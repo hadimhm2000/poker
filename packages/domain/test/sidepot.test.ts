@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { parseCards } from "../src/cards.js";
-import { type PotPlayer, awardPots, buildPots, resolveHand, winnersFromCards } from "../src/sidepot.js";
+import { parseCards } from "../src/cards";
+import { type PotPlayer, awardPots, buildPots, resolveHand, winnersFromCards } from "../src/sidepot";
 
 const P = (id: string, contributed: number, folded = false): PotPlayer => ({ id, contributed, folded });
 const seat = (players: PotPlayer[], button = players[0]!.id) => ({ seatOrder: players.map((p) => p.id), button });

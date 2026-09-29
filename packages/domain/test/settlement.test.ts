@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type Balance, balancesWithOpenDebts, settle } from "../src/settlement.js";
+import { type Balance, balancesWithOpenDebts, settle } from "../src/settlement";
 
 function applied(transfers: ReturnType<typeof settle>) {
   const m = new Map<string, number>();

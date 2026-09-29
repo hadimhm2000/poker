@@ -1,0 +1,9 @@
+{
+  "name": "Poker Home",
+  "short_name": "Poker Home",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f5f1",
+  "theme_color": "#0f6e4f",
+  "icons": []
+}

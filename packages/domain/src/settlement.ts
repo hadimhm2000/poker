@@ -1,4 +1,4 @@
-import { type Money, assertMoney, sum } from "./money.js";
+import { type Money, assertMoney, sum } from "./money";
 
 export interface Balance {
   playerId: string;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { closeBlockers, computeClose, deriveStatus, liveTotals } from "../src/game.js";
+import { closeBlockers, computeClose, deriveStatus, liveTotals } from "../src/game";
 
 const rules = { requireConfirmation: false };
 

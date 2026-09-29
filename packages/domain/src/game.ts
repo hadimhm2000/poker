@@ -1,5 +1,5 @@
-import { type Money, assertNonNegative, sum } from "./money.js";
-import { type Balance, type Transfer, balancesWithOpenDebts, settle } from "./settlement.js";
+import { type Money, assertNonNegative, sum } from "./money";
+import { type Balance, type Transfer, balancesWithOpenDebts, settle } from "./settlement";
 
 /** Stored status. "balanced" is derived from the numbers of a live game, not stored. */
 export type StoredGameStatus = "draft" | "live" | "closed";

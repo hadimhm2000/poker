@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GENESIS_HASH, type HashableGame, canonicalJson, gameHash, verifyChain } from "../src/hash.js";
+import { GENESIS_HASH, type HashableGame, canonicalJson, gameHash, verifyChain } from "../src/hash";
 
 const game = (n: number, out = 150): HashableGame => ({
   homeId: "h1",

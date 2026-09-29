@@ -1,0 +1,64 @@
+{
+  "meta": { "title": "Poker Home", "description": "Suivi des scores et des comptes pour vos soirées poker entre amis. Aucun argent ne transite par l'application." },
+  "nav": { "homes": "Mes groupes", "tools": "Outils", "sidepot": "Calcul des side pots", "showdown": "Qui gagne ?", "signIn": "Se connecter", "signUp": "Créer un compte", "signOut": "Se déconnecter", "security": "Sécurité", "language": "Langue" },
+  "landing": {
+    "title": "Le carnet de comptes de votre soirée poker",
+    "subtitle": "Notez les cave et les sorties, réglez les comptes avec le moins de virements possible et gardez un historique que personne ne peut modifier en douce.",
+    "cta": "Commencer gratuitement", "tryTool": "Essayer le calcul des side pots",
+    "f1Title": "Résultats figés", "f1Body": "Une fois la partie clôturée par l'hôte, personne ne peut la modifier. Pas même nous.",
+    "f2Title": "Moins de virements", "f2Body": "Qui paie qui, avec les dettes en cours reportées et compensées.",
+    "f3Title": "Sept langues", "f3Body": "Persan, anglais, arabe, français, italien, russe et espagnol.",
+    "disclaimer": "Poker Home ne fait que tenir les comptes. Il ne détient ni ne transfère jamais d'argent."
+  },
+  "auth": {
+    "email": "E-mail", "password": "Mot de passe", "passwordHint": "Au moins 10 caractères.", "displayName": "Votre nom",
+    "signInTitle": "Se connecter", "signUpTitle": "Créer votre compte", "submitSignIn": "Se connecter", "submitSignUp": "Créer un compte",
+    "noAccount": "Pas encore de compte ?", "haveAccount": "Vous avez déjà un compte ?",
+    "invalid": "E-mail ou mot de passe incorrect.", "rateLimited": "Trop de tentatives. Patientez quelques minutes puis réessayez.",
+    "breached": "Ce mot de passe figure dans une fuite de données. Choisissez-en un autre.", "weak": "Le mot de passe doit comporter au moins 10 caractères.",
+    "cannotCreate": "Impossible de créer un compte avec ces informations. Si vous en avez déjà un, connectez-vous.",
+    "twoFactorTitle": "Validation en deux étapes", "twoFactorPrompt": "Saisissez le code à 6 chiffres de votre application d'authentification.",
+    "code": "Code", "verify": "Valider", "badCode": "Ce code n'est pas valide.", "securityTitle": "Sécurité",
+    "twoFactorOff": "La validation en deux étapes est désactivée.", "twoFactorOn": "La validation en deux étapes est activée.", "enable2fa": "Activer la validation en deux étapes",
+    "scan": "Scannez ce code avec une application d'authentification, puis saisissez le code à 6 chiffres affiché.", "secret": "Ou saisissez cette clé : {secret}",
+    "sessions": "Appareils connectés", "signOutAll": "Se déconnecter de tous les appareils"
+  },
+  "homes": {
+    "title": "Mes groupes", "empty": "Vous n'avez pas encore de groupe. Un groupe, c'est votre table habituelle.", "create": "Créer un groupe",
+    "name": "Nom du groupe", "currency": "Devise (ex. EUR, USD, CHF)", "unitSuffix": "Suffixe d'affichage (ex. k)", "unitDivisor": "Diviser les montants par",
+    "locale": "Langue des résultats et des cartes", "requireConfirmation": "Les joueurs confirment leur résultat avant la clôture",
+    "limitReached": "Limite de groupes atteinte pour votre formule. Passez à Pro pour jusqu'à 5 groupes.", "owner": "Hôte", "member": "Membre",
+    "players": "Joueurs", "addPlayer": "Ajouter un joueur", "playerName": "Nom du joueur", "games": "Parties", "newGame": "Nouvelle partie",
+    "defaultBuyIn": "Cave par défaut", "gameLimit": "La formule gratuite comprend 3 parties. Passez à Pro pour des parties illimitées. Vos parties passées restent visibles.",
+    "history": "Historique", "ledger": "Dettes en cours", "noDebts": "Aucune dette en cours.", "markPaid": "Marquer payé",
+    "invite": "Lien d'invitation", "inviteCreate": "Créer un lien d'invitation (valable 7 jours)", "inviteHint": "Envoyez ce lien une seule fois. Il fonctionne pour une personne.",
+    "readOnly": "Ce groupe est en lecture seule.", "duplicateName": "Un joueur porte déjà ce nom.", "join": "Rejoindre ce groupe"
+  },
+  "game": {
+    "title": "Partie n° {number}", "untitled": "Partie en cours", "status_draft": "Brouillon", "status_live": "En cours", "status_balanced": "Équilibrée", "status_closed": "Clôturée",
+    "player": "Joueur", "in": "Entrée", "cashOut": "Sortie", "net": "Net", "pot": "Au pot", "cashedOut": "Total des sorties", "difference": "Écart",
+    "rebuy": "Recave", "save": "Enregistrer", "addToGame": "Ajouter à la partie", "close": "Clôturer la partie", "summary": "Vérification finale",
+    "warning": "Après la clôture, personne ne pourra modifier cette partie. Ni l'hôte, ni les administrateurs du site.", "confirmClose": "Oui, clôturer et figer", "cancel": "Retour",
+    "blocked_MIN_PLAYERS": "Il faut au moins {min} joueurs.", "blocked_NO_BUY_IN": "Pas encore de cave : {names}", "blocked_MISSING_CASH_OUT": "Sortie manquante : {names}",
+    "blocked_UNBALANCED": "Les sorties diffèrent des entrées de {difference}.", "blocked_UNCONFIRMED": "En attente de confirmation : {names}",
+    "stale": "Les montants ont changé depuis l'ouverture du résumé. Vérifiez à nouveau.", "settlement": "Qui paie qui", "pays": "{from} paie {to}",
+    "nothingToSettle": "Tout le monde est à égalité.", "closedAt": "Clôturée le {date}", "fingerprint": "Empreinte", "frozen": "Cette partie est clôturée et figée.", "confirmMine": "Confirmer mon résultat"
+  },
+  "history": { "title": "Historique", "search": "Rechercher", "player": "Nom du joueur", "from": "Du", "to": "Au", "number": "Partie n°", "outcome": "Résultat", "any": "Tous", "win": "Gain", "loss": "Perte", "even": "Égalité", "minAmount": "Au moins", "date": "Date", "empty": "Aucune partie ne correspond." },
+  "sidepot": {
+    "title": "Calcul des tapis et side pots", "intro": "Saisissez ce que chaque joueur a misé pendant le coup et s'il s'est couché. Vous obtenez le pot principal, chaque side pot et qui peut le gagner.",
+    "player": "Joueur", "contributed": "Misé", "folded": "Couché", "addRow": "Ajouter un joueur", "remove": "Retirer", "button": "Bouton", "pot": "Pot",
+    "main": "Pot principal", "side": "Side pot {n}", "amount": "Montant", "eligible": "Peut gagner", "winner": "Gagnant", "split": "Partage",
+    "returned": "Rendu à {name} (personne n'a suivi)", "total": "Total {amount}", "payouts": "Part finale", "chooseWinners": "Choisissez le ou les gagnants de chaque pot.",
+    "invalid": "Saisissez des montants entiers positifs et au moins un joueur qui ne s'est pas couché."
+  },
+  "showdown": {
+    "title": "Qui gagne ?", "intro": "Saisissez le tableau et chaque main, par ex. As Kd 7h. La meilleure main et la raison s'affichent.", "variant": "Jeu", "holdem": "Texas Hold'em", "omaha": "Omaha",
+    "board": "Tableau", "hand": "Main {n}", "evaluate": "Afficher le gagnant", "winner": "Gagnant", "split": "Pot partagé", "byCategory": "Combinaison supérieure.",
+    "byTiebreak": "Même combinaison ; départagée par la carte {n} des cinq meilleures.", "tie": "Cinq meilleures cartes identiques : le pot est partagé.",
+    "invalid": "Vérifiez les cartes : valeur (2–9, T, J, Q, K, A) et couleur (s, h, d, c), sans doublon."
+  },
+  "hand": { "royalFlush": "Quinte flush royale", "straightFlush": "Quinte flush", "quads": "Carré", "fullHouse": "Full", "flush": "Couleur", "straight": "Quinte", "trips": "Brelan", "twoPair": "Deux paires", "pair": "Paire", "highCard": "Carte haute" },
+  "common": { "notFound": "Introuvable.", "error": "Une erreur est survenue. Réessayez." },
+  "errors": { "INVALID": "Vérifiez les valeurs saisies.", "LIMIT": "La limite de votre formule est atteinte. Passez à Pro pour continuer. Rien n'est supprimé.", "READ_ONLY": "Ce groupe est en lecture seule.", "FROZEN": "Cette partie est clôturée et ne peut pas être modifiée.", "DUPLICATE": "Ce nom existe déjà ici.", "FORBIDDEN": "Vous n'avez pas l'autorisation de faire cela.", "ERROR": "Une erreur est survenue. Réessayez.", "NOT_FOUND": "Introuvable.", "STALE": "Les montants ont changé depuis l'ouverture du résumé. Vérifiez à nouveau.", "BLOCKED": "La partie ne peut pas encore être clôturée.", "NOT_IN_GAME": "Ce joueur ne fait pas partie de cette partie." }
+}

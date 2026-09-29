@@ -1,6 +1,6 @@
-import type { Card } from "./cards.js";
-import { type Variant, showdown } from "./hand.js";
-import { type Money, assertNonNegative, sum } from "./money.js";
+import type { Card } from "./cards";
+import { type Variant, showdown } from "./hand";
+import { type Money, assertNonNegative, sum } from "./money";
 
 export interface PotPlayer {
   id: string;

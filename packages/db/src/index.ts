@@ -1,4 +1,5 @@
-export * from "./client.js";
-export * as schema from "./schema.js";
-export * from "./repo.js";
-export { migrate } from "./migrate.js";
+export * from "./client";
+export * as schema from "./schema";
+export * from "./repo";
+export { migrate } from "./migrate";
+export { and, asc, desc, eq, gt, inArray, isNull, notExists, or, sql } from "drizzle-orm";

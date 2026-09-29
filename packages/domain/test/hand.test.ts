@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fullDeck, parseCards } from "../src/cards.js";
+import { fullDeck, parseCards } from "../src/cards";
 import {
   CATEGORY_COMBINATIONS,
   type CategoryKey,
@@ -7,7 +7,7 @@ import {
   bestHand,
   evaluate5,
   showdown,
-} from "../src/hand.js";
+} from "../src/hand";
 
 const c = parseCards;
 const holdem = (board: string, hands: Record<string, string>) =>

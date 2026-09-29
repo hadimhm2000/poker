@@ -1,4 +1,4 @@
-import { type Card, assertDistinct, cardToString } from "./cards.js";
+import { type Card, assertDistinct, cardToString } from "./cards";
 
 export enum HandCategory {
   HighCard = 0,

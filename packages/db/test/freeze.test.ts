@@ -4,10 +4,10 @@ import { randomUUID } from "node:crypto";
 import { type HashableGame, verifyChain } from "@poker/domain";
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { asUser } from "../src/client.js";
-import { DomainError, addPlayer, addToGame, closeGame, createGame, createHome, ledger, rebuy, setCashOut } from "../src/repo.js";
-import * as s from "../src/schema.js";
-import { type TestDb, freshDb, pgError } from "./helpers.js";
+import { asUser } from "../src/client";
+import { DomainError, addPlayer, addToGame, closeGame, createGame, createHome, ledger, rebuy, setCashOut } from "../src/repo";
+import * as s from "../src/schema";
+import { type TestDb, freshDb, pgError } from "./helpers";
 
 let t: TestDb;
 let host: string;

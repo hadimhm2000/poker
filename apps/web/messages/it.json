@@ -1,0 +1,64 @@
+{
+  "meta": { "title": "Poker Home", "description": "Punteggi e conti per le serate di poker in casa. Nessun denaro passa attraverso l'app." },
+  "nav": { "homes": "I miei gruppi", "tools": "Strumenti", "sidepot": "Calcolo side pot", "showdown": "Chi vince?", "signIn": "Accedi", "signUp": "Crea account", "signOut": "Esci", "security": "Sicurezza", "language": "Lingua" },
+  "landing": {
+    "title": "Il libro dei conti della tua serata di poker",
+    "subtitle": "Registra buy-in e cash-out, salda i conti con il minor numero di trasferimenti e conserva uno storico che nessuno può modificare di nascosto.",
+    "cta": "Inizia gratis", "tryTool": "Prova il calcolo dei side pot",
+    "f1Title": "Risultati congelati", "f1Body": "Quando l'host chiude la partita, nessuno può più modificarla. Nemmeno noi.",
+    "f2Title": "Meno trasferimenti", "f2Body": "Chi paga chi, con i debiti aperti riportati e compensati.",
+    "f3Title": "Sette lingue", "f3Body": "Persiano, inglese, arabo, francese, italiano, russo e spagnolo.",
+    "disclaimer": "Poker Home tiene solo i conti. Non detiene né trasferisce mai denaro."
+  },
+  "auth": {
+    "email": "Email", "password": "Password", "passwordHint": "Almeno 10 caratteri.", "displayName": "Il tuo nome",
+    "signInTitle": "Accedi", "signUpTitle": "Crea il tuo account", "submitSignIn": "Accedi", "submitSignUp": "Crea account",
+    "noAccount": "Non hai un account?", "haveAccount": "Hai già un account?",
+    "invalid": "Email o password non corretti.", "rateLimited": "Troppi tentativi. Attendi qualche minuto e riprova.",
+    "breached": "Questa password è comparsa in una violazione di dati. Scegline un'altra.", "weak": "La password deve avere almeno 10 caratteri.",
+    "cannotCreate": "Non è stato possibile creare un account con questi dati. Se ne hai già uno, accedi.",
+    "twoFactorTitle": "Verifica in due passaggi", "twoFactorPrompt": "Inserisci il codice a 6 cifre della tua app di autenticazione.",
+    "code": "Codice", "verify": "Verifica", "badCode": "Il codice non è valido.", "securityTitle": "Sicurezza",
+    "twoFactorOff": "La verifica in due passaggi è disattivata.", "twoFactorOn": "La verifica in due passaggi è attiva.", "enable2fa": "Attiva la verifica in due passaggi",
+    "scan": "Scansiona questo codice con un'app di autenticazione, poi inserisci il codice a 6 cifre.", "secret": "Oppure digita questa chiave: {secret}",
+    "sessions": "Dispositivi connessi", "signOutAll": "Esci da tutti i dispositivi"
+  },
+  "homes": {
+    "title": "I miei gruppi", "empty": "Non hai ancora gruppi. Un gruppo è il tuo tavolo abituale.", "create": "Crea gruppo",
+    "name": "Nome del gruppo", "currency": "Valuta (es. EUR, USD, CHF)", "unitSuffix": "Suffisso (es. k)", "unitDivisor": "Dividi gli importi per",
+    "locale": "Lingua di risultati e card", "requireConfirmation": "I giocatori confermano il proprio risultato prima della chiusura",
+    "limitReached": "Hai raggiunto il limite di gruppi del tuo piano. Passa a Pro per averne fino a 5.", "owner": "Host", "member": "Membro",
+    "players": "Giocatori", "addPlayer": "Aggiungi giocatore", "playerName": "Nome del giocatore", "games": "Partite", "newGame": "Nuova partita",
+    "defaultBuyIn": "Buy-in predefinito", "gameLimit": "Il piano gratuito include 3 partite. Passa a Pro per partite illimitate. Le partite passate restano visibili.",
+    "history": "Storico", "ledger": "Debiti aperti", "noDebts": "Nessun debito aperto.", "markPaid": "Segna come pagato",
+    "invite": "Link di invito", "inviteCreate": "Crea link di invito (valido 7 giorni)", "inviteHint": "Invia questo link una sola volta. Vale per una persona.",
+    "readOnly": "Questo gruppo è in sola lettura.", "duplicateName": "Esiste già un giocatore con questo nome.", "join": "Unisciti a questo gruppo"
+  },
+  "game": {
+    "title": "Partita n. {number}", "untitled": "Partita in corso", "status_draft": "Bozza", "status_live": "In corso", "status_balanced": "In pari", "status_closed": "Chiusa",
+    "player": "Giocatore", "in": "Entrata", "cashOut": "Cash-out", "net": "Netto", "pot": "Sul tavolo", "cashedOut": "Totale cash-out", "difference": "Differenza",
+    "rebuy": "Rebuy", "save": "Salva", "addToGame": "Aggiungi alla partita", "close": "Chiudi partita", "summary": "Controllo finale",
+    "warning": "Dopo la chiusura nessuno potrà modificare questa partita. Né l'host né gli amministratori del sito.", "confirmClose": "Sì, chiudi e congela", "cancel": "Indietro",
+    "blocked_MIN_PLAYERS": "Servono almeno {min} giocatori.", "blocked_NO_BUY_IN": "Ancora nessun buy-in: {names}", "blocked_MISSING_CASH_OUT": "Cash-out mancante: {names}",
+    "blocked_UNBALANCED": "I cash-out differiscono dai buy-in di {difference}.", "blocked_UNCONFIRMED": "In attesa di conferma: {names}",
+    "stale": "Gli importi sono cambiati da quando hai aperto il riepilogo. Ricontrolla.", "settlement": "Chi paga chi", "pays": "{from} paga {to}",
+    "nothingToSettle": "Sono tutti in pari.", "closedAt": "Chiusa il {date}", "fingerprint": "Impronta", "frozen": "Questa partita è chiusa e congelata.", "confirmMine": "Conferma il mio risultato"
+  },
+  "history": { "title": "Storico", "search": "Cerca", "player": "Nome del giocatore", "from": "Dal", "to": "Al", "number": "Partita n.", "outcome": "Risultato", "any": "Tutti", "win": "Vincita", "loss": "Perdita", "even": "Pari", "minAmount": "Almeno", "date": "Data", "empty": "Nessuna partita trovata." },
+  "sidepot": {
+    "title": "Calcolo all-in e side pot", "intro": "Inserisci quanto ha messo ogni giocatore nella mano e se ha foldato. Ottieni il piatto principale, ogni side pot e chi può vincerlo.",
+    "player": "Giocatore", "contributed": "Puntato", "folded": "Fold", "addRow": "Aggiungi giocatore", "remove": "Rimuovi", "button": "Bottone", "pot": "Piatto",
+    "main": "Piatto principale", "side": "Side pot {n}", "amount": "Importo", "eligible": "Può vincere", "winner": "Vincitore", "split": "Diviso",
+    "returned": "Restituito a {name} (nessuno ha chiamato)", "total": "Totale {amount}", "payouts": "Quota finale", "chooseWinners": "Scegli il vincitore o i vincitori di ogni piatto.",
+    "invalid": "Inserisci importi interi non negativi e almeno un giocatore che non ha foldato."
+  },
+  "showdown": {
+    "title": "Chi vince?", "intro": "Inserisci le carte comuni e ogni mano, ad es. As Kd 7h. Vengono mostrati la mano migliore e il motivo.", "variant": "Gioco", "holdem": "Texas Hold'em", "omaha": "Omaha",
+    "board": "Carte comuni", "hand": "Mano {n}", "evaluate": "Mostra il vincitore", "winner": "Vincitore", "split": "Piatto diviso", "byCategory": "Combinazione superiore.",
+    "byTiebreak": "Stessa combinazione; decide la carta {n} delle cinque migliori.", "tie": "Cinque carte migliori identiche: il piatto si divide.",
+    "invalid": "Controlla le carte: valore (2–9, T, J, Q, K, A) e seme (s, h, d, c), senza duplicati."
+  },
+  "hand": { "royalFlush": "Scala reale massima", "straightFlush": "Scala colore", "quads": "Poker", "fullHouse": "Full", "flush": "Colore", "straight": "Scala", "trips": "Tris", "twoPair": "Doppia coppia", "pair": "Coppia", "highCard": "Carta alta" },
+  "common": { "notFound": "Non trovato.", "error": "Qualcosa è andato storto. Riprova." },
+  "errors": { "INVALID": "Controlla i valori inseriti.", "LIMIT": "Hai raggiunto il limite del tuo piano. Passa a Pro per continuare. Non viene cancellato nulla.", "READ_ONLY": "Questo gruppo è in sola lettura.", "FROZEN": "Questa partita è chiusa e non può essere modificata.", "DUPLICATE": "Questo nome esiste già qui.", "FORBIDDEN": "Non hai il permesso di farlo.", "ERROR": "Qualcosa è andato storto. Riprova.", "NOT_FOUND": "Non trovato.", "STALE": "Gli importi sono cambiati da quando hai aperto il riepilogo. Ricontrolla.", "BLOCKED": "La partita non può ancora essere chiusa.", "NOT_IN_GAME": "Questo giocatore non è nella partita." }
+}

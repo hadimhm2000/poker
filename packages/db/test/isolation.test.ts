@@ -3,7 +3,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { randomUUID } from "node:crypto";
 import { eq, sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { asUser } from "../src/client.js";
+import { asUser } from "../src/client";
 import {
   addPlayer,
   addToGame,
@@ -14,9 +14,9 @@ import {
   ledger,
   markPaid,
   setCashOut,
-} from "../src/repo.js";
-import * as s from "../src/schema.js";
-import { type TestDb, freshDb, pgError } from "./helpers.js";
+} from "../src/repo";
+import * as s from "../src/schema";
+import { type TestDb, freshDb, pgError } from "./helpers";
 
 let t: TestDb;
 let alice: string;

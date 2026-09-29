@@ -8,8 +8,8 @@ import {
 } from "@poker/domain";
 import { and, asc, desc, eq, inArray, isNull, notExists, sql } from "drizzle-orm";
 import { z } from "zod";
-import type { Tx } from "./client.js";
-import { debtPayments, gameEntries, gameEvents, games, homes, players, settlements } from "./schema.js";
+import type { Tx } from "./client";
+import { debtPayments, gameEntries, gameEvents, games, homes, players, settlements } from "./schema";
 
 // All functions take a transaction already scoped with asUser(): RLS is the backstop,
 // but each function also states its own rules so errors are clear and early.

@@ -1,6 +1,6 @@
 import postgres from "postgres";
-import { type Db, createDb } from "../src/client.js";
-import { migrate } from "../src/migrate.js";
+import { type Db, createDb } from "../src/client";
+import { migrate } from "../src/migrate";
 
 const base = process.env.TEST_DATABASE_URL ?? "postgres://postgres@localhost:5432/postgres";
 
