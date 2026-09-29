@@ -11,6 +11,9 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "declaration": false,
-    "noEmit": true
+    "noEmit": true,
+    "types": [
+      "node"
+    ]
   }
 }
