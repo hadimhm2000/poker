@@ -27,6 +27,11 @@ export type CloseBlocker =
 export interface CloseRules {
   /** Home setting: every player with an account must confirm before closing. */
   requireConfirmation: boolean;
+  /**
+   * Imported history only: old sheets often record just the net for a player who broke
+   * even, so a zero buy-in is accepted. Live games always require a buy-in.
+   */
+  allowZeroBuyIn?: boolean;
 }
 
 export const MIN_PLAYERS = 2;
@@ -41,7 +46,7 @@ export function closeBlockers(entries: readonly GameEntry[], rules: CloseRules):
   if (entries.length < MIN_PLAYERS) {
     blockers.push({ code: "MIN_PLAYERS", min: MIN_PLAYERS, actual: entries.length });
   }
-  const noBuyIn = entries.filter((e) => e.totalIn <= 0).map((e) => e.playerId);
+  const noBuyIn = rules.allowZeroBuyIn ? [] : entries.filter((e) => e.totalIn <= 0).map((e) => e.playerId);
   if (noBuyIn.length) blockers.push({ code: "NO_BUY_IN", playerIds: noBuyIn });
 
   const missing = entries.filter((e) => e.cashOut === null).map((e) => e.playerId);

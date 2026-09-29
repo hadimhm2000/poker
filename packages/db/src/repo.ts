@@ -143,6 +143,12 @@ export const closeGameInput = z.object({
   carryDebts: z.boolean().default(true),
 });
 
+/** Internal options used by the importer; never taken from a request. */
+interface CloseOptions {
+  closedAt?: Date;
+  imported?: boolean;
+}
+
 export interface CloseResult {
   gameId: string;
   number: number;
@@ -156,7 +162,12 @@ export interface CloseResult {
  * the game row is locked, the close key makes retries return the same result, and
  * the version check rejects a close based on numbers that changed since the summary.
  */
-export async function closeGame(tx: Tx, userId: string, input: z.input<typeof closeGameInput>): Promise<CloseResult> {
+export async function closeGame(
+  tx: Tx,
+  userId: string,
+  input: z.input<typeof closeGameInput>,
+  opts: CloseOptions = {},
+): Promise<CloseResult> {
   const v = closeGameInput.parse(input);
   const [g] = await tx.select().from(games).where(eq(games.id, v.gameId)).for("update");
   if (!g) throw new DomainError("NOT_FOUND");
@@ -190,7 +201,7 @@ export async function closeGame(tx: Tx, userId: string, input: z.input<typeof cl
   try {
     result = computeClose(
       entries.map((e) => ({ ...e, hasAccount: !!e.userId, confirmed: !!e.confirmedAt })),
-      { requireConfirmation: home.requireConfirmation },
+      { requireConfirmation: home.requireConfirmation && !opts.imported, allowZeroBuyIn: opts.imported },
       carried,
     );
   } catch (err) {
@@ -218,7 +229,7 @@ export async function closeGame(tx: Tx, userId: string, input: z.input<typeof cl
     .limit(1);
   const number = (last?.number ?? 0) + 1;
   const prevHash = last?.hash ?? GENESIS_HASH;
-  const closedAt = new Date();
+  const closedAt = opts.closedAt ?? new Date();
   const hash = await gameHash(prevHash, {
     homeId: home.id,
     number,
@@ -301,4 +312,73 @@ export async function ledger(tx: Tx, homeId: string) {
 
 export async function markPaid(tx: Tx, userId: string, settlementId: string) {
   await tx.insert(debtPayments).values({ settlementId: id.parse(settlementId), kind: "paid", markedBy: userId });
+}
+
+/** Every player's result in every closed game of a home: the input for statistics and exports. */
+export async function resultRows(tx: Tx, homeId: string) {
+  return tx
+    .select({
+      gameId: games.id,
+      number: games.number,
+      closedAt: games.closedAt,
+      playerId: players.id,
+      name: players.displayName,
+      totalIn: gameEntries.totalIn,
+      cashOut: gameEntries.cashOut,
+    })
+    .from(gameEntries)
+    .innerJoin(games, eq(games.id, gameEntries.gameId))
+    .innerJoin(players, eq(players.id, gameEntries.playerId))
+    .where(and(eq(games.homeId, id.parse(homeId)), eq(games.status, "closed")))
+    .orderBy(asc(games.closedAt), asc(games.number))
+    .then((rows) =>
+      rows.map((r) => ({ ...r, number: r.number!, closedAt: r.closedAt!, cashOut: r.cashOut ?? 0 })),
+    );
+}
+
+export const importGameInput = z.object({
+  homeId: id,
+  playedAt: z.coerce.date(),
+  rows: z
+    .array(z.object({ name: z.string().trim().min(1).max(40), totalIn: money, cashOut: money }))
+    .min(2)
+    .max(40),
+});
+
+/**
+ * Record one game from an old spreadsheet. It goes through the same close path as a live
+ * game (same checks, same hash chain); its settlement is marked as already paid so old
+ * nights do not show up as open debts.
+ */
+export async function importGame(tx: Tx, userId: string, input: z.input<typeof importGameInput>) {
+  const v = importGameInput.parse(input);
+  const existing = await tx.select().from(players).where(eq(players.homeId, v.homeId));
+  const byName = new Map(existing.filter((p) => !p.mergedInto).map((p) => [p.displayName.toLowerCase(), p.id]));
+  const game = await createGame(tx, userId, v.homeId, 0);
+  for (const r of v.rows) {
+    let pid = byName.get(r.name.toLowerCase());
+    if (!pid) {
+      pid = (await addPlayer(tx, v.homeId, r.name)).id;
+      byName.set(r.name.toLowerCase(), pid);
+    }
+    await tx.insert(gameEntries).values({ gameId: game.id, playerId: pid, totalIn: r.totalIn, cashOut: r.cashOut });
+  }
+  const [cur] = await tx.select({ version: games.version }).from(games).where(eq(games.id, game.id));
+  const result = await closeGame(
+    tx,
+    userId,
+    { gameId: game.id, closeKey: crypto.randomUUID(), expectedVersion: cur!.version, carryDebts: false },
+    { closedAt: v.playedAt, imported: true },
+  );
+  const rows = await tx.select({ id: settlements.id }).from(settlements).where(eq(settlements.gameId, game.id));
+  if (rows.length) {
+    await tx.insert(debtPayments).values(rows.map((r) => ({ settlementId: r.id, kind: "paid" as const, markedBy: userId })));
+  }
+  return result;
+}
+
+/** 'free' | 'pro' of the home's owner, or null when the caller is not a member. */
+export async function homePlan(tx: Tx, homeId: string): Promise<"free" | "pro" | null> {
+  const r = await tx.execute<{ plan: "free" | "pro" | null }>(sql`SELECT app.home_plan(${id.parse(homeId)}) AS plan`);
+  return r[0]?.plan ?? null;
 }

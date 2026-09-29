@@ -22,6 +22,7 @@ export default async function HomePage({
   const locale = await getLocale();
   const t = await getTranslations("homes");
   const tg = await getTranslations("game");
+  const ts = await getTranslations("stats");
   const invite = (await cookies()).get("invite_flash")?.value;
 
   const data = await withUser(async (tx, user) => {
@@ -72,7 +73,14 @@ export default async function HomePage({
             ))}
           </ul>
           <p style={{ marginBlockEnd: 0 }}>
-            <Link href={`/homes/${home.id}/history`}>{t("history")} →</Link>
+            <Link href={`/homes/${home.id}/history`}>{t("history")}</Link> ·{" "}
+            <Link href={`/homes/${home.id}/stats`}>{ts("title")}</Link>
+            {canWrite && (
+              <>
+                {" "}
+                · <Link href={`/homes/${home.id}/import`}>{ts("import")}</Link>
+              </>
+            )}
           </p>
         </section>
 

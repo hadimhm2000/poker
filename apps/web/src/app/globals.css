@@ -139,3 +139,35 @@ td.end, th.end { text-align: end; }
 }
 .playing-card.red { color: #c0182a; }
 .playing-card .suit { align-self: flex-end; font-size: 1.1em; }
+
+/* Chart palette: validated categorical order (see dataviz reference palette). */
+:root {
+  --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100;
+  --series-5: #e87ba4; --series-6: #008300; --series-7: #4a3aa7; --series-8: #e34948;
+  --pos: #2a78d6; --neg: #e34948; --grid: #e6e3da; --axis: #9a968b;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500;
+    --series-5: #d55181; --series-6: #008300; --series-7: #9085e9; --series-8: #e66767;
+    --pos: #3987e5; --neg: #e66767; --grid: #2e2f2b; --axis: #6f6c63;
+  }
+}
+.chart { width: 100%; height: auto; display: block; direction: ltr; }
+.chart text { fill: var(--muted); font-size: 11px; font-family: var(--font); }
+.chart .gridline { stroke: var(--grid); stroke-width: 1; }
+.chart .zero { stroke: var(--axis); stroke-width: 1; }
+.chart .hit { fill: transparent; }
+.chart .hit:hover + .mark, .chart g:hover > .mark { opacity: 0.8; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-block-start: 8px; font-size: 0.85rem; }
+.legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--c); margin-inline-end: 6px; vertical-align: -1px; }
+.medal { font-size: 1.05rem; }
+
+@media print {
+  @page { size: A4 landscape; margin: 12mm; }
+  .topbar, .no-print, form { display: none !important; }
+  body { background: #fff; color: #000; }
+  .card { break-inside: avoid; border-color: #ccc; }
+  .print-break { break-before: page; }
+  main { padding: 0; }
+}

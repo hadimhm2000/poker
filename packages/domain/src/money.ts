@@ -40,7 +40,7 @@ export interface MoneyFormat {
 export function formatMoney(amount: Money, fmt: MoneyFormat): string {
   const divisor = fmt.divisor ?? 1;
   const value = amount / divisor;
-  const opts: Intl.NumberFormatOptions = { maximumFractionDigits: divisor === 1 ? 0 : 2 };
+  const opts: Intl.NumberFormatOptions = { maximumFractionDigits: divisor === 1 ? 0 : 1 };
   if (fmt.signed) opts.signDisplay = "exceptZero";
   if (fmt.currency && !fmt.suffix) {
     opts.style = "currency";

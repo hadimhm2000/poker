@@ -16,8 +16,9 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  experimental: { serverActions: { bodySizeLimit: "2mb" } },
   transpilePackages: ["@poker/domain", "@poker/db"],
-  serverExternalPackages: ["@node-rs/argon2", "postgres"],
+  serverExternalPackages: ["@node-rs/argon2", "postgres", "exceljs"],
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
