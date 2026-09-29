@@ -56,8 +56,15 @@ tests in `packages/db/test`:
 The hand engine and side pot calculator from phase 4 are also done (every example from the
 rules table plus 200+ generated scenarios, and a full enumeration of all 2,598,960 hands).
 
-Not yet built: Google/Apple/Telegram login, email verification and password reset (need a
-mail provider), TOTP recovery codes, statistics page and exports (phase 2), live game over
+Phase 2 (statistics and exports) is built: statistics page shaped like sheet 3 (cards, leaderboard with
+medals, cumulative-profit and net charts, last 10 games, records), per-player page with head-to-head,
+Excel export with two sheets (history and statistics, in the home's language, right-to-left for fa/ar),
+CSV, a two-page landscape print view (browser Print to PDF), and spreadsheet import with preview,
+Solar Hijri dates and duplicate detection. Its exit gate (importing Hadi's real workbook reproduces
+sheet 3: abol +2,980k over 28 games) still needs that file.
+
+Not yet built: result card image (Satori), server-side PDF, Google/Apple/Telegram login, email verification and password reset (need a
+mail provider), TOTP recovery codes, live game over
 WebSocket, Telegram bot and Mini App (phase 3), seasons and badges, rules section, payments
 (phase 5). The in-memory rate limiter must move to Postgres or Redis before running more than
 one server instance.
