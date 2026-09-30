@@ -7,6 +7,7 @@ import {
   closeGame,
   createGame,
   createHome,
+  createHomeInvite,
   markPaid,
   rebuy,
   schema,
@@ -14,14 +15,14 @@ import {
   setHouseRules,
 } from "@poker/db";
 import { and, eq, sql } from "@poker/db";
-import { cookies } from "next/headers";
 import { unstable_rethrow } from "next/navigation";
 import { after } from "next/server";
 import { getLocale } from "next-intl/server";
 import { z } from "zod";
 import { redirect } from "@/i18n/navigation";
-import { randomToken, sha256 } from "@/lib/crypto";
+import { sha256 } from "@/lib/crypto";
 import { parseAmount } from "@/lib/format";
+import { inviteTokenHash } from "@/lib/live";
 import { errorCode, withUser } from "@/lib/session";
 import { notifyGameClosed } from "@/telegram/notify";
 
@@ -98,28 +99,14 @@ export async function newGameAction(form: FormData) {
 
 export async function createInviteAction(form: FormData) {
   const homeId = uuid.parse(form.get("homeId"));
-  const playerId = form.get("playerId") ? uuid.parse(form.get("playerId")) : null;
-  const token = randomToken();
-  await attempt(`/homes/${homeId}`, () =>
-    withUser((tx, user) =>
-      tx.insert(schema.invites).values({
-        homeId,
-        playerId,
-        tokenHash: sha256(token),
-        expiresAt: new Date(Date.now() + 7 * 864e5),
-        createdBy: user.id,
-      }),
-    ),
-  );
-  // Shown once to the host (flash cookie, not the URL); only its hash is stored.
-  (await cookies()).set("invite_flash", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 120,
+  await attempt(`/homes/${homeId}`, () => {
+    const playerId = form.get("playerId") ? uuid.parse(form.get("playerId")) : null;
+    const maxUses = z.coerce.number().int().parse(form.get("maxUses") || 1);
+    // The token is an HMAC of the invite id: only its hash is stored, and the host's page
+    // can show the link and its QR code again while it is valid.
+    return withUser((tx, user) => createHomeInvite(tx, user.id, { homeId, playerId, maxUses }, inviteTokenHash));
   });
-  return go(`/homes/${homeId}`);
+  return go(`/homes/${homeId}#invites`);
 }
 
 export async function acceptInviteAction(form: FormData) {

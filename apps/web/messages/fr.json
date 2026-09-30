@@ -274,7 +274,10 @@
     "NOT_CLOSED": "La partie n'est pas encore clôturée.",
     "EMAIL_IN_USE": "Un compte existe déjà avec cet e-mail.",
     "IDENTITY_TAKEN": "Cette connexion est déjà reliée à un autre compte.",
-    "LAST_LOGIN": "Vous ne pouvez pas retirer votre seul moyen de connexion."
+    "LAST_LOGIN": "Vous ne pouvez pas retirer votre seul moyen de connexion.",
+    "MERGE_SAME_GAME": "Les deux joueurs sont dans la même partie ouverte. Retirez d'abord l'un d'eux de cette partie.",
+    "MERGE_LINKED": "Les deux joueurs sont liés à un compte : ce sont deux personnes différentes.",
+    "MERGED": "Ce joueur a été fusionné avec un autre joueur."
   },
   "stats": {
     "title": "Statistiques",
@@ -750,5 +753,40 @@
     "verifyBody": "Bonjour,\n\nConfirmez votre adresse e-mail pour Poker Home en ouvrant ce lien :\n{link}\n\nLe lien est valable 48 heures. Si vous n’avez pas créé de compte, ignorez cet e-mail.",
     "resetSubject": "Réinitialisez votre mot de passe Poker Home",
     "resetBody": "Bonjour,\n\nQuelqu’un a demandé à réinitialiser le mot de passe de votre compte Poker Home. Pour en choisir un nouveau, ouvrez ce lien :\n{link}\n\nLe lien est valable 30 minutes et une seule fois. Si ce n’était pas vous, ignorez cet e-mail ; votre mot de passe reste inchangé."
+  },
+  "people": {
+    "membersTitle": "Membres",
+    "joined": "membre depuis le {date}",
+    "you": "vous",
+    "noName": "(sans nom)",
+    "remove": "Retirer",
+    "removeHint": "Un membre retiré perd l'accès immédiatement. Ses résultats passés restent, et vous pouvez l'inviter à nouveau.",
+    "invitesTitle": "Liens d'invitation",
+    "invitesNone": "Aucun lien d'invitation actif.",
+    "inviteFor": "Pour {name}",
+    "inviteAnyone": "Pour tout le monde",
+    "inviteUses": "utilisé {uses} sur {max}",
+    "inviteExpires": "expire le {date}",
+    "inviteShowQr": "Afficher le QR code",
+    "inviteQrAlt": "QR code du lien d'invitation",
+    "inviteLegacy": "Cet ancien lien n'a été affiché qu'une fois et ne peut plus l'être. Révoquez-le si vous n'en avez plus besoin.",
+    "inviteForPlayer": "Lier à un joueur (facultatif)",
+    "inviteMaxUses": "Utilisations",
+    "revoke": "Révoquer",
+    "copyLink": "Copier le lien",
+    "copy": "Copier",
+    "copied": "Copié",
+    "editPlayer": "Modifier",
+    "avatar": "Avatar",
+    "noAvatar": "Aucun",
+    "paymentInfo": "Coordonnées de paiement",
+    "paymentHint": "Numéro de carte, IBAN ou PayPal. Seuls les membres de cette home les voient, pour pouvoir vous payer. Stockées chiffrées.",
+    "noPaymentInfo": "pas de coordonnées de paiement",
+    "save": "Enregistrer",
+    "mergeTitle": "Fusionner des joueurs en double",
+    "mergeHint": "Pour deux noms d'une même personne (par ex. Ali et ali). Les places du doublon dans les parties ouvertes passent au joueur conservé. Les parties clôturées ne changent jamais ; dans les statistiques, elles comptent pour le joueur conservé. Impossible tant que les deux sont dans la même partie ouverte.",
+    "mergeKeep": "Conserver",
+    "mergeDuplicate": "Fusionner celui-ci dedans",
+    "mergeButton": "Fusionner"
   }
 }

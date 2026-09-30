@@ -4,16 +4,22 @@ import { headers } from "next/headers";
 import QRCode from "qrcode";
 import { sha256 } from "./crypto";
 
-// Join links for a game's QR code. The token is an HMAC of the invite id under a key derived
-// from FIELD_KEY, so the database keeps only its hash and the host's page can redraw the QR.
-function joinKey(): Buffer {
+// Join links for a game's QR code and home invite links. The token is an HMAC of the invite id
+// under a key derived from FIELD_KEY, so the database keeps only its hash and the host's page
+// can redraw the link and QR. Each kind of link has its own derived key.
+function derivedKey(info: string): Buffer {
   const master = Buffer.from(process.env.FIELD_KEY ?? "", "base64");
   if (master.length !== 32) throw new Error("FIELD_KEY must be 32 bytes, base64");
-  return Buffer.from(hkdfSync("sha256", master, Buffer.alloc(0), "poker-home/join-token", 32));
+  return Buffer.from(hkdfSync("sha256", master, Buffer.alloc(0), info, 32));
 }
 
-export const joinToken = (inviteId: string) => createHmac("sha256", joinKey()).update(inviteId).digest("base64url");
+export const joinToken = (inviteId: string) =>
+  createHmac("sha256", derivedKey("poker-home/join-token")).update(inviteId).digest("base64url");
 export const joinTokenHash = (inviteId: string) => sha256(joinToken(inviteId));
+
+export const inviteToken = (inviteId: string) =>
+  createHmac("sha256", derivedKey("poker-home/invite-token")).update(inviteId).digest("base64url");
+export const inviteTokenHash = (inviteId: string) => sha256(inviteToken(inviteId));
 
 /** Public origin of the site: APP_URL in production, else the request's own host. */
 export async function appOrigin(): Promise<string> {

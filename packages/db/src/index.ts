@@ -6,3 +6,4 @@ export { migrate } from "./migrate";
 export { and, asc, desc, eq, gt, gte, inArray, isNull, lt, lte, ne, notExists, or, sql } from "drizzle-orm";
 export * from "./seasons";
 export * from "./accounts";
+export * from "./players";

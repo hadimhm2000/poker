@@ -274,7 +274,10 @@
     "NOT_CLOSED": "La partita non è ancora chiusa.",
     "EMAIL_IN_USE": "Esiste già un account con questa email.",
     "IDENTITY_TAKEN": "Questo accesso è già collegato a un altro account.",
-    "LAST_LOGIN": "Non puoi rimuovere il tuo unico modo per accedere."
+    "LAST_LOGIN": "Non puoi rimuovere il tuo unico modo per accedere.",
+    "MERGE_SAME_GAME": "Entrambi i giocatori sono nella stessa partita aperta. Togline prima uno da quella partita.",
+    "MERGE_LINKED": "Entrambi i giocatori sono collegati a un account, quindi sono due persone diverse.",
+    "MERGED": "Questo giocatore è stato unito a un altro giocatore."
   },
   "stats": {
     "title": "Statistiche",
@@ -750,5 +753,40 @@
     "verifyBody": "Ciao,\n\nconferma il tuo indirizzo email per Poker Home aprendo questo link:\n{link}\n\nIl link vale 48 ore. Se non hai creato un account, ignora questa email.",
     "resetSubject": "Reimposta la password di Poker Home",
     "resetBody": "Ciao,\n\nqualcuno ha chiesto di reimpostare la password del tuo account Poker Home. Per sceglierne una nuova, apri questo link:\n{link}\n\nIl link vale 30 minuti e una sola volta. Se non sei stato tu, ignora questa email; la password resta la stessa."
+  },
+  "people": {
+    "membersTitle": "Membri",
+    "joined": "entrato il {date}",
+    "you": "tu",
+    "noName": "(senza nome)",
+    "remove": "Rimuovi",
+    "removeHint": "Un membro rimosso perde subito l'accesso. I suoi risultati passati restano e puoi invitarlo di nuovo.",
+    "invitesTitle": "Link di invito",
+    "invitesNone": "Nessun link di invito attivo.",
+    "inviteFor": "Per {name}",
+    "inviteAnyone": "Per chiunque",
+    "inviteUses": "usato {uses} su {max}",
+    "inviteExpires": "scade il {date}",
+    "inviteShowQr": "Mostra codice QR",
+    "inviteQrAlt": "Codice QR del link di invito",
+    "inviteLegacy": "Questo vecchio link è stato mostrato una sola volta e non può essere mostrato di nuovo. Revocalo se non ti serve più.",
+    "inviteForPlayer": "Collega a un giocatore (facoltativo)",
+    "inviteMaxUses": "Utilizzi",
+    "revoke": "Revoca",
+    "copyLink": "Copia link",
+    "copy": "Copia",
+    "copied": "Copiato",
+    "editPlayer": "Modifica",
+    "avatar": "Avatar",
+    "noAvatar": "Nessuno",
+    "paymentInfo": "Dati di pagamento",
+    "paymentHint": "Numero di carta, IBAN o PayPal. Li vedono solo i membri di questa home, per poterti pagare. Salvati cifrati.",
+    "noPaymentInfo": "nessun dato di pagamento",
+    "save": "Salva",
+    "mergeTitle": "Unisci giocatori doppi",
+    "mergeHint": "Per due nomi della stessa persona (es. Ali e ali). I posti del doppione nelle partite aperte passano al giocatore tenuto. Le partite chiuse non cambiano mai; nelle statistiche contano per il giocatore tenuto. Non possibile finché entrambi sono nella stessa partita aperta.",
+    "mergeKeep": "Tieni",
+    "mergeDuplicate": "Unisci questo in esso",
+    "mergeButton": "Unisci"
   }
 }
