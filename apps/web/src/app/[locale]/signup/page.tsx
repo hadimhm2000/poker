@@ -1,5 +1,6 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { signUpAction } from "@/app/actions/auth";
+import { ProviderButtons } from "@/components/ProviderButtons";
 import { Link } from "@/i18n/navigation";
 
 const ERRORS = ["weak", "breached", "cannotCreate", "rateLimited"] as const;
@@ -7,6 +8,7 @@ const ERRORS = ["weak", "breached", "cannotCreate", "rateLimited"] as const;
 export default async function SignUp({ searchParams }: { searchParams: Promise<{ error?: string; next?: string }> }) {
   const { error, next } = await searchParams;
   const t = await getTranslations("auth");
+  const locale = await getLocale();
   return (
     <div className="card" style={{ maxWidth: 420, marginInline: "auto" }}>
       <h1>{t("signUpTitle")}</h1>
@@ -32,6 +34,7 @@ export default async function SignUp({ searchParams }: { searchParams: Promise<{
           {t("submitSignUp")}
         </button>
       </form>
+      <ProviderButtons locale={locale} next={next} />
       <p className="small muted">
         {t("haveAccount")} <Link href={next ? `/signin?next=${encodeURIComponent(next)}` : "/signin"}>{t("submitSignIn")}</Link>
       </p>

@@ -11,6 +11,8 @@ import { dir, routing } from "@/i18n/routing";
 import { currentUser } from "@/lib/auth";
 import { signOutAction } from "../actions/auth";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
+import { cookies } from "next/headers";
+import { THEME_COOKIE, isTheme } from "@/lib/theme";
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -34,9 +36,10 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
   const t = await getTranslations("nav");
   const user = await currentUser();
+  const theme = (await cookies()).get(THEME_COOKIE)?.value;
 
   return (
-    <html lang={locale} dir={dir(locale)}>
+    <html lang={locale} dir={dir(locale)} data-theme={isTheme(theme) && theme !== "system" ? theme : undefined}>
       <body>
         <NextIntlClientProvider>
           <header className="topbar">
@@ -51,7 +54,7 @@ export default async function LocaleLayout({
                 <Link href="/rules">{t("rules")}</Link>
                 {user ? (
                   <>
-                    <Link href="/security">{t("security")}</Link>
+                    <Link href="/settings">{t("settings")}</Link>
                     <form action={signOutAction}>
                       <button className="linklike" type="submit">
                         {t("signOut")}

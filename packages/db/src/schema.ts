@@ -45,6 +45,7 @@ export const users = pgTable("users", {
   totpSecretEnc: bytea("totp_secret_enc"),
   totpEnabledAt: ts("totp_enabled_at"),
   plan: planEnum("plan").notNull().default("free"),
+  settings: jsonb("settings").notNull().default({}),
   createdAt: ts("created_at").notNull().defaultNow(),
   deletedAt: ts("deleted_at"),
 });
@@ -244,3 +245,36 @@ export const seasons = pgTable("seasons", {
   createdBy: uuid("created_by").notNull(),
   createdAt: ts("created_at").notNull().defaultNow(),
 });
+
+export const recoveryCodes = pgTable(
+  "recovery_codes",
+  {
+    userId: uuid("user_id").notNull(),
+    codeHash: bytea("code_hash").notNull(),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    usedAt: ts("used_at"),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.codeHash] })],
+);
+
+export const emailTokens = pgTable("email_tokens", {
+  tokenHash: bytea("token_hash").primaryKey(),
+  userId: uuid("user_id").notNull(),
+  purpose: text("purpose").$type<"verify" | "reset">().notNull(),
+  email: text("email").notNull(),
+  expiresAt: ts("expires_at").notNull(),
+  usedAt: ts("used_at"),
+  createdAt: ts("created_at").notNull().defaultNow(),
+});
+
+export const userIdentities = pgTable(
+  "user_identities",
+  {
+    provider: text("provider").$type<"google" | "apple">().notNull(),
+    subject: text("subject").notNull(),
+    userId: uuid("user_id").notNull(),
+    email: text("email"),
+    createdAt: ts("created_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.provider, t.subject] })],
+);

@@ -13,7 +13,8 @@
     "signOut": "Esci",
     "security": "Sicurezza",
     "language": "Lingua",
-    "rules": "Regole"
+    "rules": "Regole",
+    "settings": "Impostazioni"
   },
   "landing": {
     "title": "Il libro dei conti della tua serata di poker",
@@ -26,7 +27,8 @@
     "f2Body": "Chi paga chi, con i debiti aperti riportati e compensati.",
     "f3Title": "Sette lingue",
     "f3Body": "Persiano, inglese, arabo, francese, italiano, russo e spagnolo.",
-    "disclaimer": "Poker Home tiene solo i conti. Non detiene né trasferisce mai denaro."
+    "disclaimer": "Poker Home tiene solo i conti. Non detiene né trasferisce mai denaro.",
+    "deleted": "Il tuo account è stato eliminato."
   },
   "auth": {
     "email": "Email",
@@ -57,7 +59,41 @@
     "secret": "Oppure digita questa chiave: {secret}",
     "sessions": "Dispositivi connessi",
     "signOutAll": "Esci da tutti i dispositivi",
-    "orTelegram": "Oppure accedi con Telegram:"
+    "orTelegram": "Oppure accedi con Telegram:",
+    "forgotLink": "Password dimenticata?",
+    "forgotTitle": "Reimposta la password",
+    "forgotIntro": "Inserisci la tua email. Se c’è un account con questo indirizzo, ti invieremo un link per scegliere una nuova password.",
+    "forgotSubmit": "Invia link",
+    "forgotSent": "Se c’è un account con questa email, il link è in arrivo. Vale 30 minuti.",
+    "backToSignIn": "Torna all’accesso",
+    "linkInvalid": "Questo link non è più valido. Richiedine uno nuovo.",
+    "resetTitle": "Scegli una nuova password",
+    "newPassword": "Nuova password",
+    "resetSubmit": "Salva password",
+    "resetDone": "La password è cambiata e tutti i dispositivi sono stati disconnessi. Accedi con la nuova password.",
+    "oauthFailed": "L’accesso con quell’account non è riuscito. Riprova.",
+    "emailInUse": "Esiste già un account con questa email. Accedi con la password, poi collega questo accesso in Sicurezza.",
+    "withGoogle": "Continua con Google",
+    "withApple": "Continua con Apple",
+    "recoveryHint": "Hai perso il telefono? Inserisci uno dei tuoi codici di recupero.",
+    "recoveryTitle": "I tuoi codici di recupero",
+    "recoveryIntro": "Conservali in un posto sicuro. Ogni codice ti fa entrare una volta se perdi l’app di autenticazione. Vengono mostrati solo ora.",
+    "recoverySaved": "Li ho salvati",
+    "recoveryGone": "I codici non sono più visibili. Puoi crearne di nuovi nella pagina Sicurezza.",
+    "recoveryLeft": "{count, plural, one {Resta # codice di recupero.} other {Restano # codici di recupero.}}",
+    "codeOrRecovery": "Codice dell’app o codice di recupero",
+    "recoveryNew": "Nuovi codici di recupero",
+    "disable2fa": "Disattiva",
+    "loginsTitle": "Modi per accedere",
+    "loginErrors": {
+      "oauthFailed": "Il collegamento di quell’account non è riuscito. Riprova.",
+      "IDENTITY_TAKEN": "Quell’account è già collegato a un altro account Poker Home.",
+      "LAST_LOGIN": "È il tuo unico modo per accedere. Aggiungine prima un altro."
+    },
+    "providerGoogle": "Google",
+    "providerApple": "Apple",
+    "link": "Collega",
+    "unlink": "Scollega"
   },
   "homes": {
     "title": "I miei gruppi",
@@ -235,7 +271,10 @@
     "TELEGRAM_TAKEN": "Questo account Telegram è già collegato a un altro account.",
     "UNAUTHORIZED": "Accedi di nuovo.",
     "rateLimited": "Troppi tentativi. Attendi un momento.",
-    "NOT_CLOSED": "La partita non è ancora chiusa."
+    "NOT_CLOSED": "La partita non è ancora chiusa.",
+    "EMAIL_IN_USE": "Esiste già un account con questa email.",
+    "IDENTITY_TAKEN": "Questo accesso è già collegato a un altro account.",
+    "LAST_LOGIN": "Non puoi rimuovere il tuo unico modo per accedere."
   },
   "stats": {
     "title": "Statistiche",
@@ -662,5 +701,54 @@
     "prevHash": "Impronta della partita precedente",
     "payload": "Esattamente ciò di cui è stata calcolata l'impronta",
     "payloadNote": "I giocatori compaiono con il loro id interno; gli importi sono nell'unità più piccola."
+  },
+  "settings": {
+    "title": "Impostazioni",
+    "profile": "Profilo",
+    "save": "Salva",
+    "saved": "Salvato.",
+    "verified": "confermata",
+    "notVerified": "non confermata",
+    "verifySent": "Abbiamo inviato un nuovo link di conferma.",
+    "mailOff": "L’invio di email non è ancora configurato su questo server.",
+    "resend": "Invia di nuovo il link di conferma",
+    "securityLink": "Sicurezza: password, verifica in due passaggi, accessi collegati",
+    "theme": "Aspetto",
+    "themes": {
+      "system": "Come il mio dispositivo",
+      "light": "Chiaro",
+      "dark": "Scuro"
+    },
+    "notifications": "Notifiche",
+    "nightReminders": "Promemoria della serata di gioco su Telegram",
+    "nightEmails": "Promemoria della serata di gioco via email",
+    "debtReminders": "Promemoria privati di ciò che devo",
+    "notificationsNote": "Le email vanno solo a un indirizzo confermato. I messaggi di gruppo seguono le impostazioni di ogni casa.",
+    "data": "I tuoi dati",
+    "exportNote": "Scarica tutto ciò che riguarda il tuo account in un file JSON.",
+    "export": "Scarica i miei dati",
+    "deleteTitle": "Elimina account",
+    "deleteNote": "I dati di accesso e quelli privati vengono cancellati. Le partite chiuse restano per gli altri giocatori, con il tuo nome sostituito. Le case di tua proprietà vengono chiuse per tutti. Non si può annullare.",
+    "deleteConfirm": "Scrivi DELETE per confermare",
+    "deletePassword": "La tua password",
+    "deleteCode": "Codice dell’app o codice di recupero",
+    "deleteButton": "Elimina il mio account",
+    "emailVerified": "La tua email è confermata.",
+    "nameRequired": "Inserisci un nome.",
+    "errors": {
+      "rateLimited": "Troppi tentativi. Attendi un po’.",
+      "confirmDelete": "Scrivi DELETE per confermare.",
+      "invalid": "La password non è corretta.",
+      "badCode": "Quel codice non è valido.",
+      "linkInvalid": "Questo link di conferma non è più valido. Inviane uno nuovo."
+    },
+    "verifyBanner": "Conferma il tuo indirizzo email.",
+    "verifyBannerLink": "Impostazioni"
+  },
+  "email": {
+    "verifySubject": "Conferma la tua email per Poker Home",
+    "verifyBody": "Ciao,\n\nconferma il tuo indirizzo email per Poker Home aprendo questo link:\n{link}\n\nIl link vale 48 ore. Se non hai creato un account, ignora questa email.",
+    "resetSubject": "Reimposta la password di Poker Home",
+    "resetBody": "Ciao,\n\nqualcuno ha chiesto di reimpostare la password del tuo account Poker Home. Per sceglierne una nuova, apri questo link:\n{link}\n\nIl link vale 30 minuti e una sola volta. Se non sei stato tu, ignora questa email; la password resta la stessa."
   }
 }

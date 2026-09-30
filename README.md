@@ -111,6 +111,13 @@ Phase 4 rest and the result card are built:
   opens the public `/verify/<hash>` page, which rechecks the game and the whole hash chain behind it.
   On close the bot posts the card with the result as caption; `/last` does the same.
 
-Not yet built: server-side PDF, Google/Apple login, email verification and password reset (need a
-mail provider), TOTP recovery codes, voice rebuys, the "companion referee" log, payments (phase 5). The in-memory rate limiter must move to
-Postgres or Redis before running more than one server instance.
+Account module is built: email confirmation and password reset by one-time links (hash stored,
+bound to the address, reset ends every session), Google and Apple sign-in (OpenID Connect with
+state, nonce and PKCE; an existing account is linked only when both sides verified the email) and
+connecting or disconnecting them from Security, ten single-use recovery codes for two-step
+verification, a Settings page (name, light/dark theme, notification choices, "download my data" as
+JSON, and account deletion that keeps closed games for the others with the name replaced). Game-night
+reminders also go by email to confirmed addresses. Tests: `packages/db/test/accounts.test.ts`,
+`apps/web/src/lib/{oidc,recovery}.test.ts`.
+
+The in-memory rate limiter must move to Postgres or Redis before running more than one server instance.

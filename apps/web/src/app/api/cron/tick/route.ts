@@ -5,10 +5,10 @@ import { runReminders } from "@/telegram/notifications";
 
 export const dynamic = "force-dynamic";
 
-/** Called every ~10 minutes by the scheduler: game-night and debt reminders. */
+/** Called every ~10 minutes by the scheduler: game-night and debt reminders (Telegram and email). */
 export async function POST(request: Request) {
   if (!authorizedCron(request)) return new Response(null, { status: 401 });
+  // Without Telegram the email reminders still go out.
   const bot = await getBot();
-  if (!bot) return Response.json({ skipped: "telegram not configured" });
-  return Response.json(await runReminders(getDb(), bot.api));
+  return Response.json(await runReminders(getDb(), bot?.api ?? null));
 }

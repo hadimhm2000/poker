@@ -2,7 +2,16 @@ import { asAuth, schema } from "@poker/db";
 import { eq } from "@poker/db";
 import { getLocale, getTranslations } from "next-intl/server";
 import QRCode from "qrcode";
-import { enableTwoFactorAction, signOutAllAction, startTwoFactorAction } from "@/app/actions/auth";
+import { unlinkIdentityAction } from "@/app/actions/account";
+import {
+  disableTwoFactorAction,
+  enableTwoFactorAction,
+  recoveryCodesRemaining,
+  regenerateRecoveryCodesAction,
+  signOutAllAction,
+  startTwoFactorAction,
+} from "@/app/actions/auth";
+import { type ProviderId, providerEnabled } from "@/lib/oidc";
 import { connectTelegramAction, disconnectTelegramAction } from "@/app/actions/telegram";
 import { telegramConfigured } from "@/telegram/instance";
 import { getDb } from "@/lib/db";
@@ -27,6 +36,11 @@ export default async function Security({ searchParams }: { searchParams: Promise
       .select({ id: schema.sessions.id, ua: schema.sessions.userAgent, lastSeen: schema.sessions.lastSeenAt })
       .from(schema.sessions),
   );
+  const linked = await withUser((tx) =>
+    tx.select({ provider: schema.userIdentities.provider, email: schema.userIdentities.email }).from(schema.userIdentities),
+  );
+  const providers = (["google", "apple"] as ProviderId[]).filter((p) => providerEnabled(p) || linked.some((l) => l.provider === p));
+  const codesLeft = row?.on ? await recoveryCodesRemaining(user.id) : 0;
   const pending = row?.on ? null : await pendingTotpSecret();
   const qr = pending ? await QRCode.toDataURL(totpFor(pending, user.email ?? "").toString(), { margin: 1, width: 200 }) : null;
 
@@ -37,7 +51,22 @@ export default async function Security({ searchParams }: { searchParams: Promise
         <h2>{t("twoFactorTitle")}</h2>
         {error && ["badCode", "rateLimited"].includes(error) && <div className="alert">{t(error as "badCode")}</div>}
         {row?.on ? (
-          <p>{t("twoFactorOn")}</p>
+          <>
+            <p>{t("twoFactorOn")}</p>
+            <p className="small">{t("recoveryLeft", { count: codesLeft })}</p>
+            <form action={regenerateRecoveryCodesAction} className="row">
+              <label className="grow">
+                {t("codeOrRecovery")}
+                <input name="code" autoComplete="one-time-code" required dir="ltr" />
+              </label>
+              <button className="btn small secondary" type="submit">
+                {t("recoveryNew")}
+              </button>
+              <button className="btn small danger" type="submit" formAction={disableTwoFactorAction}>
+                {t("disable2fa")}
+              </button>
+            </form>
+          </>
         ) : pending && qr ? (
           <>
             <p>{t("scan")}</p>
@@ -65,6 +94,43 @@ export default async function Security({ searchParams }: { searchParams: Promise
           </>
         )}
       </section>
+      {providers.length > 0 && (
+        <section className="card stack">
+          <h2>{t("loginsTitle")}</h2>
+          {error && ["oauthFailed", "IDENTITY_TAKEN", "LAST_LOGIN"].includes(error) && (
+            <div className="alert">{t(`loginErrors.${error}` as "loginErrors.oauthFailed")}</div>
+          )}
+          {providers.map((p) => {
+            const l = linked.find((x) => x.provider === p);
+            const name = t(p === "google" ? "providerGoogle" : "providerApple");
+            return (
+              <div key={p} className="row" style={{ alignItems: "center" }}>
+                <span className="grow">
+                  {name}
+                  {l && (
+                    <span className="small muted" dir="ltr">
+                      {" "}
+                      {l.email ?? ""}
+                    </span>
+                  )}
+                </span>
+                {l ? (
+                  <form action={unlinkIdentityAction}>
+                    <input type="hidden" name="provider" value={p} />
+                    <button className="btn small secondary" type="submit">
+                      {t("unlink")}
+                    </button>
+                  </form>
+                ) : (
+                  <a className="btn small" href={`/api/auth/${p}/start?intent=link&locale=${locale}`}>
+                    {t("link")}
+                  </a>
+                )}
+              </div>
+            );
+          })}
+        </section>
+      )}
       {telegramConfigured() && (
         <section className="card stack">
           <h2>{tt("accountTitle")}</h2>

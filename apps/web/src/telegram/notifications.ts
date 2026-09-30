@@ -5,6 +5,7 @@ import { and, eq, gt, isNull, lt, lte, sql } from "@poker/db";
 import type { Api } from "grammy";
 import { InlineKeyboard, InputFile } from "grammy";
 import { formatAmount, formatDate } from "@/lib/format";
+import { type Mail, sendMail } from "@/lib/mail";
 import { resultCardPng } from "@/lib/result-card";
 import { botT, esc } from "./i18n";
 import { gameResultText, nightText } from "./text";
@@ -118,16 +119,27 @@ export interface ReminderOptions {
   /** Repeat debt reminders at most this often, and at most this many times. */
   debtRepeatDays?: number;
   debtMaxReminders?: number;
+  /** Outgoing email (tests pass a fake). Defaults to SMTP via lib/mail. */
+  mail?: (m: Mail) => Promise<boolean>;
 }
+
+/** A user's notification choices (users.settings); everything is on unless turned off. */
+export interface NotifySettings {
+  nightReminders?: boolean;
+  nightEmails?: boolean;
+  debtReminders?: boolean;
+}
+const wants = (s: unknown, k: keyof NotifySettings) => (s as NotifySettings | null)?.[k] !== false;
 
 /**
  * Periodic job (cron → /api/cron/tick): game-night reminders to the group and to those who
  * said yes or maybe, and private reminders to debtors (never in the group).
  */
-export async function runReminders(db: Db, api: Api, opts: ReminderOptions = {}) {
+export async function runReminders(db: Db, api: Api | null, opts: ReminderOptions = {}) {
   const now = opts.now ?? new Date();
+  const mail = opts.mail ?? sendMail;
   const lead = opts.nightLeadMs ?? 3 * 3600e3;
-  const sent = { nights: 0, debts: 0 };
+  const sent = { nights: 0, debts: 0, emails: 0 };
 
   // Game nights starting within the lead time that were not reminded yet.
   const nights = await asJobs(db, (tx) =>
@@ -147,15 +159,32 @@ export async function runReminders(db: Db, api: Api, opts: ReminderOptions = {})
   for (const { night, home } of nights) {
     const coming = await asJobs(db, (tx) =>
       tx
-        .select({ tg: schema.users.telegramId, locale: schema.users.locale })
+        .select({
+          tg: schema.users.telegramId,
+          locale: schema.users.locale,
+          settings: schema.users.settings,
+          email: schema.users.email,
+          verified: schema.users.emailVerifiedAt,
+        })
         .from(schema.nightRsvps)
         .innerJoin(schema.users, eq(schema.users.id, schema.nightRsvps.userId))
         .where(and(eq(schema.nightRsvps.nightId, night.id), sql`${schema.nightRsvps.answer} IN ('yes', 'maybe')`)),
     );
     const text = (locale: string) =>
       esc(botT(locale)("nightReminder", { when: formatDate(night.startsAt, locale, true), home: home.name }));
-    if (home.telegramChatId) await api.sendMessage(home.telegramChatId, text(home.locale), { parse_mode: "HTML" }).catch(() => {});
-    for (const c of coming) if (c.tg) await api.sendMessage(c.tg, text(c.locale), { parse_mode: "HTML" }).catch(() => {});
+    if (api && home.telegramChatId) {
+      await api.sendMessage(home.telegramChatId, text(home.locale), { parse_mode: "HTML" }).catch(() => {});
+    }
+    for (const c of coming) {
+      if (api && c.tg && wants(c.settings, "nightReminders")) {
+        await api.sendMessage(c.tg, text(c.locale), { parse_mode: "HTML" }).catch(() => {});
+      }
+      // Email only to a confirmed address.
+      if (c.email && c.verified && wants(c.settings, "nightEmails")) {
+        const plain = botT(c.locale)("nightReminder", { when: formatDate(night.startsAt, c.locale, true), home: home.name });
+        if (await mail({ to: c.email, subject: plain.split("\n")[0]!.slice(0, 120), text: plain })) sent.emails++;
+      }
+    }
     await asJobs(db, (tx) => tx.update(schema.gameNights).set({ remindedAt: now }).where(eq(schema.gameNights.id, night.id)));
     sent.nights++;
   }
@@ -175,6 +204,7 @@ export async function runReminders(db: Db, api: Api, opts: ReminderOptions = {})
         to: sql<string>`(SELECT display_name FROM players WHERE id = ${schema.settlements.toPlayer})`,
         debtorTg: schema.users.telegramId,
         debtorLocale: schema.users.locale,
+        debtorSettings: schema.users.settings,
         count: sql<number>`(SELECT count(*) FROM debt_reminders r WHERE r.settlement_id = ${schema.settlements.id})`.mapWith(Number),
         last: sql<Date | null>`(SELECT max(sent_at) FROM debt_reminders r WHERE r.settlement_id = ${schema.settlements.id})`,
       })
@@ -194,7 +224,7 @@ export async function runReminders(db: Db, api: Api, opts: ReminderOptions = {})
   );
   for (const d of debts) {
     const days = Number((d.home.settings as { debtReminderDays?: number })?.debtReminderDays ?? defaultDays);
-    if (!d.debtorTg || !(days > 0)) continue;
+    if (!api || !d.debtorTg || !(days > 0) || !wants(d.debtorSettings, "debtReminders")) continue;
     if (d.closedAt!.getTime() > now.getTime() - days * 864e5) continue;
     if (d.count >= maxReminders) continue;
     if (d.last && new Date(d.last).getTime() > now.getTime() - repeatMs) continue;

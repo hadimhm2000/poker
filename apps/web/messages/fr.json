@@ -13,7 +13,8 @@
     "signOut": "Se déconnecter",
     "security": "Sécurité",
     "language": "Langue",
-    "rules": "Règles"
+    "rules": "Règles",
+    "settings": "Paramètres"
   },
   "landing": {
     "title": "Le carnet de comptes de votre soirée poker",
@@ -26,7 +27,8 @@
     "f2Body": "Qui paie qui, avec les dettes en cours reportées et compensées.",
     "f3Title": "Sept langues",
     "f3Body": "Persan, anglais, arabe, français, italien, russe et espagnol.",
-    "disclaimer": "Poker Home ne fait que tenir les comptes. Il ne détient ni ne transfère jamais d'argent."
+    "disclaimer": "Poker Home ne fait que tenir les comptes. Il ne détient ni ne transfère jamais d'argent.",
+    "deleted": "Votre compte a été supprimé."
   },
   "auth": {
     "email": "E-mail",
@@ -57,7 +59,41 @@
     "secret": "Ou saisissez cette clé : {secret}",
     "sessions": "Appareils connectés",
     "signOutAll": "Se déconnecter de tous les appareils",
-    "orTelegram": "Ou connectez-vous avec Telegram :"
+    "orTelegram": "Ou connectez-vous avec Telegram :",
+    "forgotLink": "Mot de passe oublié ?",
+    "forgotTitle": "Réinitialiser le mot de passe",
+    "forgotIntro": "Saisissez votre e-mail. Si un compte l’utilise, nous enverrons un lien pour choisir un nouveau mot de passe.",
+    "forgotSubmit": "Envoyer le lien",
+    "forgotSent": "Si un compte utilise cet e-mail, le lien est en route. Il est valable 30 minutes.",
+    "backToSignIn": "Retour à la connexion",
+    "linkInvalid": "Ce lien n’est plus valable. Demandez-en un nouveau.",
+    "resetTitle": "Choisissez un nouveau mot de passe",
+    "newPassword": "Nouveau mot de passe",
+    "resetSubmit": "Enregistrer le mot de passe",
+    "resetDone": "Votre mot de passe a changé et tous les appareils ont été déconnectés. Connectez-vous avec le nouveau.",
+    "oauthFailed": "La connexion avec ce compte n’a pas fonctionné. Réessayez.",
+    "emailInUse": "Un compte existe déjà avec cet e-mail. Connectez-vous avec votre mot de passe, puis reliez cette connexion dans Sécurité.",
+    "withGoogle": "Continuer avec Google",
+    "withApple": "Continuer avec Apple",
+    "recoveryHint": "Téléphone perdu ? Saisissez plutôt un de vos codes de récupération.",
+    "recoveryTitle": "Vos codes de récupération",
+    "recoveryIntro": "Gardez-les en lieu sûr. Chaque code vous connecte une fois si vous perdez votre application d’authentification. Ils ne s’affichent que maintenant.",
+    "recoverySaved": "Je les ai enregistrés",
+    "recoveryGone": "Les codes ne sont plus affichés. Vous pouvez en créer de nouveaux dans Sécurité.",
+    "recoveryLeft": "{count, plural, one {# code de récupération restant.} other {# codes de récupération restants.}}",
+    "codeOrRecovery": "Code d’authentification ou de récupération",
+    "recoveryNew": "Nouveaux codes de récupération",
+    "disable2fa": "Désactiver",
+    "loginsTitle": "Moyens de connexion",
+    "loginErrors": {
+      "oauthFailed": "La liaison de ce compte n’a pas fonctionné. Réessayez.",
+      "IDENTITY_TAKEN": "Ce compte est déjà relié à un autre compte Poker Home.",
+      "LAST_LOGIN": "C’est votre seul moyen de connexion. Ajoutez-en un autre d’abord."
+    },
+    "providerGoogle": "Google",
+    "providerApple": "Apple",
+    "link": "Relier",
+    "unlink": "Délier"
   },
   "homes": {
     "title": "Mes groupes",
@@ -235,7 +271,10 @@
     "TELEGRAM_TAKEN": "Ce compte Telegram est déjà lié à un autre compte.",
     "UNAUTHORIZED": "Veuillez vous reconnecter.",
     "rateLimited": "Trop de tentatives. Patientez un instant.",
-    "NOT_CLOSED": "La partie n'est pas encore clôturée."
+    "NOT_CLOSED": "La partie n'est pas encore clôturée.",
+    "EMAIL_IN_USE": "Un compte existe déjà avec cet e-mail.",
+    "IDENTITY_TAKEN": "Cette connexion est déjà reliée à un autre compte.",
+    "LAST_LOGIN": "Vous ne pouvez pas retirer votre seul moyen de connexion."
   },
   "stats": {
     "title": "Statistiques",
@@ -662,5 +701,54 @@
     "prevHash": "Empreinte de la partie précédente",
     "payload": "Exactement ce qui a servi à l'empreinte",
     "payloadNote": "Les joueurs apparaissent par leur identifiant interne ; les montants sont dans la plus petite unité."
+  },
+  "settings": {
+    "title": "Paramètres",
+    "profile": "Profil",
+    "save": "Enregistrer",
+    "saved": "Enregistré.",
+    "verified": "confirmé",
+    "notVerified": "non confirmé",
+    "verifySent": "Nous avons envoyé un nouveau lien de confirmation.",
+    "mailOff": "L’envoi d’e-mails n’est pas encore configuré sur ce serveur.",
+    "resend": "Renvoyer le lien de confirmation",
+    "securityLink": "Sécurité : mot de passe, validation en deux étapes, connexions reliées",
+    "theme": "Apparence",
+    "themes": {
+      "system": "Comme mon appareil",
+      "light": "Clair",
+      "dark": "Sombre"
+    },
+    "notifications": "Notifications",
+    "nightReminders": "Rappels de soirée de jeu sur Telegram",
+    "nightEmails": "Rappels de soirée de jeu par e-mail",
+    "debtReminders": "Rappels privés de ce que je dois",
+    "notificationsNote": "Les e-mails ne partent que vers une adresse confirmée. Les messages de groupe suivent les réglages de chaque maison.",
+    "data": "Vos données",
+    "exportNote": "Téléchargez tout ce qui est lié à votre compte dans un fichier JSON.",
+    "export": "Télécharger mes données",
+    "deleteTitle": "Supprimer le compte",
+    "deleteNote": "Vos identifiants et données privées sont effacés. Les parties clôturées restent pour les autres joueurs, avec votre nom remplacé. Les maisons dont vous êtes propriétaire sont fermées pour tous. C’est irréversible.",
+    "deleteConfirm": "Tapez DELETE pour confirmer",
+    "deletePassword": "Votre mot de passe",
+    "deleteCode": "Code d’authentification ou de récupération",
+    "deleteButton": "Supprimer mon compte",
+    "emailVerified": "Votre e-mail est confirmé.",
+    "nameRequired": "Veuillez saisir un nom.",
+    "errors": {
+      "rateLimited": "Trop de tentatives. Patientez un moment.",
+      "confirmDelete": "Tapez DELETE pour confirmer.",
+      "invalid": "Le mot de passe est incorrect.",
+      "badCode": "Ce code n’est pas valable.",
+      "linkInvalid": "Ce lien de confirmation n’est plus valable. Envoyez-en un nouveau."
+    },
+    "verifyBanner": "Veuillez confirmer votre adresse e-mail.",
+    "verifyBannerLink": "Paramètres"
+  },
+  "email": {
+    "verifySubject": "Confirmez votre e-mail pour Poker Home",
+    "verifyBody": "Bonjour,\n\nConfirmez votre adresse e-mail pour Poker Home en ouvrant ce lien :\n{link}\n\nLe lien est valable 48 heures. Si vous n’avez pas créé de compte, ignorez cet e-mail.",
+    "resetSubject": "Réinitialisez votre mot de passe Poker Home",
+    "resetBody": "Bonjour,\n\nQuelqu’un a demandé à réinitialiser le mot de passe de votre compte Poker Home. Pour en choisir un nouveau, ouvrez ce lien :\n{link}\n\nLe lien est valable 30 minutes et une seule fois. Si ce n’était pas vous, ignorez cet e-mail ; votre mot de passe reste inchangé."
   }
 }

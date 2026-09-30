@@ -1,6 +1,14 @@
 "use server";
 
-import { asAuth, schema } from "@poker/db";
+import {
+  asAuth,
+  consumeEmailToken,
+  recoveryCodesLeft,
+  resetPassword,
+  schema,
+  setRecoveryCodes,
+  useRecoveryCode,
+} from "@poker/db";
 import { eq, sql } from "@poker/db";
 import { cookies } from "next/headers";
 import { getLocale } from "next-intl/server";
@@ -18,7 +26,9 @@ import {
   markTwoFactorPassed,
   verifyPassword,
 } from "@/lib/auth";
-import { decryptField, encryptField } from "@/lib/crypto";
+import { decryptField, encryptField, sha256 } from "@/lib/crypto";
+import { sendResetEmail, sendVerificationEmail } from "@/lib/email-links";
+import { RECOVERY_FLASH, generateRecoveryCodes, hashRecoveryCode, looksLikeTotp } from "@/lib/recovery";
 import { getDb } from "@/lib/db";
 import { safeNext } from "@/lib/next-path";
 import { rateLimit } from "@/lib/rate-limit";
@@ -80,6 +90,7 @@ export async function signUpAction(form: FormData) {
   );
   if (!created[0]) return back("/signup", "cannotCreate");
   await createSession(created[0].id, false);
+  await sendVerificationEmail({ id: created[0].id, email: parsed.data.email, locale }).catch(() => false);
   return signedIn();
 }
 
@@ -113,8 +124,11 @@ export async function verifyTwoFactorAction(form: FormData) {
     tx.select({ enc: schema.users.totpSecretEnc }).from(schema.users).where(eq(schema.users.id, user.id)),
   );
   if (!row?.enc) return back("/homes");
-  const code = String(form.get("code") ?? "").replace(/\s/g, "");
-  const valid = totpFor(decryptField(row.enc), user.email ?? "").validate({ token: code, window: 1 }) !== null;
+  const code = String(form.get("code") ?? "").replace(/\s/g, "").slice(0, 40);
+  // A 6-digit code from the app, or one of the single-use recovery codes.
+  const valid = looksLikeTotp(code)
+    ? totpFor(decryptField(row.enc), user.email ?? "").validate({ token: code, window: 1 }) !== null
+    : await asAuth(getDb(), (tx) => useRecoveryCode(tx, user.id, hashRecoveryCode(code)));
   if (!valid) return back("/signin/2fa", "badCode");
   // New session id once the second factor is passed.
   await destroySession();
@@ -149,15 +163,117 @@ export async function enableTwoFactorAction(form: FormData) {
   if (totpFor(secret, user.email ?? "").validate({ token: code, window: 1 }) === null) {
     return back("/security", "badCode");
   }
+  const codes = generateRecoveryCodes();
   await asAuth(getDb(), async (tx) => {
     await tx
       .update(schema.users)
       .set({ totpSecretEnc: encryptField(secret), totpEnabledAt: new Date() })
       .where(eq(schema.users.id, user.id));
     await tx.update(schema.sessions).set({ twoFactorPassed: true }).where(eq(schema.sessions.id, user.sessionId));
+    await setRecoveryCodes(tx, user.id, codes.map(hashRecoveryCode));
   });
   jar.delete(PENDING_TOTP);
+  await flashRecoveryCodes(codes);
+  return back("/security/recovery");
+}
+
+/** The new codes are shown once, from a 5-minute encrypted cookie; only hashes are stored. */
+async function flashRecoveryCodes(codes: string[]) {
+  (await cookies()).set(RECOVERY_FLASH, encryptField(codes.join(" ")).toString("base64url"), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 300,
+  });
+}
+
+/** Check the current authenticator code (or a recovery code) of a signed-in user. */
+async function secondFactorOk(userId: string, email: string | null, input: string): Promise<boolean> {
+  const code = input.replace(/\s/g, "").slice(0, 40);
+  if (!rateLimit(`2fa-confirm:${userId}`, 6, 15 * 60e3)) return false;
+  const [row] = await asAuth(getDb(), (tx) =>
+    tx.select({ enc: schema.users.totpSecretEnc }).from(schema.users).where(eq(schema.users.id, userId)),
+  );
+  if (!row?.enc) return false;
+  if (looksLikeTotp(code)) return totpFor(decryptField(row.enc), email ?? "").validate({ token: code, window: 1 }) !== null;
+  return asAuth(getDb(), (tx) => useRecoveryCode(tx, userId, hashRecoveryCode(code)));
+}
+
+export async function regenerateRecoveryCodesAction(form: FormData) {
+  const user = await requireUser();
+  if (!(await secondFactorOk(user.id, user.email, String(form.get("code") ?? "")))) return back("/security", "badCode");
+  const codes = generateRecoveryCodes();
+  await asAuth(getDb(), (tx) => setRecoveryCodes(tx, user.id, codes.map(hashRecoveryCode)));
+  await flashRecoveryCodes(codes);
+  return back("/security/recovery");
+}
+
+export async function dismissRecoveryCodesAction() {
+  await requireUser();
+  (await cookies()).delete(RECOVERY_FLASH);
   return back("/security");
+}
+
+export async function disableTwoFactorAction(form: FormData) {
+  const user = await requireUser();
+  if (!(await secondFactorOk(user.id, user.email, String(form.get("code") ?? "")))) return back("/security", "badCode");
+  await asAuth(getDb(), async (tx) => {
+    await tx.update(schema.users).set({ totpSecretEnc: null, totpEnabledAt: null }).where(eq(schema.users.id, user.id));
+    await setRecoveryCodes(tx, user.id, []);
+  });
+  return back("/security");
+}
+
+export async function recoveryCodesRemaining(userId: string) {
+  return asAuth(getDb(), (tx) => recoveryCodesLeft(tx, userId));
+}
+
+// ---------------------------------------------------------------- email
+
+export async function resendVerificationAction() {
+  const user = await requireUser();
+  if (!user.email || user.emailVerified) return back("/settings");
+  if (!rateLimit(`verify-mail:${user.id}`, 3, 60 * 60e3)) return back("/settings", "rateLimited");
+  await sendVerificationEmail({ id: user.id, email: user.email, locale: await getLocale() });
+  return back("/settings?sent=1");
+}
+
+/** Always the same answer, whether or not the address has an account. */
+export async function forgotPasswordAction(form: FormData) {
+  const email = String(form.get("email") ?? "").trim().toLowerCase().slice(0, 254);
+  const ip = await clientKey();
+  if (!rateLimit(`forgot-ip:${ip}`, 10, 60 * 60e3) || !rateLimit(`forgot-email:${email}`, 3, 60 * 60e3)) {
+    return back("/forgot", "rateLimited");
+  }
+  if (z.string().email().safeParse(email).success) {
+    const [u] = await asAuth(getDb(), (tx) =>
+      tx
+        .select({ id: schema.users.id })
+        .from(schema.users)
+        .where(sql`${schema.users.email} = ${email} AND ${schema.users.deletedAt} IS NULL`),
+    );
+    if (u) await sendResetEmail({ id: u.id, email, locale: await getLocale() }).catch(() => false);
+  }
+  return back("/forgot?sent=1");
+}
+
+export async function resetPasswordAction(form: FormData) {
+  const token = String(form.get("token") ?? "").slice(0, 100);
+  const password = String(form.get("password") ?? "");
+  const again = `/reset?token=${encodeURIComponent(token)}`;
+  if (!rateLimit(`reset:${await clientKey()}`, 10, 15 * 60e3)) return back(again, "rateLimited");
+  if (password.length < 10 || password.length > 200) return back(again, "weak");
+  if (await isBreachedPassword(password)) return back(again, "breached");
+  const passwordHash = await hashPassword(password);
+  const ok = await asAuth(getDb(), async (tx) => {
+    const t = await consumeEmailToken(tx, sha256(token), "reset");
+    if (t) await resetPassword(tx, t.userId, passwordHash);
+    return !!t;
+  });
+  if (!ok) return back("/forgot", "linkInvalid");
+  await destroySession();
+  return back("/signin?reset=1");
 }
 
 export async function signOutAllAction() {

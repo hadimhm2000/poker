@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 
-const KNOWN = ["INVALID", "LIMIT", "READ_ONLY", "FROZEN", "DUPLICATE", "FORBIDDEN", "ERROR", "NOT_FOUND", "STALE", "BLOCKED", "NOT_IN_GAME"] as const;
+const KNOWN = ["INVALID", "LIMIT", "READ_ONLY", "FROZEN", "DUPLICATE", "FORBIDDEN", "ERROR", "NOT_FOUND", "STALE", "BLOCKED", "NOT_IN_GAME", "EMAIL_IN_USE", "IDENTITY_TAKEN", "LAST_LOGIN"] as const;
 
 export async function ErrorNotice({ code }: { code?: string }) {
   if (!code) return null;

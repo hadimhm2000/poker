@@ -18,7 +18,7 @@
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #121311;
     --surface: #1b1c1a;
     --surface-2: #242522;
@@ -34,6 +34,22 @@
     color-scheme: dark;
   }
 }
+:root[data-theme="dark"] {
+    --bg: #121311;
+    --surface: #1b1c1a;
+    --surface-2: #242522;
+    --text: #ecebe6;
+    --muted: #a19d92;
+    --border: #34352f;
+    --accent: #3fbf8c;
+    --accent-text: #0b1a13;
+    --win: #58d38a;
+    --loss: #ff8a80;
+    --warn-bg: #3a2f10;
+    --warn-text: #ffd97a;
+    color-scheme: dark;
+  }
+
 :lang(fa) { --font: "Vazirmatn Variable", "Inter Variable", system-ui, sans-serif; }
 :lang(ar) { --font: "Noto Sans Arabic Variable", "Inter Variable", system-ui, sans-serif; }
 
@@ -148,12 +164,18 @@ td.end, th.end { text-align: end; }
   --pos: #2a78d6; --neg: #e34948; --grid: #e6e3da; --axis: #9a968b;
 }
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500;
     --series-5: #d55181; --series-6: #008300; --series-7: #9085e9; --series-8: #e66767;
     --pos: #3987e5; --neg: #e66767; --grid: #2e2f2b; --axis: #6f6c63;
   }
 }
+:root[data-theme="dark"] {
+    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500;
+    --series-5: #d55181; --series-6: #008300; --series-7: #9085e9; --series-8: #e66767;
+    --pos: #3987e5; --neg: #e66767; --grid: #2e2f2b; --axis: #6f6c63;
+  }
+
 .chart { width: 100%; height: auto; display: block; direction: ltr; }
 .chart text { fill: var(--muted); font-size: 11px; font-family: var(--font); }
 .chart .gridline { stroke: var(--grid); stroke-width: 1; }
@@ -184,7 +206,9 @@ details.card > summary { cursor: pointer; font-weight: 600; }
 
 /* Phase 4 rest: verification, rules, badges, result card */
 .alert.ok { background: #d9f2e6; color: #0f5a3f; }
-@media (prefers-color-scheme: dark) { .alert.ok { background: #13382a; color: #8fe3b8; } }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .alert.ok { background: #13382a; color: #8fe3b8; } }
+:root[data-theme="dark"] .alert.ok { background: #13382a; color: #8fe3b8; }
+
 .break { overflow-wrap: anywhere; white-space: pre-wrap; }
 pre.break { background: var(--surface-2); padding: 10px; border-radius: 8px; direction: ltr; text-align: left; }
 dl.small dt { color: var(--muted); margin-block-start: 6px; }

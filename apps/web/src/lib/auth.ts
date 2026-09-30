@@ -87,6 +87,7 @@ export async function createSession(userId: string, twoFactorPassed: boolean, op
 export interface SessionUser {
   id: string;
   email: string | null;
+  emailVerified: boolean;
   displayName: string;
   locale: string;
   plan: "free" | "pro";
@@ -103,6 +104,7 @@ export const currentUser = cache(async (): Promise<SessionUser | null> => {
       .select({
         id: schema.users.id,
         email: schema.users.email,
+        emailVerifiedAt: schema.users.emailVerifiedAt,
         displayName: schema.users.displayName,
         locale: schema.users.locale,
         plan: schema.users.plan,
@@ -126,6 +128,7 @@ export const currentUser = cache(async (): Promise<SessionUser | null> => {
   return {
     id: row.id,
     email: row.email,
+    emailVerified: !!row.emailVerifiedAt,
     displayName: row.displayName,
     locale: row.locale,
     plan: row.plan,

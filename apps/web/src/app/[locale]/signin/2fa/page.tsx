@@ -16,8 +16,9 @@ export default async function TwoFactor({ searchParams }: { searchParams: Promis
       <form action={verifyTwoFactorAction} className="stack">
         <label>
           {t("code")}
-          <input name="code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9 ]{6,7}" required dir="ltr" />
+          <input name="code" autoComplete="one-time-code" maxLength={20} required dir="ltr" />
         </label>
+        <span className="small muted">{t("recoveryHint")}</span>
         <button className="btn" type="submit">
           {t("verify")}
         </button>

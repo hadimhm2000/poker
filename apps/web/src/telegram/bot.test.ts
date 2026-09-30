@@ -289,10 +289,16 @@ describe("a game night from Telegram", () => {
     expect(r!.answer).toBe("yes");
     // Reminders: the group and those coming, once.
     calls = [];
-    const sent = await runReminders(db, bot().api);
+    // Abol has a confirmed email: the reminder also goes there (the host has none).
+    await admin`UPDATE users SET email = 'abol-bot-test@example.com', email_verified_at = now() WHERE id = ${friend}`;
+    const mails: { to: string; text: string }[] = [];
+    const mail = async (m: { to: string; text: string }) => (mails.push(m), true);
+    const sent = await runReminders(db, bot().api, { mail });
     expect(sent.nights).toBe(1);
     expect(calls.map((c) => c.payload.chat_id).sort()).toEqual([GROUP, FRIEND_TG].sort());
-    expect((await runReminders(db, bot().api)).nights).toBe(0);
+    expect(mails.map((m) => m.to)).toEqual(["abol-bot-test@example.com"]);
+    expect(sent.emails).toBe(1);
+    expect((await runReminders(db, bot().api, { mail })).nights).toBe(0);
   });
 
   it("debt reminders go privately to the debtor, never to the group", async () => {

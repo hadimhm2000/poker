@@ -5,11 +5,13 @@ import { createHomeAction } from "@/app/actions/homes";
 import { ErrorNotice } from "@/components/ErrorNotice";
 import { Link } from "@/i18n/navigation";
 import { localeNames, locales } from "@/i18n/routing";
-import { withUser } from "@/lib/session";
+import { requireUser, withUser } from "@/lib/session";
 
 export default async function Homes({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams;
   const t = await getTranslations("homes");
+  const ts = await getTranslations("settings");
+  const me = await requireUser();
   const rows = await withUser((tx, user) =>
     tx
       .select({ id: schema.homes.id, name: schema.homes.name, ownerId: schema.homes.ownerId, readOnly: schema.homes.readOnly })
@@ -23,6 +25,11 @@ export default async function Homes({ searchParams }: { searchParams: Promise<{ 
     <>
       <h1>{t("title")}</h1>
       <ErrorNotice code={error} />
+      {me.email && !me.emailVerified && (
+        <div className="alert">
+          {ts("verifyBanner")} <Link href="/settings">{ts("verifyBannerLink")}</Link>
+        </div>
+      )}
       {rows.length === 0 && <p className="muted">{t("empty")}</p>}
       <div className="grid">
         {rows.map((h) => (
