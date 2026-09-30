@@ -7,12 +7,23 @@ import {
   gameHash,
 } from "@poker/domain";
 import { and, asc, desc, eq, inArray, isNull, notExists, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import type { Tx } from "./client";
 import { debtPayments, gameEntries, gameEvents, games, homes, players, settlements } from "./schema";
 
 // All functions take a transaction already scoped with asUser(): RLS is the backstop,
 // but each function also states its own rules so errors are clear and early.
+
+// A merged duplicate keeps its id in frozen games. Reads map it to the player it was merged
+// into (merges keep chains one step deep), so statistics and debts count under one name.
+const kept = alias(players, "kept");
+const keptFrom = alias(players, "kept_from");
+const keptTo = alias(players, "kept_to");
+const fromOf = alias(players, "from_of");
+const toOf = alias(players, "to_of");
+const resolvedId = sql<string>`coalesce(${kept.id}, ${players.id})`;
+const resolvedName = sql<string>`coalesce(${kept.displayName}, ${players.displayName})`;
 
 export class DomainError extends Error {
   constructor(
@@ -125,15 +136,27 @@ export async function gameBlockers(tx: Tx, gameId: string): Promise<CloseBlocker
   );
 }
 
-/** Unpaid, not-yet-carried settlements from earlier games in this home. */
-async function openDebts(tx: Tx, homeId: string) {
+/**
+ * Unpaid, not-yet-carried settlements from earlier games in this home, with merged players
+ * mapped to the player they were merged into.
+ */
+export async function openDebts(tx: Tx, homeId: string) {
   return tx
-    .select({ id: settlements.id, from: settlements.fromPlayer, to: settlements.toPlayer, amount: settlements.amount })
+    .select({
+      id: settlements.id,
+      from: sql<string>`coalesce(${keptFrom.id}, ${settlements.fromPlayer})`,
+      to: sql<string>`coalesce(${keptTo.id}, ${settlements.toPlayer})`,
+      amount: settlements.amount,
+    })
     .from(settlements)
     .innerJoin(games, eq(games.id, settlements.gameId))
+    .innerJoin(fromOf, eq(fromOf.id, settlements.fromPlayer))
+    .leftJoin(keptFrom, eq(keptFrom.id, fromOf.mergedInto))
+    .innerJoin(toOf, eq(toOf.id, settlements.toPlayer))
+    .leftJoin(keptTo, eq(keptTo.id, toOf.mergedInto))
     .where(
       and(
-        eq(games.homeId, homeId),
+        eq(games.homeId, id.parse(homeId)),
         eq(games.status, "closed"),
         notExists(tx.select({ x: sql`1` }).from(debtPayments).where(eq(debtPayments.settlementId, settlements.id))),
       ),
@@ -272,7 +295,7 @@ export async function history(tx: Tx, q: z.input<typeof historyQuery>) {
   const net = sql<number>`(${gameEntries.cashOut} - ${gameEntries.totalIn})`;
   const conds = [eq(games.status, "closed")];
   if (v.homeIds?.length) conds.push(inArray(games.homeId, v.homeIds));
-  if (v.player) conds.push(sql`${players.displayName} ILIKE ${"%" + v.player.replace(/[%_\\]/g, "\\$&") + "%"}`);
+  if (v.player) conds.push(sql`${resolvedName} ILIKE ${"%" + v.player.replace(/[%_\\]/g, "\\$&") + "%"}`);
   if (v.from) conds.push(sql`${games.closedAt} >= ${v.from}`);
   if (v.to) conds.push(sql`${games.closedAt} <= ${v.to}`);
   if (v.number) conds.push(eq(games.number, v.number));
@@ -286,8 +309,8 @@ export async function history(tx: Tx, q: z.input<typeof historyQuery>) {
       gameId: games.id,
       number: games.number,
       closedAt: games.closedAt,
-      playerId: players.id,
-      player: players.displayName,
+      playerId: resolvedId,
+      player: resolvedName,
       totalIn: gameEntries.totalIn,
       cashOut: gameEntries.cashOut,
       net: sql<number>`${net}::bigint`.mapWith(Number),
@@ -295,23 +318,28 @@ export async function history(tx: Tx, q: z.input<typeof historyQuery>) {
     .from(gameEntries)
     .innerJoin(games, eq(games.id, gameEntries.gameId))
     .innerJoin(players, eq(players.id, gameEntries.playerId))
+    .leftJoin(kept, eq(kept.id, players.mergedInto))
     .where(and(...conds))
-    .orderBy(desc(games.closedAt), asc(players.displayName))
+    .orderBy(desc(games.closedAt), asc(resolvedName))
     .limit(v.limit);
 }
 
-/** Open debts in a home (the ledger). */
+/** Open debts in a home (the ledger), merged players mapped like in openDebts. */
 export async function ledger(tx: Tx, homeId: string) {
   return tx
     .select({
       settlementId: settlements.id,
       gameNumber: games.number,
-      from: settlements.fromPlayer,
-      to: settlements.toPlayer,
+      from: sql<string>`coalesce(${keptFrom.id}, ${settlements.fromPlayer})`,
+      to: sql<string>`coalesce(${keptTo.id}, ${settlements.toPlayer})`,
       amount: settlements.amount,
     })
     .from(settlements)
     .innerJoin(games, eq(games.id, settlements.gameId))
+    .innerJoin(fromOf, eq(fromOf.id, settlements.fromPlayer))
+    .leftJoin(keptFrom, eq(keptFrom.id, fromOf.mergedInto))
+    .innerJoin(toOf, eq(toOf.id, settlements.toPlayer))
+    .leftJoin(keptTo, eq(keptTo.id, toOf.mergedInto))
     .leftJoin(debtPayments, eq(debtPayments.settlementId, settlements.id))
     .where(and(eq(games.homeId, id.parse(homeId)), isNull(debtPayments.id)))
     .orderBy(asc(games.number));
@@ -321,26 +349,30 @@ export async function markPaid(tx: Tx, userId: string, settlementId: string) {
   await tx.insert(debtPayments).values({ settlementId: id.parse(settlementId), kind: "paid", markedBy: userId });
 }
 
-/** Every player's result in every closed game of a home: the input for statistics and exports. */
+/**
+ * Every player's result in every closed game of a home: the input for statistics and exports.
+ * A merged duplicate's frozen rows count under the kept player (one row per player per game,
+ * summed if both sat in the same closed game). Nothing frozen is rewritten; this is a read.
+ */
 export async function resultRows(tx: Tx, homeId: string) {
   return tx
     .select({
       gameId: games.id,
       number: games.number,
       closedAt: games.closedAt,
-      playerId: players.id,
-      name: players.displayName,
-      totalIn: gameEntries.totalIn,
-      cashOut: gameEntries.cashOut,
+      playerId: resolvedId,
+      name: resolvedName,
+      totalIn: sql<number>`sum(${gameEntries.totalIn})::bigint`.mapWith(Number),
+      cashOut: sql<number>`sum(coalesce(${gameEntries.cashOut}, 0))::bigint`.mapWith(Number),
     })
     .from(gameEntries)
     .innerJoin(games, eq(games.id, gameEntries.gameId))
     .innerJoin(players, eq(players.id, gameEntries.playerId))
+    .leftJoin(kept, eq(kept.id, players.mergedInto))
     .where(and(eq(games.homeId, id.parse(homeId)), eq(games.status, "closed")))
-    .orderBy(asc(games.closedAt), asc(games.number))
-    .then((rows) =>
-      rows.map((r) => ({ ...r, number: r.number!, closedAt: r.closedAt!, cashOut: r.cashOut ?? 0 })),
-    );
+    .groupBy(games.id, games.number, games.closedAt, resolvedId, resolvedName)
+    .orderBy(asc(games.closedAt), asc(games.number), asc(resolvedName))
+    .then((rows) => rows.map((r) => ({ ...r, number: r.number!, closedAt: r.closedAt! })));
 }
 
 export const importGameInput = z.object({
