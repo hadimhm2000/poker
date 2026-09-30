@@ -8,6 +8,8 @@ export interface TestDb {
   db: Db;
   /** Superuser connection: stands in for "someone with direct database access". */
   admin: ReturnType<typeof postgres>;
+  /** Connection string of this test database (superuser). */
+  url: string;
   newUser: (plan?: "free" | "pro") => Promise<string>;
   close: () => Promise<void>;
 }
@@ -26,6 +28,7 @@ export async function freshDb(): Promise<TestDb> {
   return {
     db,
     admin,
+    url: url.toString(),
     newUser: async (plan = "pro") => {
       const [u] = await admin`INSERT INTO users(email, plan) VALUES (${`u${++n}@test.local`}, ${plan}) RETURNING id`;
       return u!.id as string;

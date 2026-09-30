@@ -160,8 +160,7 @@ describe("changes queued while offline", () => {
 
 describe("live updates", () => {
   it("a change wakes listeners with only the game id", async () => {
-    const url = (t.admin as unknown as { options: { host: string[]; port: number[]; database: string } }).options;
-    const listener = postgres({ host: url.host[0], port: url.port[0], database: url.database, username: "postgres", max: 1 });
+    const listener = postgres(t.url, { max: 1, onnotice: () => {} });
     const got: string[] = [];
     await listener.listen("game_changed", (payload) => got.push(payload));
     await asUser(t.db, host, (tx) => applyHostOp(tx, host, gameId, { kind: "rebuy", opKey: randomUUID(), playerId: pHost, amount: 1 }));
