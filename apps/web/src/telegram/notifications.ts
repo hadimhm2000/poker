@@ -3,8 +3,9 @@
 import { type Db, asJobs, schema } from "@poker/db";
 import { and, eq, gt, isNull, lt, lte, sql } from "@poker/db";
 import type { Api } from "grammy";
-import { InlineKeyboard } from "grammy";
+import { InlineKeyboard, InputFile } from "grammy";
 import { formatAmount, formatDate } from "@/lib/format";
+import { resultCardPng } from "@/lib/result-card";
 import { botT, esc } from "./i18n";
 import { gameResultText, nightText } from "./text";
 
@@ -51,9 +52,38 @@ export async function sendGameClosed(db: Db, api: Api, gameId: string, appUrl: s
       .where(eq(schema.games.id, gameId));
     if (!row?.home.telegramChatId) return null;
     const r = await gameResultText(tx, row.home, gameId, botT(row.home.locale), appUrl);
-    return r && { chatId: row.home.telegramChatId, ...r };
+    return r && { chatId: row.home.telegramChatId, ...r, png: await cardOrNull(tx, gameId, appUrl) };
   });
-  if (m) await api.sendMessage(m.chatId, m.text, { parse_mode: "HTML", reply_markup: m.keyboard });
+  if (m) await postResult(api, m.chatId, m, m.png);
+}
+
+/** The result card image, or null if it cannot be drawn (the text still goes out). */
+export async function cardOrNull(tx: Parameters<typeof resultCardPng>[0], gameId: string, appUrl: string) {
+  try {
+    return (await resultCardPng(tx, gameId, appUrl)).png;
+  } catch (e) {
+    console.error("result card failed", e);
+    return null;
+  }
+}
+
+/** Card with the result as its caption; a long result goes as a message after the card. */
+export async function postResult(
+  api: Api,
+  chatId: number,
+  r: { text: string; keyboard: InlineKeyboard },
+  png: Buffer | null,
+) {
+  if (png) {
+    const photo = new InputFile(png, "result.png");
+    // Telegram captions are limited to 1024 characters.
+    if (r.text.length <= 1024) {
+      await api.sendPhoto(chatId, photo, { caption: r.text, parse_mode: "HTML", reply_markup: r.keyboard });
+      return;
+    }
+    await api.sendPhoto(chatId, photo);
+  }
+  await api.sendMessage(chatId, r.text, { parse_mode: "HTML", reply_markup: r.keyboard });
 }
 
 /** A new (or changed) game night: post the invite with RSVP buttons to the group. */

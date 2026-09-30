@@ -12,7 +12,8 @@
     "signUp": "Créer un compte",
     "signOut": "Se déconnecter",
     "security": "Sécurité",
-    "language": "Langue"
+    "language": "Langue",
+    "rules": "Règles"
   },
   "landing": {
     "title": "Le carnet de comptes de votre soirée poker",
@@ -87,7 +88,8 @@
     "inviteHint": "Envoyez ce lien une seule fois. Il fonctionne pour une personne.",
     "readOnly": "Ce groupe est en lecture seule.",
     "duplicateName": "Un joueur porte déjà ce nom.",
-    "join": "Rejoindre ce groupe"
+    "join": "Rejoindre ce groupe",
+    "rules": "Règles"
   },
   "game": {
     "title": "Partie n° {number}",
@@ -232,7 +234,8 @@
     "CANCELED": "Cette soirée a été annulée.",
     "TELEGRAM_TAKEN": "Ce compte Telegram est déjà lié à un autre compte.",
     "UNAUTHORIZED": "Veuillez vous reconnecter.",
-    "rateLimited": "Trop de tentatives. Patientez un instant."
+    "rateLimited": "Trop de tentatives. Patientez un instant.",
+    "NOT_CLOSED": "La partie n'est pas encore clôturée."
   },
   "stats": {
     "title": "Statistiques",
@@ -281,7 +284,8 @@
     "yourNet": "Net du joueur",
     "opponentNet": "Net de l'adversaire",
     "gamesOf": "Parties de {name}",
-    "proOnly": "Disponible avec Pro."
+    "proOnly": "Disponible avec Pro.",
+    "seasonLeaderboard": "Classement : {season}"
   },
   "import": {
     "title": "Importer un ancien tableau",
@@ -417,6 +421,246 @@
     "cmd_debts": "Dettes ouvertes",
     "cmd_next": "Prochaine soirée",
     "cmd_sidepot": "Calcul des side pots",
-    "cmd_help": "Ce que je sais faire"
+    "cmd_help": "Ce que je sais faire",
+    "rulesList": "Règles du poker. Envoyez /rules et un sujet, par exemple /rules omaha couleur",
+    "rulesNone": "Aucun résultat pour « {query} ». Essayez /rules kicker ou /rules omaha.",
+    "rulesMore": "Aussi : {titles}",
+    "openRules": "Toutes les règles",
+    "houseRules": "Règles maison de {home} :",
+    "verifyButton": "Vérifier",
+    "cmd_rules": "Rechercher dans les règles du poker",
+    "helpRules": "/rules [sujet] – rechercher dans les règles du poker"
+  },
+  "rules": {
+    "title": "Règles du poker",
+    "intro": "Les règles auxquelles nous jouons, avec de vraies cartes. Les exemples sont vérifiés par le même moteur que l'outil Qui gagne ?, donc la page et le calculateur ne se contredisent jamais.",
+    "source": "Basé sur les règles de la Poker TDA. Chaque partie peut ajouter ses propres règles maison ; elles sont affichées à part, avec une étiquette.",
+    "contents": "Sommaire",
+    "search": "Rechercher dans les règles",
+    "searchPlaceholder": "ex. couleur omaha, kicker, jeton restant",
+    "searchButton": "Rechercher",
+    "searchResults": "{count, plural, =0 {Aucun résultat.} one {# situation trouvée} other {# situations trouvées}}",
+    "clearSearch": "Tout afficher",
+    "handsTitle": "Classement des mains",
+    "handsIntro": "De la plus forte à la plus faible. Seules vos cinq meilleures cartes comptent.",
+    "combos": "{count} sur 2 598 960 mains de cinq cartes",
+    "hands": {
+      "royalFlush": "A-K-Q-J-10 de la même couleur. La meilleure main qui existe.",
+      "straightFlush": "Cinq cartes qui se suivent, toutes de la même couleur.",
+      "quads": "Quatre cartes de même valeur.",
+      "fullHouse": "Un brelan plus une paire. On compare d'abord le brelan, puis la paire.",
+      "flush": "Cinq cartes de la même couleur, qui ne se suivent pas. On compare la carte la plus haute, puis la suivante.",
+      "straight": "Cinq cartes qui se suivent, de couleurs mélangées. L'as compte en haut (10-J-Q-K-A) ou en bas (A-2-3-4-5).",
+      "trips": "Trois cartes de même valeur.",
+      "twoPair": "Deux paires différentes. La paire la plus haute, puis la plus basse, puis la cinquième carte.",
+      "pair": "Deux cartes de même valeur.",
+      "highCard": "Rien de ce qui précède. La carte la plus haute gagne, puis la suivante."
+    },
+    "holdemTitle": "Texas Hold'em",
+    "holdem": {
+      "cards": "Chaque joueur reçoit deux cartes face cachée. Cinq cartes communes sont distribuées face visible au milieu : trois (le flop), une (la turn), une (la river). Vous formez la meilleure main de cinq cartes avec vos deux cartes et les cinq du board, en utilisant les deux, une ou aucune des vôtres.",
+      "blinds": "Avant la distribution, les deux joueurs à gauche du bouton posent la petite blinde et la grosse blinde. Le bouton se déplace d'une place vers la gauche après chaque main.",
+      "rounds": "Il y a quatre tours d'enchères : préflop (en commençant à gauche de la grosse blinde), flop, turn et river (en commençant à gauche du bouton). À chaque tour, vous pouvez checker, miser, suivre, relancer ou vous coucher.",
+      "minRaise": "Une relance doit être au moins égale à la dernière mise ou relance du même tour.",
+      "showdown": "S'il reste plus d'un joueur après la river, les mains sont montrées et la meilleure remporte le pot. Les mains égales se le partagent.",
+      "headsUp": "À deux joueurs, le bouton pose la petite blinde, parle en premier avant le flop et en dernier après."
+    },
+    "omahaTitle": "Omaha (Pot-Limit Omaha)",
+    "omaha": {
+      "cards": "Chaque joueur reçoit quatre cartes. Le board est distribué comme au Hold'em.",
+      "twoThree": "Vous devez utiliser exactement deux cartes de votre main et exactement trois du board. Ni une, ni trois, ni quatre. C'est la règle sur laquelle les joueurs de Hold'em se trompent le plus souvent.",
+      "potLimit": "Pot-limit : la relance maximale est égale au pot après avoir suivi. Mettez ce que vous devez pour suivre, puis relancez de tout ce qui se trouve maintenant au milieu."
+    },
+    "potCalcTitle": "Calculateur pot-limit",
+    "potCalcPot": "Au milieu maintenant (mises de ce tour comprises)",
+    "potCalcBet": "Mise à suivre",
+    "potCalcIn": "Déjà mis par vous dans ce tour",
+    "potCalcToCall": "Pour suivre",
+    "potCalcRaiseTo": "Relance maximale à",
+    "potCalcPutIn": "Vous mettez",
+    "potCalcInvalid": "Saisissez des nombres entiers ; ce que vous avez mis ne peut pas dépasser la mise.",
+    "situationsTitle": "Situations litigieuses",
+    "situationsIntro": "Les disputes qui surviennent aux vraies tables, et comment elles sont tranchées.",
+    "ruling": "Décision",
+    "example": "Exemple",
+    "board": "Board",
+    "handLabel": "Main {label}",
+    "winner": "Gagne",
+    "split": "Partage",
+    "loses": "Perd",
+    "s": {
+      "boardPlays": {
+        "title": "Les cinq meilleures cartes sont sur le board",
+        "ruling": "Tous les joueurs encore dans le coup se partagent le pot.",
+        "example": "Board A-K-Q-J-10 : tout le monde est à égalité."
+      },
+      "kicker": {
+        "title": "Kicker",
+        "ruling": "Seules cinq cartes comptent. Une sixième carte ne compte jamais.",
+        "example": "Board A-A-K-K-Q : une main avec un J et une main avec un 10 sont à égalité. Les deux jouent le board."
+      },
+      "suits": {
+        "title": "Couleurs",
+        "ruling": "Au Hold'em, aucune couleur ne bat une autre.",
+        "example": "Deux couleurs de mêmes valeurs se partagent le pot."
+      },
+      "threePairs": {
+        "title": "Trois paires",
+        "ruling": "Votre main se compose des deux paires les plus hautes et de la meilleure carte restante.",
+        "example": "Board K-K-9-9-4 : Q-4 perd contre A-2. La paire de 4 ne compte pas ; l'as est la cinquième carte."
+      },
+      "fullHouses": {
+        "title": "Deux fulls",
+        "ruling": "On compare d'abord le brelan, puis la paire.",
+        "example": "9-9-9-2-2 bat 8-8-8-A-A."
+      },
+      "twoFlushes": {
+        "title": "Deux couleurs",
+        "ruling": "On compare la carte la plus haute, puis la deuxième, jusqu'à la cinquième.",
+        "example": "A-J-8-5-3 bat A-J-8-4-3."
+      },
+      "wheel": {
+        "title": "Quinte avec un as",
+        "ruling": "A-2-3-4-5 est la quinte la plus basse. Une quinte ne peut pas « tourner » autour de l'as.",
+        "example": "Q-K-A-2-3 n'est pas une quinte."
+      },
+      "boardQuads": {
+        "title": "Carré sur le board (Hold'em)",
+        "ruling": "Tout le monde a le carré ; la cinquième carte départage.",
+        "example": "Board A-A-A-A-5 : un roi en main bat une dame."
+      },
+      "omahaFlush": {
+        "title": "Omaha : quatre cœurs sur le board",
+        "ruling": "Un seul cœur en main ne fait pas couleur. Il en faut deux.",
+        "example": "L'erreur la plus fréquente des joueurs de Hold'em à une table d'Omaha."
+      },
+      "omahaStraight": {
+        "title": "Omaha : quatre cartes à la quinte sur le board",
+        "ruling": "Vous ne pouvez utiliser que trois cartes du board, donc une seule carte en main ne fait pas la quinte.",
+        "example": "Board 5-6-7-8-K : une main avec un seul 9 n'a pas de quinte ; avec 9-10 en main, si."
+      },
+      "omahaQuads": {
+        "title": "Omaha : quatre as sur le board",
+        "ruling": "Personne n'a de carré, car seules trois cartes du board peuvent être utilisées. Une paire en main fait un full.",
+        "example": "Seuls trois as peuvent jouer."
+      },
+      "showOrder": {
+        "title": "Qui montre en premier",
+        "ruling": "Le dernier joueur à avoir misé ou relancé à la river montre en premier. S'il n'y a pas eu de mise, le premier joueur à gauche du bouton montre en premier. En cas d'all-in sans autre enchère, toutes les mains sont retournées."
+      },
+      "cardsSpeak": {
+        "title": "Les cartes parlent",
+        "ruling": "Une main se lit à ses cartes, pas à ce que dit le joueur. Une main jetée qui ne peut pas être clairement identifiée est morte.",
+        "example": "Un joueur qui croyait avoir perdu et a jeté ses cartes ne peut pas gagner le pot."
+      },
+      "minRaise": {
+        "title": "Relance minimale",
+        "ruling": "Au moins la taille de la dernière mise ou relance du même tour.",
+        "example": "Mise de 100, relance à 300 : la relance suivante est d'au moins 500."
+      },
+      "shortAllIn": {
+        "title": "Un all-in inférieur à une relance complète",
+        "ruling": "Il ne rouvre pas les enchères pour les joueurs qui ont déjà parlé.",
+        "example": "Ils peuvent seulement suivre ou se coucher."
+      },
+      "stringBet": {
+        "title": "Annonces verbales et mises en plusieurs fois",
+        "ruling": "Ce que vous annoncez à votre tour vous engage. Les jetons doivent être avancés en un seul geste.",
+        "example": "« Je suis… et je relance » ne compte que comme un call."
+      },
+      "outOfTurn": {
+        "title": "Agir hors de son tour",
+        "ruling": "Si l'action avant le joueur ne change pas, son action l'engage.",
+        "example": "Un check avant lui ne change pas l'action ; une mise, si."
+      },
+      "oddChip": {
+        "title": "Le jeton restant",
+        "ruling": "Quand un pot ne peut pas être partagé à parts égales, le jeton en trop va au premier gagnant à gauche du bouton.",
+        "example": "Un pot de 25 entre deux joueurs : 13 et 12."
+      },
+      "headsUp": {
+        "title": "Heads-up",
+        "ruling": "Le bouton pose la petite blinde et parle en premier avant le flop, en dernier après."
+      },
+      "sidePot": {
+        "title": "Side pots",
+        "ruling": "Chaque pot est attribué séparément, uniquement entre les joueurs qui y participent.",
+        "example": "Utilisez le calculateur de side pots pour le partage exact."
+      }
+    },
+    "whoWinsTitle": "Qui gagne ?",
+    "whoWinsBody": "Saisissez le board et les mains ; le gagnant s'affiche avec la raison.",
+    "openWhoWins": "Ouvrir l'outil",
+    "openSidePot": "Calculateur de side pots",
+    "dailyTitle": "Question du jour",
+    "dailyAsk": "Qui gagne ?",
+    "dailyReveal": "Voir la réponse",
+    "houseTitle": "Règles maison",
+    "houseLabel": "Règle maison de {home}",
+    "houseNone": "Pas encore de règles maison.",
+    "houseEdit": "Règles maison (uniquement pour ce groupe)",
+    "houseHint": "Par exemple : limite de recaves, blindes, fin de la partie. Affichées à côté des règles officielles avec une étiquette distincte.",
+    "houseSave": "Enregistrer les règles maison",
+    "reviewNote": "Les textes des règles sont une première traduction et sont en cours de relecture."
+  },
+  "seasons": {
+    "title": "Saisons",
+    "allTime": "Depuis toujours",
+    "intro": "Chaque saison a son propre classement. Les statistiques globales ne sont jamais remises à zéro.",
+    "name": "Nom",
+    "startsOn": "Premier jour",
+    "endsOn": "Dernier jour (vide = en cours)",
+    "create": "Créer une saison",
+    "thisMonth": "Créer une saison pour ce mois",
+    "delete": "Supprimer",
+    "running": "en cours",
+    "range": "{start} – {end}",
+    "rangeOpen": "depuis le {start}",
+    "empty": "Aucune partie clôturée dans cette saison pour l'instant."
+  },
+  "badges": {
+    "title": "Badges",
+    "none": "Pas encore de badges. On les obtient avec des séries de victoires, de gros gains, en jouant régulièrement et en remontant.",
+    "streak": "En feu",
+    "streakBody": "{count} parties gagnées d'affilée",
+    "bigWin": "Plus gros gain",
+    "bigWinBody": "{amount} à la partie n° {number}",
+    "regular": "Habitué",
+    "regularBody": "{count} parties d'affilée sans en manquer une",
+    "comeback": "Remontée",
+    "comebackBody": "Était en perte, maintenant en gain : {amount} récupérés"
+  },
+  "card": {
+    "brand": "Poker Home",
+    "title": "Partie n° {number}",
+    "pot": "Pot total",
+    "more": "et {count, plural, one {# autre joueur} other {# autres joueurs}}",
+    "scanToVerify": "Scannez pour vérifier ce résultat",
+    "heading": "Carte de résultat",
+    "intro": "Une image du résultat pour votre groupe ou votre story. Le QR code prouve que les chiffres n'ont pas été modifiés après la clôture.",
+    "post": "Télécharger (publication)",
+    "story": "Télécharger (story)",
+    "share": "Partager",
+    "verifyLink": "Page de vérification"
+  },
+  "verify": {
+    "title": "Vérification du résultat",
+    "ok": "Vérifié : ce résultat n'a pas changé depuis la clôture de la partie.",
+    "okBody": "Son empreinte et toute la chaîne des {count} parties jusqu'à celle-ci incluse sont valides.",
+    "changed": "Attention : ce résultat ne correspond pas à son empreinte.",
+    "chainBroken": "Attention : une partie antérieure de ce groupe a été modifiée après sa clôture.",
+    "brokenBody": "Les chiffres ont été modifiés en dehors de Poker Home après le gel de la partie.",
+    "game": "Partie n° {number}",
+    "closedAt": "Clôturée {when}",
+    "player": "Joueur",
+    "in": "Entrée",
+    "out": "Sortie",
+    "net": "Résultat",
+    "howTitle": "Vérifiez vous-même",
+    "howBody": "Chaque partie clôturée enregistre une empreinte SHA-256 de son résultat liée à l'empreinte de la partie précédente. Modifier une ancienne partie casse toutes les empreintes suivantes.",
+    "hash": "Empreinte",
+    "prevHash": "Empreinte de la partie précédente",
+    "payload": "Exactement ce qui a servi à l'empreinte",
+    "payloadNote": "Les joueurs apparaissent par leur identifiant interne ; les montants sont dans la plus petite unité."
   }
 }

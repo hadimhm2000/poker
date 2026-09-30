@@ -16,6 +16,7 @@ import {
   migrate,
   setCashOut,
 } from "@poker/db";
+import { InputFile } from "grammy";
 import postgres from "postgres";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createBot } from "./bot";
@@ -85,7 +86,10 @@ async function send(update: object) {
   await bot().handleUpdate(update as never);
   return calls;
 }
-const texts = (cs: Call[]) => cs.filter((c) => c.method === "sendMessage" || c.method === "editMessageText").map((c) => String(c.payload.text));
+const texts = (cs: Call[]) =>
+  cs
+    .filter((c) => c.method === "sendMessage" || c.method === "editMessageText" || c.method === "sendPhoto")
+    .map((c) => String(c.payload.text ?? c.payload.caption));
 
 beforeAll(async () => {
   const url = new URL(base);
@@ -229,16 +233,40 @@ describe("a game night from Telegram", () => {
     await asUser(db, host, (tx) => closeGame(tx, host, { gameId, closeKey: randomUUID(), expectedVersion: v!.version }));
     calls = [];
     await sendGameClosed(db, bot().api, gameId, "https://poker.test");
-    const post = calls.find((c) => c.method === "sendMessage")!;
+    // The result card image, with the result and settlement as its caption.
+    const post = calls.find((c) => c.method === "sendPhoto")!;
     expect(post.payload.chat_id).toBe(GROUP);
-    expect(String(post.payload.text)).toMatch(/Abol ← Hadi/);
-    expect(String(post.payload.text)).toMatch(/۱۵۰k/);
+    expect(post.payload.photo).toBeInstanceOf(InputFile);
+    expect(String(post.payload.caption)).toMatch(/Abol ← Hadi/);
+    expect(String(post.payload.caption)).toMatch(/۱۵۰k/);
+    const buttons = (post.payload.reply_markup as { inline_keyboard: { url: string }[][] }).inline_keyboard[0]!;
+    const [hash] = await admin`SELECT hash FROM games WHERE id = ${gameId}`;
+    expect(buttons.map((b) => b.url)).toContain(`https://poker.test/fa/verify/${hash!.hash}`);
+  });
+
+  it("/rules finds a situation in the group's language and adds the house rules", async () => {
+    await admin`UPDATE homes SET house_rules = 'سقف rebuy: ۳ بار' WHERE telegram_chat_id = ${GROUP}`;
+    const [text] = texts(await send(message(FRIEND_TG, GROUP, "/rules کیکر")));
+    expect(text).toMatch(/<b>کیکر<\/b>/);
+    expect(text).toMatch(/سقف rebuy/);
+    // English keywords work in every language; the example comes from the hand engine.
+    const [omaha] = texts(await send(message(FRIEND_TG, GROUP, "/rules omaha flush")));
+    expect(omaha).toMatch(/اوماها: ۴ دل/);
+    expect(omaha).toMatch(/3♥ 7♥ 9♥ J♥ 5♣/);
+    // Anyone may ask in private, linked or not (here in their Telegram language); nothing found says so.
+    const [none] = texts(await send(message(9_999_001, 9_999_001, "/rules zzzz")));
+    expect(none).toMatch(/چیزی پیدا نشد/);
+    const [list] = texts(await send(message(9_999_001, 9_999_001, "/rules")));
+    expect(list).toMatch(/• کیکر/);
+    expect(list).not.toMatch(/قوانین خانگی/);
   });
 
   it("/stats, /stats name and /last", async () => {
     expect(texts(await send(message(FRIEND_TG, GROUP, "/stats")))[0]).toMatch(/🥇 Hadi/);
     expect(texts(await send(message(FRIEND_TG, GROUP, "/stats abol")))[0]).toMatch(/Abol/);
-    expect(texts(await send(message(FRIEND_TG, GROUP, "/last")))[0]).toMatch(/شماره‌ی ۱/);
+    const last = await send(message(FRIEND_TG, GROUP, "/last"));
+    expect(last[0]!.method).toBe("sendPhoto");
+    expect(texts(last)[0]).toMatch(/شماره‌ی ۱/);
   });
 
   it("/debts: only the creditor (or host) can mark a debt paid", async () => {

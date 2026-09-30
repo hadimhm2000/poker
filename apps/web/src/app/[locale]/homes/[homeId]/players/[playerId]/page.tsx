@@ -1,4 +1,4 @@
-import { headToHead, homeStats } from "@poker/domain";
+import { badges, headToHead, homeStats } from "@poker/domain";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { LineChart } from "@/components/charts";
@@ -11,6 +11,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ homeId:
   const { homeId, playerId } = await params;
   const locale = await getLocale();
   const t = await getTranslations("stats");
+  const tb = await getTranslations("badges");
   const data = await withUser((tx) => loadHomeResults(tx, homeId));
   if (!data) notFound();
   const { home, rows } = data;
@@ -24,6 +25,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ homeId:
   const num = (n: number) => new Intl.NumberFormat(locale).format(n);
   const pct = (n: number) => new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 0 }).format(n);
   const cls = (n: number) => (n > 0 ? "win" : n < 0 ? "loss" : "");
+  const myBadges = badges(rows).filter((b) => b.playerId === playerId);
 
   return (
     <>
@@ -48,6 +50,26 @@ export default async function PlayerPage({ params }: { params: Promise<{ homeId:
           </div>
         ))}
       </div>
+
+      {myBadges.length > 0 && (
+        <section className="card">
+          <h2>{tb("title")}</h2>
+          <div className="badges">
+            {myBadges.map((b) => (
+              <div className="badge-card" key={b.kind}>
+                <strong>{tb(b.kind)}</strong>
+                <span className="small muted">
+                  {b.kind === "bigWin"
+                    ? tb("bigWinBody", { amount: money(b.value, true), number: num(b.gameNumber!) })
+                    : b.kind === "comeback"
+                      ? tb("comebackBody", { amount: money(b.value) })
+                      : tb(`${b.kind}Body`, { count: num(b.value) })}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="card">
         <h2>{t("cumulative")}</h2>

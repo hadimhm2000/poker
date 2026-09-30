@@ -8,7 +8,9 @@ const flatten = (t: Tree, prefix = ""): Record<string, string> =>
     else Object.assign(acc, flatten(v, `${prefix}${k}.`));
     return acc;
   }, {});
-const placeholders = (s: string) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
+// Simple ({name}) and plural/select ({count, plural, ...}) arguments alike; a language may use
+// a plural where English does not need one.
+const placeholders = (s: string) => [...new Set([...s.matchAll(/\{(\w+)[,}]/g)].map((m) => m[1]))].sort();
 
 describe("translations", async () => {
   const en = flatten((await import("../messages/en.json")).default as Tree);

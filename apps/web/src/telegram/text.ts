@@ -1,11 +1,12 @@
 // Message builders shared by bot commands (run as the Telegram user, under RLS) and
 // automatic posts (run as the jobs role). Same queries either way; RLS decides what is seen.
-import { homeStats } from "@poker/domain";
+import { type RuleExample, SITUATIONS, exampleWinners, homeStats, parseCards, searchRules } from "@poker/domain";
 import { type Tx, ledger, nightAnswers, resultRows, schema } from "@poker/db";
 import { and, desc, eq } from "@poker/db";
 import { InlineKeyboard } from "grammy";
 import { type HomeMoney, formatAmount, formatDate } from "@/lib/format";
-import { type BotT, esc } from "./i18n";
+import { verifyUrl } from "@/lib/result-card";
+import { type BotT, botLocale, esc, textsFor } from "./i18n";
 
 export type Home = typeof schema.homes.$inferSelect;
 const money = (home: HomeMoney, locale: string) => (n: number, signed = false) => formatAmount(n, home, locale, signed);
@@ -45,8 +46,10 @@ export async function gameResultText(tx: Tx, home: Home, gameId: string, t: BotT
     "",
     `<i>${esc(t("verify", { hash: game.hash!.slice(0, 16) }))}</i>`,
   ];
-  const keyboard = new InlineKeyboard().url(t("openGame"), `${appUrl}/${home.locale}/games/${game.id}`);
-  return { text: lines.join("\n"), keyboard };
+  const keyboard = new InlineKeyboard()
+    .url(t("openGame"), `${appUrl}/${home.locale}/games/${game.id}`)
+    .url(t("verifyButton"), verifyUrl(appUrl, home.locale, game.hash!));
+  return { text: lines.join("\n"), keyboard, gameId: game.id };
 }
 
 export async function lastGameText(tx: Tx, home: Home, t: BotT, appUrl: string) {
@@ -129,4 +132,63 @@ export async function nightText(tx: Tx, home: Home, nightId: string, t: BotT) {
         .text(t("rsvpMaybe"), `nv:${n.id}:m`)
         .text(t("rsvpNo"), `nv:${n.id}:n`);
   return { text: lines.join("\n"), keyboard };
+}
+
+// ---------------------------------------------------------------- /rules
+
+const SUIT = { s: "♠", h: "♥", d: "♦", c: "♣" } as const;
+const cardsText = (cards: string) =>
+  parseCards(cards)
+    .map((c) => `${c.rank === 10 ? "10" : "23456789TJQKA"[c.rank - 2]}${SUIT[c.suit]}`)
+    .join(" ");
+
+/** Rule texts are looked up by computed keys (s.<id>.title), so a loosely typed translator. */
+type Loose = { (key: string, values?: Record<string, string | number>): string; has(key: string): boolean };
+
+function exampleText(ex: RuleExample, tr: Loose): string[] {
+  const winners = exampleWinners(ex);
+  const lines = ex.kind === "showdown" ? [`${tr("board")}: ${cardsText(ex.board)}`] : [];
+  for (const h of ex.hands) {
+    const outcome = !winners.includes(h.label) ? tr("loses") : winners.length > 1 ? tr("split") : tr("winner");
+    lines.push(`${tr("handLabel", { label: h.label })}: ${cardsText(h.cards)} — ${outcome}`);
+  }
+  return lines;
+}
+
+/** /rules [topic]: the best matching situation, or the list of topics. */
+export function rulesText(query: string, locale: string, appUrl: string, house?: { name: string; rules: string } | null) {
+  const l = botLocale(locale);
+  const tr = textsFor(l, "rules") as unknown as Loose;
+  const tb = textsFor(l, "bot");
+  const full = (id: string) =>
+    ["title", "ruling", "example"]
+      .map((k) => `s.${id}.${k}`)
+      .filter((k) => tr.has(k))
+      .map((k) => tr(k))
+      .join(" ");
+  const q = query.trim().slice(0, 80);
+  const houseLines = house?.rules ? ["", `<b>${esc(tb("houseRules", { home: house.name }))}</b>`, esc(house.rules)] : [];
+  let lines: string[];
+  let link = `${appUrl}/${l}/rules`;
+  if (!q) {
+    lines = [esc(tb("rulesList")), "", ...SITUATIONS.map((s) => `• ${esc(tr(`s.${s.id}.title`))}`)];
+  } else {
+    const ids = searchRules(q, full);
+    if (!ids.length) {
+      lines = [esc(tb("rulesNone", { query: q }))];
+    } else {
+      const s = SITUATIONS.find((x) => x.id === ids[0])!;
+      link = `${appUrl}/${l}/rules?q=${encodeURIComponent(q)}#s-${s.id}`;
+      lines = [`<b>${esc(tr(`s.${s.id}.title`))}</b>`, "", `${esc(tr("ruling"))}: ${esc(tr(`s.${s.id}.ruling`))}`];
+      if (tr.has(`s.${s.id}.example`)) lines.push(`<i>${esc(tr(`s.${s.id}.example`))}</i>`);
+      if (s.example) lines.push("", ...exampleText(s.example, tr).map(esc));
+      if (ids.length > 1) {
+        lines.push("", esc(tb("rulesMore", { titles: ids.slice(1, 4).map((id) => tr(`s.${id}.title`)).join(" · ") })));
+      }
+    }
+  }
+  return {
+    text: [...lines, ...houseLines].join("\n"),
+    keyboard: new InlineKeyboard().url(tb("openRules"), link),
+  };
 }

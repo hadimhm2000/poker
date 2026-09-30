@@ -1,7 +1,9 @@
-import { homePlan } from "@poker/db";
-import { homeStats } from "@poker/domain";
+import { homePlan, listSeasons, seasonPeriod } from "@poker/db";
+import { badges, homeStats, rowsInPeriod } from "@poker/domain";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
+import { createSeasonAction, deleteSeasonAction } from "@/app/actions/seasons";
+import { ErrorNotice } from "@/components/ErrorNotice";
 import { PrintButton } from "@/components/PrintButton";
 import { DivergingBars, LineChart } from "@/components/charts";
 import { Link } from "@/i18n/navigation";
@@ -11,18 +13,39 @@ import { withUser } from "@/lib/session";
 
 const MEDAL = { 1: "🥇", 2: "🥈", 3: "🥉" } as const;
 const MAX_LINES = 8;
+const BADGE_ICON = { streak: "🔥", bigWin: "💰", regular: "📅", comeback: "🔄" } as const;
 
-export default async function StatsPage({ params }: { params: Promise<{ homeId: string }> }) {
+export default async function StatsPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ homeId: string }>;
+  searchParams: Promise<{ season?: string; error?: string }>;
+}) {
   const { homeId } = await params;
+  const { season: seasonId, error } = await searchParams;
   const locale = await getLocale();
   const t = await getTranslations("stats");
-  const data = await withUser(async (tx) => {
+  const tse = await getTranslations("seasons");
+  const tb = await getTranslations("badges");
+  const data = await withUser(async (tx, user) => {
     const loaded = await loadHomeResults(tx, homeId);
-    return loaded && { ...loaded, plan: await homePlan(tx, homeId) };
+    return (
+      loaded && {
+        ...loaded,
+        plan: await homePlan(tx, homeId),
+        seasons: await listSeasons(tx, homeId),
+        canWrite: loaded.home.ownerId === user.id && !loaded.home.readOnly,
+      }
+    );
   });
   if (!data) notFound();
-  const { home, rows } = data;
+  const { home, seasons } = data;
+  const season = seasons.find((x) => x.id === seasonId) ?? null;
+  const rows = season ? rowsInPeriod(data.rows, seasonPeriod(season)) : data.rows;
   const s = homeStats(rows);
+  const earned = badges(rows);
+  const day = (d: string) => formatDate(new Date(`${d}T12:00:00Z`), locale);
   const money = (n: number, signed = false) => formatAmount(n, home, locale, signed);
   const num = (n: number) => new Intl.NumberFormat(locale).format(n);
   const pct = (n: number) => new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 0 }).format(n);
@@ -49,6 +72,7 @@ export default async function StatsPage({ params }: { params: Promise<{ homeId: 
       <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
         <h1 style={{ margin: 0 }}>
           {t("title")} · {home.name}
+          {season && ` · ${season.name}`}
         </h1>
         <div className="row no-print" style={{ alignItems: "center" }}>
           {data.plan === "pro" ? (
@@ -69,8 +93,71 @@ export default async function StatsPage({ params }: { params: Promise<{ homeId: 
         </div>
       </div>
 
+      <ErrorNotice code={error} />
+      <section className="card stack no-print" style={{ marginBlockStart: 16 }}>
+        <h2>{tse("title")}</h2>
+        <nav className="seasons" aria-label={tse("title")}>
+          <Link href={`/homes/${home.id}/stats`} className={season ? "" : "current"}>
+            {tse("allTime")}
+          </Link>
+          {seasons.map((x) => (
+            <Link key={x.id} href={`/homes/${home.id}/stats?season=${x.id}`} className={x.id === season?.id ? "current" : ""}>
+              {x.name}
+              {!x.endsOn && <span className="badge live">{tse("running")}</span>}
+            </Link>
+          ))}
+        </nav>
+        {season && (
+          <p className="small muted">
+            {season.endsOn
+              ? tse("range", { start: day(season.startsOn), end: day(season.endsOn) })
+              : tse("rangeOpen", { start: day(season.startsOn) })}
+          </p>
+        )}
+        <p className="small muted">{tse("intro")}</p>
+        {data.canWrite && (
+          <details>
+            <summary>{tse("create")}</summary>
+            <form action={createSeasonAction} className="row" style={{ marginBlockStart: 8 }}>
+              <input type="hidden" name="homeId" value={home.id} />
+              <label>
+                {tse("name")}
+                <input name="name" required maxLength={60} />
+              </label>
+              <label>
+                {tse("startsOn")}
+                <input name="startsOn" type="date" required />
+              </label>
+              <label>
+                {tse("endsOn")}
+                <input name="endsOn" type="date" />
+              </label>
+              <button className="btn secondary" type="submit">
+                {tse("create")}
+              </button>
+            </form>
+            <form action={createSeasonAction} style={{ marginBlockStart: 8 }}>
+              <input type="hidden" name="homeId" value={home.id} />
+              <input type="hidden" name="preset" value="month" />
+              <button className="btn small secondary" type="submit">
+                {tse("thisMonth")}
+              </button>
+            </form>
+          </details>
+        )}
+        {data.canWrite && season && (
+          <form action={deleteSeasonAction}>
+            <input type="hidden" name="homeId" value={home.id} />
+            <input type="hidden" name="seasonId" value={season.id} />
+            <button className="btn small danger" type="submit">
+              {tse("delete")}: {season.name}
+            </button>
+          </form>
+        )}
+      </section>
+
       {s.totals.games === 0 ? (
-        <p className="muted">{t("empty")}</p>
+        <p className="muted">{season ? tse("empty") : t("empty")}</p>
       ) : (
         <>
           <div className="stats" style={{ marginBlock: 16 }}>
@@ -91,7 +178,7 @@ export default async function StatsPage({ params }: { params: Promise<{ homeId: 
           </div>
 
           <section className="card table-wrap">
-            <h2>{t("leaderboard")}</h2>
+            <h2>{season ? t("seasonLeaderboard", { season: season.name }) : t("leaderboard")}</h2>
             <table>
               <thead>
                 <tr>
@@ -126,6 +213,34 @@ export default async function StatsPage({ params }: { params: Promise<{ homeId: 
                 ))}
               </tbody>
             </table>
+          </section>
+
+          <section className="card">
+            <h2>{tb("title")}</h2>
+            {earned.length === 0 ? (
+              <p className="muted small">{tb("none")}</p>
+            ) : (
+              <div className="badges">
+                {earned.map((b) => (
+                  <div className="badge-card" key={`${b.kind}-${b.playerId}`}>
+                    <span className="icon" aria-hidden="true">
+                      {BADGE_ICON[b.kind]}
+                    </span>
+                    <strong>{tb(b.kind)}</strong>
+                    <span>
+                      <Link href={`/homes/${home.id}/players/${b.playerId}`}>{b.name}</Link>
+                    </span>
+                    <span className="small muted">
+                      {b.kind === "bigWin"
+                        ? tb("bigWinBody", { amount: money(b.value, true), number: num(b.gameNumber!) })
+                        : b.kind === "comeback"
+                          ? tb("comebackBody", { amount: money(b.value) })
+                          : tb(`${b.kind}Body`, { count: num(b.value) })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
 
           <div>

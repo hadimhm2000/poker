@@ -12,7 +12,8 @@
     "signUp": "Crear cuenta",
     "signOut": "Cerrar sesión",
     "security": "Seguridad",
-    "language": "Idioma"
+    "language": "Idioma",
+    "rules": "Reglas"
   },
   "landing": {
     "title": "El libro de cuentas de tu noche de póker",
@@ -87,7 +88,8 @@
     "inviteHint": "Envía este enlace una sola vez. Sirve para una persona.",
     "readOnly": "Este grupo es de solo lectura.",
     "duplicateName": "Ya existe un jugador con ese nombre.",
-    "join": "Unirse a este grupo"
+    "join": "Unirse a este grupo",
+    "rules": "Reglas"
   },
   "game": {
     "title": "Partida n.º {number}",
@@ -232,7 +234,8 @@
     "CANCELED": "Esta noche de juego fue cancelada.",
     "TELEGRAM_TAKEN": "Esta cuenta de Telegram ya está vinculada a otra cuenta.",
     "UNAUTHORIZED": "Vuelve a iniciar sesión.",
-    "rateLimited": "Demasiados intentos. Espera un momento."
+    "rateLimited": "Demasiados intentos. Espera un momento.",
+    "NOT_CLOSED": "La partida todavía no está cerrada."
   },
   "stats": {
     "title": "Estadísticas",
@@ -281,7 +284,8 @@
     "yourNet": "Neto del jugador",
     "opponentNet": "Neto del rival",
     "gamesOf": "Partidas de {name}",
-    "proOnly": "Disponible en Pro."
+    "proOnly": "Disponible en Pro.",
+    "seasonLeaderboard": "Clasificación: {season}"
   },
   "import": {
     "title": "Importar una hoja antigua",
@@ -417,6 +421,246 @@
     "cmd_debts": "Deudas abiertas",
     "cmd_next": "Próxima noche de juego",
     "cmd_sidepot": "Calculadora de botes",
-    "cmd_help": "Qué puedo hacer"
+    "cmd_help": "Qué puedo hacer",
+    "rulesList": "Reglas del póker. Envía /rules y un tema, por ejemplo /rules omaha color",
+    "rulesNone": "No se encontró nada para “{query}”. Prueba /rules kicker o /rules omaha.",
+    "rulesMore": "También: {titles}",
+    "openRules": "Todas las reglas",
+    "houseRules": "Reglas de la casa de {home}:",
+    "verifyButton": "Verificar",
+    "cmd_rules": "Buscar en las reglas del póker",
+    "helpRules": "/rules [tema] – buscar en las reglas del póker"
+  },
+  "rules": {
+    "title": "Reglas del póker",
+    "intro": "Las reglas con las que jugamos, con cartas reales. Los ejemplos se comprueban con el mismo motor que la herramienta ¿Quién gana?, así que la página y la calculadora nunca se contradicen.",
+    "source": "Basado en las reglas de la Poker TDA. Cada partida casera puede añadir sus propias reglas de la casa; se muestran aparte y con su etiqueta.",
+    "contents": "Contenido",
+    "search": "Buscar en las reglas",
+    "searchPlaceholder": "p. ej. color omaha, kicker, ficha sobrante",
+    "searchButton": "Buscar",
+    "searchResults": "{count, plural, =0 {No se encontró nada.} one {# situación encontrada} other {# situaciones encontradas}}",
+    "clearSearch": "Mostrar todo",
+    "handsTitle": "Ranking de manos",
+    "handsIntro": "De la más fuerte a la más débil. Solo cuentan tus cinco mejores cartas.",
+    "combos": "{count} de 2.598.960 manos de cinco cartas",
+    "hands": {
+      "royalFlush": "A-K-Q-J-10 del mismo palo. La mejor mano que existe.",
+      "straightFlush": "Cinco cartas seguidas, todas del mismo palo.",
+      "quads": "Cuatro cartas del mismo valor.",
+      "fullHouse": "Un trío más una pareja. Se compara primero el trío y luego la pareja.",
+      "flush": "Cinco cartas del mismo palo, no seguidas. Se compara la carta más alta y luego la siguiente.",
+      "straight": "Cinco cartas seguidas de palos distintos. El as puede ser alto (10-J-Q-K-A) o bajo (A-2-3-4-5).",
+      "trips": "Tres cartas del mismo valor.",
+      "twoPair": "Dos parejas distintas. Primero la pareja más alta, luego la más baja y después la quinta carta.",
+      "pair": "Dos cartas del mismo valor.",
+      "highCard": "Nada de lo anterior. Gana la carta más alta, luego la siguiente."
+    },
+    "holdemTitle": "Texas Hold'em",
+    "holdem": {
+      "cards": "Cada jugador recibe dos cartas boca abajo. Se reparten cinco cartas comunitarias boca arriba en el centro: tres (el flop), una (el turn) y una (el river). Formas la mejor mano de cinco cartas con tus dos cartas y las cinco de la mesa, usando las dos, una o ninguna de las tuyas.",
+      "blinds": "Antes de repartir, los dos jugadores a la izquierda del botón ponen la ciega pequeña y la ciega grande. El botón se mueve un asiento a la izquierda después de cada mano.",
+      "rounds": "Hay cuatro rondas de apuestas: preflop (empieza a la izquierda de la ciega grande), flop, turn y river (empiezan a la izquierda del botón). En cada ronda puedes pasar, apostar, igualar, subir o retirarte.",
+      "minRaise": "Una subida debe ser al menos del tamaño de la última apuesta o subida de la misma ronda.",
+      "showdown": "Si después del river queda más de un jugador, se muestran las manos y la mejor se lleva el bote. Las manos iguales se lo reparten.",
+      "headsUp": "Con dos jugadores, el botón pone la ciega pequeña, habla primero antes del flop y último después."
+    },
+    "omahaTitle": "Omaha (Pot-Limit Omaha)",
+    "omaha": {
+      "cards": "Cada jugador recibe cuatro cartas. La mesa se reparte igual que en Hold'em.",
+      "twoThree": "Debes usar exactamente dos cartas de tu mano y exactamente tres de la mesa. Ni una, ni tres, ni cuatro. Es la regla en la que más se equivocan los jugadores de Hold'em.",
+      "potLimit": "Pot-limit: lo máximo que puedes subir es el tamaño del bote después de igualar. Pon lo que debes para igualar y luego sube todo lo que hay ahora en el centro."
+    },
+    "potCalcTitle": "Calculadora pot-limit",
+    "potCalcPot": "En el centro ahora (incluidas las apuestas de esta ronda)",
+    "potCalcBet": "Apuesta a igualar",
+    "potCalcIn": "Lo que ya pusiste en esta ronda",
+    "potCalcToCall": "Para igualar",
+    "potCalcRaiseTo": "Subida máxima hasta",
+    "potCalcPutIn": "Pones",
+    "potCalcInvalid": "Introduce números enteros; lo que pusiste no puede ser mayor que la apuesta.",
+    "situationsTitle": "Situaciones polémicas",
+    "situationsIntro": "Las discusiones que surgen en mesas reales y cómo se resuelven.",
+    "ruling": "Decisión",
+    "example": "Ejemplo",
+    "board": "Mesa",
+    "handLabel": "Mano {label}",
+    "winner": "Gana",
+    "split": "Reparte",
+    "loses": "Pierde",
+    "s": {
+      "boardPlays": {
+        "title": "Las cinco mejores cartas están en la mesa",
+        "ruling": "Todos los que siguen en la mano se reparten el bote.",
+        "example": "Mesa A-K-Q-J-10: todos empatan."
+      },
+      "kicker": {
+        "title": "Kicker",
+        "ruling": "Solo cuentan cinco cartas. Una sexta carta nunca importa.",
+        "example": "Mesa A-A-K-K-Q: una mano con J y otra con 10 empatan. Las dos juegan la mesa."
+      },
+      "suits": {
+        "title": "Palos",
+        "ruling": "En Hold'em ningún palo vale más que otro.",
+        "example": "Dos colores con los mismos valores se reparten el bote."
+      },
+      "threePairs": {
+        "title": "Tres parejas",
+        "ruling": "Tu mano son las dos parejas más altas más la mejor carta restante.",
+        "example": "Mesa K-K-9-9-4: Q-4 pierde contra A-2. La pareja de cuatros no cuenta; el as es la quinta carta."
+      },
+      "fullHouses": {
+        "title": "Dos full",
+        "ruling": "Se compara primero el trío y luego la pareja.",
+        "example": "9-9-9-2-2 gana a 8-8-8-A-A."
+      },
+      "twoFlushes": {
+        "title": "Dos colores",
+        "ruling": "Se compara la carta más alta, luego la segunda, hasta la quinta.",
+        "example": "A-J-8-5-3 gana a A-J-8-4-3."
+      },
+      "wheel": {
+        "title": "Escalera con as",
+        "ruling": "A-2-3-4-5 es la escalera más baja. Una escalera no puede dar la vuelta por el as.",
+        "example": "Q-K-A-2-3 no es escalera."
+      },
+      "boardQuads": {
+        "title": "Póker en la mesa (Hold'em)",
+        "ruling": "Todos tienen el póker; decide la quinta carta.",
+        "example": "Mesa A-A-A-A-5: un rey en la mano gana a una reina."
+      },
+      "omahaFlush": {
+        "title": "Omaha: cuatro corazones en la mesa",
+        "ruling": "Un corazón en tu mano no es color. Necesitas dos.",
+        "example": "El error más común de los jugadores de Hold'em en una mesa de Omaha."
+      },
+      "omahaStraight": {
+        "title": "Omaha: cuatro cartas de escalera en la mesa",
+        "ruling": "Solo puedes usar tres cartas de la mesa, así que una carta en la mano no completa la escalera.",
+        "example": "Mesa 5-6-7-8-K: una mano con un solo 9 no tiene escalera; con 9-10 en la mano, sí."
+      },
+      "omahaQuads": {
+        "title": "Omaha: cuatro ases en la mesa",
+        "ruling": "Nadie tiene póker, porque solo se pueden usar tres cartas de la mesa. Una pareja en la mano forma un full.",
+        "example": "Solo pueden jugar tres ases."
+      },
+      "showOrder": {
+        "title": "Quién muestra primero",
+        "ruling": "El último jugador que apostó o subió en el river muestra primero. Si no hubo apuesta, muestra primero el primer jugador a la izquierda del botón. En un all-in sin más apuestas, se destapan todas las manos."
+      },
+      "cardsSpeak": {
+        "title": "Las cartas hablan",
+        "ruling": "Una mano se lee por sus cartas, no por lo que dice el jugador. Una mano tirada que no se puede identificar con claridad está muerta.",
+        "example": "Un jugador que creyó haber perdido y tiró sus cartas no puede ganar el bote."
+      },
+      "minRaise": {
+        "title": "Subida mínima",
+        "ruling": "Al menos el tamaño de la última apuesta o subida de la misma ronda.",
+        "example": "Apuesta de 100, subida a 300: la siguiente subida es al menos a 500."
+      },
+      "shortAllIn": {
+        "title": "Un all-in menor que una subida completa",
+        "ruling": "No reabre las apuestas para los jugadores que ya han hablado.",
+        "example": "Solo pueden igualar o retirarse."
+      },
+      "stringBet": {
+        "title": "Declaraciones verbales y apuestas en cadena",
+        "ruling": "Lo que dices en tu turno es vinculante. Las fichas deben entrar en un solo movimiento.",
+        "example": "“Voy... y subo” cuenta solo como igualar."
+      },
+      "outOfTurn": {
+        "title": "Actuar fuera de turno",
+        "ruling": "Si la acción anterior a ellos no cambia, su acción es vinculante.",
+        "example": "Un pase antes que ellos no cambia la acción; una apuesta sí."
+      },
+      "oddChip": {
+        "title": "La ficha sobrante",
+        "ruling": "Cuando un bote no se puede repartir a partes iguales, la ficha extra va al primer ganador a la izquierda del botón.",
+        "example": "Un bote de 25 entre dos jugadores: 13 y 12."
+      },
+      "headsUp": {
+        "title": "Heads-up",
+        "ruling": "El botón pone la ciega pequeña y habla primero antes del flop, último después."
+      },
+      "sidePot": {
+        "title": "Botes secundarios",
+        "ruling": "Cada bote se decide por separado, solo entre los jugadores que participan en él.",
+        "example": "Usa la calculadora de botes secundarios para el reparto exacto."
+      }
+    },
+    "whoWinsTitle": "¿Quién gana?",
+    "whoWinsBody": "Introduce la mesa y las manos; se muestra el ganador con el motivo.",
+    "openWhoWins": "Abrir la herramienta",
+    "openSidePot": "Calculadora de botes secundarios",
+    "dailyTitle": "Pregunta del día",
+    "dailyAsk": "¿Quién gana?",
+    "dailyReveal": "Ver la respuesta",
+    "houseTitle": "Reglas de la casa",
+    "houseLabel": "Regla de la casa de {home}",
+    "houseNone": "Todavía no hay reglas de la casa.",
+    "houseEdit": "Reglas de la casa (solo para este grupo)",
+    "houseHint": "Por ejemplo: límite de recompras, ciegas, cuándo termina la partida. Se muestran junto a las reglas oficiales con una etiqueta aparte.",
+    "houseSave": "Guardar reglas de la casa",
+    "reviewNote": "Los textos de las reglas son una primera traducción y se están revisando."
+  },
+  "seasons": {
+    "title": "Temporadas",
+    "allTime": "Histórico",
+    "intro": "Cada temporada tiene su propia clasificación. Las estadísticas históricas nunca se reinician.",
+    "name": "Nombre",
+    "startsOn": "Primer día",
+    "endsOn": "Último día (vacío = sigue en curso)",
+    "create": "Crear temporada",
+    "thisMonth": "Crear temporada para este mes",
+    "delete": "Eliminar",
+    "running": "en curso",
+    "range": "{start} – {end}",
+    "rangeOpen": "desde {start}",
+    "empty": "Todavía no hay partidas cerradas en esta temporada."
+  },
+  "badges": {
+    "title": "Insignias",
+    "none": "Todavía no hay insignias. Se consiguen con rachas ganadoras, grandes victorias, jugando con regularidad y remontando.",
+    "streak": "En racha",
+    "streakBody": "{count} partidas ganadas seguidas",
+    "bigWin": "Mayor ganancia",
+    "bigWinBody": "{amount} en la partida n.º {number}",
+    "regular": "Fijo",
+    "regularBody": "{count} partidas seguidas sin faltar a ninguna",
+    "comeback": "Remontada",
+    "comebackBody": "Iba perdiendo y ahora gana: {amount} recuperados"
+  },
+  "card": {
+    "brand": "Poker Home",
+    "title": "Partida n.º {number}",
+    "pot": "Bote total",
+    "more": "y {count, plural, one {# jugador más} other {# jugadores más}}",
+    "scanToVerify": "Escanea para verificar este resultado",
+    "heading": "Tarjeta de resultado",
+    "intro": "Una imagen del resultado para tu grupo o tu historia. El código QR demuestra que los números no se cambiaron después del cierre.",
+    "post": "Descargar (publicación)",
+    "story": "Descargar (historia)",
+    "share": "Compartir",
+    "verifyLink": "Página de verificación"
+  },
+  "verify": {
+    "title": "Verificación del resultado",
+    "ok": "Verificado: este resultado no ha cambiado desde que se cerró la partida.",
+    "okBody": "Su huella y toda la cadena de {count} partidas hasta esta, incluida, son correctas.",
+    "changed": "Atención: este resultado no coincide con su huella.",
+    "chainBroken": "Atención: una partida anterior de este grupo se modificó después del cierre.",
+    "brokenBody": "Los números se cambiaron fuera de Poker Home después de congelar la partida.",
+    "game": "Partida n.º {number}",
+    "closedAt": "Cerrada {when}",
+    "player": "Jugador",
+    "in": "Entrada",
+    "out": "Salida",
+    "net": "Resultado",
+    "howTitle": "Compruébalo tú mismo",
+    "howBody": "Cada partida cerrada guarda una huella SHA-256 de su resultado unida a la huella de la partida anterior. Cambiar cualquier partida antigua rompe todas las huellas posteriores.",
+    "hash": "Huella",
+    "prevHash": "Huella de la partida anterior",
+    "payload": "Exactamente lo que se usó para la huella",
+    "payloadNote": "Los jugadores aparecen por su id interno; los importes están en la unidad más pequeña."
   }
 }

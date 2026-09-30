@@ -13,6 +13,12 @@ const all = { ar, en, es, fa, fr, it, ru } as const;
 export const botLocale = (v: string | null | undefined): Locale =>
   locales.includes(v as Locale) ? (v as Locale) : "en";
 
+/** Any namespace of the messages in the given language, outside a request (bot, images). */
+export function textsFor<N extends "bot" | "card" | "rules">(locale: string, namespace: N) {
+  const l = botLocale(locale);
+  return createTranslator({ locale: l, messages: all[l] as typeof en, namespace });
+}
+
 /** Bot texts in the given language (the home's language in groups, the user's in private). */
 export function botT(locale: string) {
   const l = botLocale(locale);

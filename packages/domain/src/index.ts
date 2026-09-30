@@ -6,3 +6,5 @@ export * from "./cards";
 export * from "./hand";
 export * from "./sidepot";
 export * from "./stats";
+export * from "./rules";
+export * from "./badges";

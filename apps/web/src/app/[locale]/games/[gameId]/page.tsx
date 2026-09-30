@@ -7,6 +7,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { addToGameAction, closeGameAction, confirmResultAction, removeFromGameAction } from "@/app/actions/homes";
 import { claimPlayerAction, makeJoinLinkAction, requestRebuyAction } from "@/app/actions/live";
 import { ErrorNotice } from "@/components/ErrorNotice";
+import { ShareCard } from "@/components/ShareCard";
 import { AnswerRequest, CopyButton, HostEntryControls, HostQueue, LiveRefresh } from "@/components/live";
 import { Link } from "@/i18n/navigation";
 import { formatAmount, formatDate } from "@/lib/format";
@@ -25,6 +26,7 @@ export default async function GamePage({
   if (!/^[0-9a-f-]{36}$/i.test(gameId)) notFound();
   const locale = await getLocale();
   const t = await getTranslations("game");
+  const tc = await getTranslations("card");
 
   const data = await withUser(async (tx, user) => {
     const [game] = await tx.select().from(schema.games).where(eq(schema.games.id, gameId));
@@ -358,9 +360,27 @@ export default async function GamePage({
       )}
 
       {game.status === "closed" && game.hash && (
-        <p className="small muted">
-          {t("fingerprint")}: <span className="mono">{game.hash}</span>
-        </p>
+        <section className="card stack" id="card">
+          <h2>{tc("heading")}</h2>
+          <p className="small muted">{tc("intro")}</p>
+          {/* eslint-disable-next-line @next/next/no-img-element -- a private PNG from our own route */}
+          <img className="result-card-img" src={`/api/games/${game.id}/card`} alt={tc("heading")} width={1080} height={1350} />
+          <div className="row">
+            <ShareCard src={`/api/games/${game.id}/card?f=story`} label={tc("share")} filename={`poker-home-${game.number}.png`} />
+            <a className="btn small secondary" href={`/api/games/${game.id}/card?download`}>
+              {tc("post")}
+            </a>
+            <a className="btn small secondary" href={`/api/games/${game.id}/card?f=story&download`}>
+              {tc("story")}
+            </a>
+            <Link className="btn small secondary" href={`/verify/${game.hash}`}>
+              {tc("verifyLink")}
+            </Link>
+          </div>
+          <p className="small muted">
+            {t("fingerprint")}: <span className="mono">{game.hash}</span>
+          </p>
+        </section>
       )}
     </>
   );

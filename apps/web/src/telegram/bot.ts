@@ -7,6 +7,7 @@ import {
   DomainError,
   answerRequest,
   asAuth,
+  asJobs,
   asUser,
   consumeLinkCode,
   linkTelegramAccount,
@@ -23,8 +24,8 @@ import { Bot, type Context, InlineKeyboard } from "grammy";
 import type { UserFromGetMe } from "grammy/types";
 import { formatAmount, parseAmount } from "@/lib/format";
 import { botLocale, botT, esc } from "./i18n";
-import { sendRebuyRequest } from "./notifications";
-import { type Home, debtsText, lastGameText, nightText, statsText } from "./text";
+import { cardOrNull, postResult, sendRebuyRequest } from "./notifications";
+import { type Home, debtsText, lastGameText, nightText, rulesText, statsText } from "./text";
 
 export interface BotConfig {
   token: string;
@@ -39,6 +40,7 @@ export interface BotConfig {
 
 const UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 const codeHash = (code: string) => createHash("sha256").update(code).digest();
+const helpText = (t: ReturnType<typeof botT>) => `${t("help")}\n${t("helpRules")}`;
 
 interface Linked {
   id: string;
@@ -140,7 +142,7 @@ export function createBot(cfg: BotConfig) {
 
   bot.command("start", async (ctx) => {
     const payload = ctx.match.trim();
-    if (isGroup(ctx)) return payload ? linkGroup(ctx, payload) : ctx.reply(esc(tFor(ctx, null)("help")), { parse_mode: "HTML" });
+    if (isGroup(ctx)) return payload ? linkGroup(ctx, payload) : ctx.reply(esc(helpText(tFor(ctx, null))), { parse_mode: "HTML" });
     // Account linking: t.me/<bot>?start=<code> made on the website's security page.
     if (/^[A-Za-z0-9_-]{20,64}$/.test(payload)) {
       const t = tFor(ctx, null);
@@ -160,7 +162,7 @@ export function createBot(cfg: BotConfig) {
     const kb = new InlineKeyboard().webApp(t("openApp"), `${appUrl}/${locale}/tg`);
     if (!user) kb.row().url(t("haveAccount"), `${appUrl}/${locale}/security`);
     const text = user ? t("welcomeLinked", { name: user.displayName || ctx.from!.first_name }) : t("welcome", { name: ctx.from!.first_name });
-    return ctx.reply(`${esc(text)}\n\n${esc(t("help"))}`, { parse_mode: "HTML", reply_markup: kb });
+    return ctx.reply(`${esc(text)}\n\n${esc(helpText(t))}`, { parse_mode: "HTML", reply_markup: kb });
   });
 
   bot.command("link", async (ctx) => {
@@ -170,7 +172,7 @@ export function createBot(cfg: BotConfig) {
     return linkGroup(ctx, code);
   });
 
-  bot.command("help", (ctx) => ctx.reply(esc(tFor(ctx, null)("help")), { parse_mode: "HTML" }));
+  bot.command("help", (ctx) => ctx.reply(esc(helpText(tFor(ctx, null))), { parse_mode: "HTML" }));
 
   // ------------------------------------------------------------ live game
 
@@ -254,9 +256,23 @@ export function createBot(cfg: BotConfig) {
   bot.command("last", async (ctx) => {
     const c = await context(ctx);
     if (!c) return;
-    const r = await asUser(db, c.user.id, (tx) => lastGameText(tx, c.home, c.t, appUrl));
+    const r = await asUser(db, c.user.id, async (tx) => {
+      const last = await lastGameText(tx, c.home, c.t, appUrl);
+      return last && { ...last, png: await cardOrNull(tx, last.gameId, appUrl) };
+    });
     if (!r) return ctx.reply(esc(c.t("noGames")), { parse_mode: "HTML" });
-    return ctx.reply(r.text, { parse_mode: "HTML", reply_markup: r.keyboard });
+    return postResult(ctx.api, ctx.chat!.id, r, r.png);
+  });
+
+  // Public knowledge: works for anyone, linked or not. In a home's group the house rules follow.
+  bot.command("rules", async (ctx) => {
+    const user = ctx.from ? await siteUser(ctx.from.id) : null;
+    const home = isGroup(ctx)
+      ? ((await asJobs(db, (tx) => tx.select().from(schema.homes).where(eq(schema.homes.telegramChatId, ctx.chat!.id))))[0] ?? null)
+      : null;
+    const locale = home?.locale ?? user?.locale ?? botLocale(ctx.from?.language_code?.slice(0, 2));
+    const r = rulesText(ctx.match, locale, appUrl, home && { name: home.name, rules: home.houseRules });
+    return ctx.reply(r.text, { parse_mode: "HTML", reply_markup: r.keyboard, link_preview_options: { is_disabled: true } });
   });
 
   bot.command("debts", async (ctx) => {

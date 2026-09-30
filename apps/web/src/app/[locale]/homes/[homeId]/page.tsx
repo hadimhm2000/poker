@@ -3,7 +3,7 @@ import { asc, desc, eq } from "@poker/db";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
-import { addPlayerAction, createInviteAction, markPaidAction, newGameAction } from "@/app/actions/homes";
+import { addPlayerAction, createInviteAction, houseRulesAction, markPaidAction, newGameAction } from "@/app/actions/homes";
 import { connectGroupAction, disconnectGroupAction } from "@/app/actions/telegram";
 import { ErrorNotice } from "@/components/ErrorNotice";
 import { Link } from "@/i18n/navigation";
@@ -28,6 +28,7 @@ export default async function HomePage({
   const ts = await getTranslations("stats");
   const tn = await getTranslations("nights");
   const tt = await getTranslations("telegram");
+  const tr = await getTranslations("rules");
   const invite = (await cookies()).get("invite_flash")?.value;
 
   const data = await withUser(async (tx, user) => {
@@ -80,7 +81,8 @@ export default async function HomePage({
           <p style={{ marginBlockEnd: 0 }}>
             <Link href={`/homes/${home.id}/history`}>{t("history")}</Link> ·{" "}
             <Link href={`/homes/${home.id}/stats`}>{ts("title")}</Link> ·{" "}
-            <Link href={`/homes/${home.id}/nights`}>{tn("title")}</Link>
+            <Link href={`/homes/${home.id}/nights`}>{tn("title")}</Link> ·{" "}
+            <Link href={`/rules?home=${home.id}`}>{t("rules")}</Link>
             {canWrite && (
               <>
                 {" "}
@@ -141,6 +143,29 @@ export default async function HomePage({
               </tbody>
             </table>
           </div>
+        )}
+      </section>
+
+      <section className="card stack">
+        <h2>{tr("houseTitle")}</h2>
+        {canWrite ? (
+          <form action={houseRulesAction} className="stack">
+            <input type="hidden" name="homeId" value={home.id} />
+            <label>
+              {tr("houseEdit")}
+              <textarea name="houseRules" defaultValue={home.houseRules} maxLength={2000} rows={4} />
+            </label>
+            <p className="small muted">{tr("houseHint")}</p>
+            <div>
+              <button className="btn secondary" type="submit">
+                {tr("houseSave")}
+              </button>
+            </div>
+          </form>
+        ) : home.houseRules ? (
+          <p className="house-rules">{home.houseRules}</p>
+        ) : (
+          <p className="muted">{tr("houseNone")}</p>
         )}
       </section>
 

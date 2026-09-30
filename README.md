@@ -95,7 +95,22 @@ to the group on close, and private debt reminders. Tests: `packages/db/test/live
 `apps/web/src/telegram/*.test.ts` (the bot runs end to end against a real database). Its exit gate
 (a real game night of the group run entirely from Telegram) needs a bot token and a deployment.
 
-Not yet built: result card image (Satori), server-side PDF, Google/Apple login, email verification
-and password reset (need a mail provider), TOTP recovery codes, `/rules` (with the rules section),
-voice rebuys, seasons and badges, payments (phase 5). The in-memory rate limiter must move to
+Phase 4 rest and the result card are built:
+
+* Rules section (`/rules`): hand rankings with cards and combination counts, Texas Hold'em, Omaha
+  with a pot-limit calculator, every disputed situation from the plan's table (card examples are
+  checked by the hand engine in `packages/domain/test/rules.test.ts`), search, question of the day,
+  and each home's own house rules (edited by the host, shown with their own label). The bot's
+  `/rules [topic]` searches the same texts in any language and adds the group's house rules.
+  Rule texts outside English are a first translation and still need a human review.
+* Seasons: named date ranges (or "this month", Solar Hijri for Persian) with their own leaderboard;
+  all-time statistics are never reset. Badges (winning streak, biggest win, regular, comeback) are
+  computed from the frozen results, per season or all time.
+* Result card: a PNG in the home's language (post 4:5 and story 9:16) drawn as SVG and rendered with
+  resvg (Persian and Arabic shaped right to left; fonts in `apps/web/assets/fonts`, SIL OFL). Its QR
+  opens the public `/verify/<hash>` page, which rechecks the game and the whole hash chain behind it.
+  On close the bot posts the card with the result as caption; `/last` does the same.
+
+Not yet built: server-side PDF, Google/Apple login, email verification and password reset (need a
+mail provider), TOTP recovery codes, voice rebuys, the "companion referee" log, payments (phase 5). The in-memory rate limiter must move to
 Postgres or Redis before running more than one server instance.

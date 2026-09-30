@@ -48,6 +48,7 @@ export default async function LocaleLayout({
                 {user && !user.needsTwoFactor && <Link href="/homes">{t("homes")}</Link>}
                 <Link href="/tools/sidepot">{t("sidepot")}</Link>
                 <Link href="/tools/showdown">{t("showdown")}</Link>
+                <Link href="/rules">{t("rules")}</Link>
                 {user ? (
                   <>
                     <Link href="/security">{t("security")}</Link>

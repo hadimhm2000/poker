@@ -11,6 +11,7 @@ import {
   rebuy,
   schema,
   setCashOut,
+  setHouseRules,
 } from "@poker/db";
 import { and, eq, sql } from "@poker/db";
 import { cookies } from "next/headers";
@@ -204,4 +205,10 @@ export async function removeFromGameAction(form: FormData) {
     ),
   );
   return go(`/games/${gameId}`);
+}
+
+export async function houseRulesAction(form: FormData) {
+  const homeId = uuid.parse(form.get("homeId"));
+  await attempt(`/homes/${homeId}`, () => withUser((tx) => setHouseRules(tx, homeId, String(form.get("houseRules") ?? ""))));
+  return go(`/homes/${homeId}`);
 }

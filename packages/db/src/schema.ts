@@ -5,6 +5,7 @@ import {
   bigserial,
   boolean,
   customType,
+  date,
   integer,
   jsonb,
   pgEnum,
@@ -72,6 +73,7 @@ export const homes = pgTable("homes", {
   requireConfirmation: boolean("require_confirmation").notNull().default(false),
   settings: jsonb("settings").notNull().default({}),
   readOnly: boolean("read_only").notNull().default(false),
+  houseRules: text("house_rules").notNull().default(""),
   createdAt: ts("created_at").notNull().defaultNow(),
   deletedAt: ts("deleted_at"),
 });
@@ -231,4 +233,14 @@ export const debtReminders = pgTable("debt_reminders", {
   id: bigserial("id", { mode: "number" }).primaryKey(),
   settlementId: uuid("settlement_id").notNull(),
   sentAt: ts("sent_at").notNull().defaultNow(),
+});
+
+export const seasons = pgTable("seasons", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  homeId: uuid("home_id").notNull(),
+  name: text("name").notNull(),
+  startsOn: date("starts_on", { mode: "string" }).notNull(),
+  endsOn: date("ends_on", { mode: "string" }),
+  createdBy: uuid("created_by").notNull(),
+  createdAt: ts("created_at").notNull().defaultNow(),
 });

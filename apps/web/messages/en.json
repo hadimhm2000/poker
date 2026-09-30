@@ -12,7 +12,8 @@
     "signUp": "Create account",
     "signOut": "Sign out",
     "security": "Security",
-    "language": "Language"
+    "language": "Language",
+    "rules": "Rules"
   },
   "landing": {
     "title": "The scorebook for your poker night",
@@ -87,7 +88,8 @@
     "inviteHint": "Send this link once. It works for one person.",
     "readOnly": "This home is read-only.",
     "duplicateName": "A player with this name already exists.",
-    "join": "Join this home"
+    "join": "Join this home",
+    "rules": "Rules"
   },
   "game": {
     "title": "Game #{number}",
@@ -232,7 +234,8 @@
     "CANCELED": "This game night was canceled.",
     "TELEGRAM_TAKEN": "This Telegram account is already connected to another account.",
     "UNAUTHORIZED": "Please sign in again.",
-    "rateLimited": "Too many attempts. Please wait a moment."
+    "rateLimited": "Too many attempts. Please wait a moment.",
+    "NOT_CLOSED": "The game is not closed yet."
   },
   "stats": {
     "title": "Statistics",
@@ -281,7 +284,8 @@
     "yourNet": "Player's net",
     "opponentNet": "Opponent's net",
     "gamesOf": "Games of {name}",
-    "proOnly": "Available on Pro."
+    "proOnly": "Available on Pro.",
+    "seasonLeaderboard": "Leaderboard: {season}"
   },
   "import": {
     "title": "Import an old spreadsheet",
@@ -417,6 +421,246 @@
     "cmd_debts": "Open debts",
     "cmd_next": "Next game night",
     "cmd_sidepot": "Side pot calculator",
-    "cmd_help": "What I can do"
+    "cmd_help": "What I can do",
+    "rulesList": "Poker rules. Send /rules and a topic, for example /rules omaha flush",
+    "rulesNone": "Nothing found for \"{query}\". Try /rules kicker or /rules omaha.",
+    "rulesMore": "Also: {titles}",
+    "openRules": "All rules",
+    "houseRules": "House rules of {home}:",
+    "verifyButton": "Verify",
+    "cmd_rules": "Search the poker rules",
+    "helpRules": "/rules [topic] – search the poker rules"
+  },
+  "rules": {
+    "title": "Poker rules",
+    "intro": "The rules we play by, with real cards. The examples are checked by the same engine as the Who wins? tool, so the page and the calculator never disagree.",
+    "source": "Based on the Poker TDA rules. Home games can add their own house rules; those are shown separately and labelled.",
+    "contents": "Contents",
+    "search": "Search the rules",
+    "searchPlaceholder": "e.g. omaha flush, kicker, odd chip",
+    "searchButton": "Search",
+    "searchResults": "{count, plural, =0 {Nothing found.} one {# situation found} other {# situations found}}",
+    "clearSearch": "Show all",
+    "handsTitle": "Hand rankings",
+    "handsIntro": "From strongest to weakest. Only your best five cards count.",
+    "combos": "{count} of 2,598,960 five-card hands",
+    "hands": {
+      "royalFlush": "A-K-Q-J-10 of one suit. The best hand there is.",
+      "straightFlush": "Five cards in a row, all of one suit.",
+      "quads": "Four cards of the same rank.",
+      "fullHouse": "Three of a kind plus a pair. Compare the three first, then the pair.",
+      "flush": "Five cards of one suit, not in a row. Compare the highest card, then the next.",
+      "straight": "Five cards in a row, mixed suits. The ace plays high (10-J-Q-K-A) or low (A-2-3-4-5).",
+      "trips": "Three cards of the same rank.",
+      "twoPair": "Two different pairs. Higher pair, then the lower pair, then the fifth card.",
+      "pair": "Two cards of the same rank.",
+      "highCard": "None of the above. Highest card wins, then the next."
+    },
+    "holdemTitle": "Texas Hold'em",
+    "holdem": {
+      "cards": "Each player gets two cards face down. Five community cards are dealt face up in the middle: three (the flop), one (the turn), one (the river). You make the best five-card hand from any of your two cards and the five on the board, using both, one or none of yours.",
+      "blinds": "Before the cards are dealt, the two players to the left of the button post the small blind and the big blind. The button moves one seat to the left after every hand.",
+      "rounds": "There are four betting rounds: pre-flop (starting left of the big blind), flop, turn and river (starting left of the button). In each round you may check, bet, call, raise or fold.",
+      "minRaise": "A raise must be at least the size of the last bet or raise in the same round.",
+      "showdown": "If more than one player is left after the river, the hands are shown and the best one takes the pot. Equal hands split it.",
+      "headsUp": "With two players, the button posts the small blind, acts first before the flop and last after it."
+    },
+    "omahaTitle": "Omaha (Pot-Limit Omaha)",
+    "omaha": {
+      "cards": "Each player gets four cards. The board is dealt the same way as in Hold'em.",
+      "twoThree": "You must use exactly two cards from your hand and exactly three from the board. Not one, not three, not four. This is the rule Hold'em players get wrong most often.",
+      "potLimit": "Pot-limit: the most you can raise is the size of the pot after you call. Put in what you owe to call, then raise by everything that is now in the middle."
+    },
+    "potCalcTitle": "Pot-limit calculator",
+    "potCalcPot": "In the middle now (including bets this round)",
+    "potCalcBet": "Bet to match",
+    "potCalcIn": "You already put in this round",
+    "potCalcToCall": "To call",
+    "potCalcRaiseTo": "Maximum raise to",
+    "potCalcPutIn": "You put in",
+    "potCalcInvalid": "Enter whole numbers; what you put in cannot be more than the bet.",
+    "situationsTitle": "Disputed situations",
+    "situationsIntro": "The arguments that come up at real tables, and how they are decided.",
+    "ruling": "Ruling",
+    "example": "Example",
+    "board": "Board",
+    "handLabel": "Hand {label}",
+    "winner": "Wins",
+    "split": "Split",
+    "loses": "Loses",
+    "s": {
+      "boardPlays": {
+        "title": "The best five cards are on the board",
+        "ruling": "Everyone still in the hand splits the pot.",
+        "example": "Board A-K-Q-J-10: everyone ties."
+      },
+      "kicker": {
+        "title": "Kicker",
+        "ruling": "Only five cards count. A sixth card never matters.",
+        "example": "Board A-A-K-K-Q: a hand with a J and a hand with a 10 tie. Both play the board."
+      },
+      "suits": {
+        "title": "Suits",
+        "ruling": "In Hold'em no suit beats another.",
+        "example": "Two flushes with the same ranks split the pot."
+      },
+      "threePairs": {
+        "title": "Three pairs",
+        "ruling": "Your hand is the two highest pairs plus the best remaining card.",
+        "example": "Board K-K-9-9-4: Q-4 loses to A-2. The pair of fours does not count; the ace is the fifth card."
+      },
+      "fullHouses": {
+        "title": "Two full houses",
+        "ruling": "Compare the three of a kind first, then the pair.",
+        "example": "9-9-9-2-2 beats 8-8-8-A-A."
+      },
+      "twoFlushes": {
+        "title": "Two flushes",
+        "ruling": "Compare the highest card, then the second, down to the fifth.",
+        "example": "A-J-8-5-3 beats A-J-8-4-3."
+      },
+      "wheel": {
+        "title": "Straight with an ace",
+        "ruling": "A-2-3-4-5 is the lowest straight. A straight cannot wrap around the ace.",
+        "example": "Q-K-A-2-3 is not a straight."
+      },
+      "boardQuads": {
+        "title": "Four of a kind on the board (Hold'em)",
+        "ruling": "Everyone has the four of a kind; the fifth card decides.",
+        "example": "Board A-A-A-A-5: a king in hand beats a queen."
+      },
+      "omahaFlush": {
+        "title": "Omaha: four hearts on the board",
+        "ruling": "One heart in your hand is not a flush. You need two.",
+        "example": "The most common mistake of Hold'em players at an Omaha table."
+      },
+      "omahaStraight": {
+        "title": "Omaha: four to a straight on the board",
+        "ruling": "You can use only three board cards, so one card in hand does not make the straight.",
+        "example": "Board 5-6-7-8-K: a hand with one 9 has no straight; 9-10 in hand does."
+      },
+      "omahaQuads": {
+        "title": "Omaha: four aces on the board",
+        "ruling": "Nobody has four of a kind, because only three board cards can be used. A pair in hand makes a full house.",
+        "example": "Only three aces can play."
+      },
+      "showOrder": {
+        "title": "Who shows first",
+        "ruling": "The last player to bet or raise on the river shows first. If there was no bet, the first player to the left of the button shows first. In an all-in with no more betting, all hands are turned up."
+      },
+      "cardsSpeak": {
+        "title": "Cards speak",
+        "ruling": "A hand is read from its cards, not from what the player says. A hand that was mucked and cannot be clearly identified is dead.",
+        "example": "A player who thought they lost and threw their cards away cannot win the pot."
+      },
+      "minRaise": {
+        "title": "Minimum raise",
+        "ruling": "At least the size of the last bet or raise in the same round.",
+        "example": "Bet 100, raise to 300: the next raise is to at least 500."
+      },
+      "shortAllIn": {
+        "title": "An all-in smaller than a full raise",
+        "ruling": "It does not reopen the betting for players who have already acted.",
+        "example": "They may only call or fold."
+      },
+      "stringBet": {
+        "title": "Verbal declarations and string bets",
+        "ruling": "What you say in turn is binding. Chips must go in with one motion.",
+        "example": "\"Call... and raise\" counts as a call only."
+      },
+      "outOfTurn": {
+        "title": "Acting out of turn",
+        "ruling": "If the action before them does not change, their action is binding.",
+        "example": "A check before them does not change the action; a bet does."
+      },
+      "oddChip": {
+        "title": "The odd chip",
+        "ruling": "When a pot cannot be split evenly, the extra chip goes to the first winner to the left of the button.",
+        "example": "A pot of 25 between two players: 13 and 12."
+      },
+      "headsUp": {
+        "title": "Heads-up",
+        "ruling": "The button posts the small blind and acts first before the flop, last after it."
+      },
+      "sidePot": {
+        "title": "Side pots",
+        "ruling": "Each pot is decided separately, only among the players who are in it.",
+        "example": "Use the side pot calculator for the exact split."
+      }
+    },
+    "whoWinsTitle": "Who wins?",
+    "whoWinsBody": "Enter the board and the hands; the winner is shown with the reason.",
+    "openWhoWins": "Open the tool",
+    "openSidePot": "Side pot calculator",
+    "dailyTitle": "Question of the day",
+    "dailyAsk": "Who wins?",
+    "dailyReveal": "Show the answer",
+    "houseTitle": "House rules",
+    "houseLabel": "House rule of {home}",
+    "houseNone": "No house rules yet.",
+    "houseEdit": "House rules (only for this home)",
+    "houseHint": "For example: rebuy cap, blinds, when the game ends. Shown next to the official rules with a separate label.",
+    "houseSave": "Save house rules",
+    "reviewNote": "Rule texts are a first translation and are being reviewed."
+  },
+  "seasons": {
+    "title": "Seasons",
+    "allTime": "All time",
+    "intro": "A season has its own leaderboard. All-time statistics are never reset.",
+    "name": "Name",
+    "startsOn": "First day",
+    "endsOn": "Last day (empty = still running)",
+    "create": "Create season",
+    "thisMonth": "Create season for this month",
+    "delete": "Delete",
+    "running": "running",
+    "range": "{start} – {end}",
+    "rangeOpen": "from {start}",
+    "empty": "No games closed in this season yet."
+  },
+  "badges": {
+    "title": "Badges",
+    "none": "No badges yet. They are earned by winning streaks, big wins, playing regularly and coming back.",
+    "streak": "On fire",
+    "streakBody": "{count} winning games in a row",
+    "bigWin": "Biggest win",
+    "bigWinBody": "{amount} in game #{number}",
+    "regular": "Regular",
+    "regularBody": "{count} games in a row without missing one",
+    "comeback": "Comeback",
+    "comebackBody": "Was down, now up: {amount} recovered"
+  },
+  "card": {
+    "brand": "Poker Home",
+    "title": "Game #{number}",
+    "pot": "Total pot",
+    "more": "and {count, plural, one {# more player} other {# more players}}",
+    "scanToVerify": "Scan to verify this result",
+    "heading": "Result card",
+    "intro": "A picture of the result for your group or story. The QR code proves the numbers were not changed after closing.",
+    "post": "Download (post)",
+    "story": "Download (story)",
+    "share": "Share",
+    "verifyLink": "Verification page"
+  },
+  "verify": {
+    "title": "Result verification",
+    "ok": "Verified: this result has not changed since the game was closed.",
+    "okBody": "Its fingerprint and the whole chain of {count} games before and including it check out.",
+    "changed": "Warning: this result does not match its fingerprint.",
+    "chainBroken": "Warning: an earlier game of this home was changed after closing.",
+    "brokenBody": "The numbers were changed outside Poker Home after the game was frozen.",
+    "game": "Game #{number}",
+    "closedAt": "Closed {when}",
+    "player": "Player",
+    "in": "In",
+    "out": "Out",
+    "net": "Result",
+    "howTitle": "Check it yourself",
+    "howBody": "Each closed game stores a SHA-256 fingerprint of its result joined to the fingerprint of the game before it. Changing any old game breaks every fingerprint after it.",
+    "hash": "Fingerprint",
+    "prevHash": "Previous game's fingerprint",
+    "payload": "Exactly what was fingerprinted",
+    "payloadNote": "Players appear by their internal id; amounts are in the smallest unit."
   }
 }

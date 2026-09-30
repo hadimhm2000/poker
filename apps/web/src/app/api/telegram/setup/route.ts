@@ -5,7 +5,7 @@ import { authorizedCron } from "@/lib/cron-auth";
 
 export const dynamic = "force-dynamic";
 
-const COMMANDS = ["game", "rebuy", "stats", "last", "debts", "next", "sidepot", "help"] as const;
+const COMMANDS = ["game", "rebuy", "stats", "last", "debts", "next", "sidepot", "rules", "help"] as const;
 
 /**
  * One-time setup after deploy (same bearer secret as the cron):
