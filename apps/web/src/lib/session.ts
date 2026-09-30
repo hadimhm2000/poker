@@ -30,6 +30,11 @@ export function errorCode(e: unknown): string {
   if (/already have a player/.test(text)) return "ALREADY_LINKED";
   if (/cannot be claimed/.test(text)) return "NOT_FOUND";
   if (/invite is not valid/.test(text)) return "INVITE_INVALID";
+  if (/same open game/.test(text)) return "MERGE_SAME_GAME";
+  if (/linked to accounts/.test(text)) return "MERGE_LINKED";
+  if (/merged into another player/.test(text)) return "MERGED";
+  if (/players_avatar_check|players_payment_len|into itself/.test(text)) return "INVALID";
+  if (/not allowed/.test(text)) return "FORBIDDEN";
   if (/closed and cannot be changed/.test(text)) return "FROZEN";
   if (/players_home_name_idx|duplicate key/.test(text)) return "DUPLICATE";
   if (/row-level security|permission denied/.test(text)) return "FORBIDDEN";

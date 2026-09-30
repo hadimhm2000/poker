@@ -235,7 +235,10 @@
     "TELEGRAM_TAKEN": "This Telegram account is already connected to another account.",
     "UNAUTHORIZED": "Please sign in again.",
     "rateLimited": "Too many attempts. Please wait a moment.",
-    "NOT_CLOSED": "The game is not closed yet."
+    "NOT_CLOSED": "The game is not closed yet.",
+    "MERGE_SAME_GAME": "Both players are in the same open game. Remove one of them from that game first.",
+    "MERGE_LINKED": "Both players are linked to accounts, so they are two different people.",
+    "MERGED": "This player was merged into another player."
   },
   "stats": {
     "title": "Statistics",
@@ -662,5 +665,40 @@
     "prevHash": "Previous game's fingerprint",
     "payload": "Exactly what was fingerprinted",
     "payloadNote": "Players appear by their internal id; amounts are in the smallest unit."
+  },
+  "people": {
+    "membersTitle": "Members",
+    "joined": "joined {date}",
+    "you": "you",
+    "noName": "(no name)",
+    "remove": "Remove",
+    "removeHint": "A removed member loses access at once. Their past results stay, and you can invite them again.",
+    "invitesTitle": "Invite links",
+    "invitesNone": "No active invite links.",
+    "inviteFor": "For {name}",
+    "inviteAnyone": "For anyone",
+    "inviteUses": "used {uses} of {max}",
+    "inviteExpires": "expires {date}",
+    "inviteShowQr": "Show QR code",
+    "inviteQrAlt": "QR code of the invite link",
+    "inviteLegacy": "This older link was shown only once and cannot be shown again. Revoke it if you no longer need it.",
+    "inviteForPlayer": "Link to player (optional)",
+    "inviteMaxUses": "Uses",
+    "revoke": "Revoke",
+    "copyLink": "Copy link",
+    "copy": "Copy",
+    "copied": "Copied",
+    "editPlayer": "Edit",
+    "avatar": "Avatar",
+    "noAvatar": "None",
+    "paymentInfo": "Payment details",
+    "paymentHint": "Card number, IBAN or PayPal. Only members of this home see it, so they can pay you. Stored encrypted.",
+    "noPaymentInfo": "no payment details",
+    "save": "Save",
+    "mergeTitle": "Merge duplicate players",
+    "mergeHint": "For two names of the same person (e.g. Ali and ali). The duplicate's places in open games move to the kept player. Closed games are never changed; in statistics they count under the kept player. Not possible while both are in the same open game.",
+    "mergeKeep": "Keep",
+    "mergeDuplicate": "Merge this one into it",
+    "mergeButton": "Merge"
   }
 }

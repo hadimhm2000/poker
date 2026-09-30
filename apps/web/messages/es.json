@@ -235,7 +235,10 @@
     "TELEGRAM_TAKEN": "Esta cuenta de Telegram ya está vinculada a otra cuenta.",
     "UNAUTHORIZED": "Vuelve a iniciar sesión.",
     "rateLimited": "Demasiados intentos. Espera un momento.",
-    "NOT_CLOSED": "La partida todavía no está cerrada."
+    "NOT_CLOSED": "La partida todavía no está cerrada.",
+    "MERGE_SAME_GAME": "Ambos jugadores están en la misma partida abierta. Quita primero a uno de ellos de esa partida.",
+    "MERGE_LINKED": "Ambos jugadores están vinculados a una cuenta, así que son dos personas distintas.",
+    "MERGED": "Este jugador se fusionó con otro jugador."
   },
   "stats": {
     "title": "Estadísticas",
@@ -662,5 +665,40 @@
     "prevHash": "Huella de la partida anterior",
     "payload": "Exactamente lo que se usó para la huella",
     "payloadNote": "Los jugadores aparecen por su id interno; los importes están en la unidad más pequeña."
+  },
+  "people": {
+    "membersTitle": "Miembros",
+    "joined": "se unió el {date}",
+    "you": "tú",
+    "noName": "(sin nombre)",
+    "remove": "Quitar",
+    "removeHint": "Un miembro quitado pierde el acceso al instante. Sus resultados pasados se conservan y puedes invitarlo de nuevo.",
+    "invitesTitle": "Enlaces de invitación",
+    "invitesNone": "No hay enlaces de invitación activos.",
+    "inviteFor": "Para {name}",
+    "inviteAnyone": "Para cualquiera",
+    "inviteUses": "usado {uses} de {max}",
+    "inviteExpires": "caduca el {date}",
+    "inviteShowQr": "Mostrar código QR",
+    "inviteQrAlt": "Código QR del enlace de invitación",
+    "inviteLegacy": "Este enlace antiguo se mostró una sola vez y no puede volver a mostrarse. Revócalo si ya no lo necesitas.",
+    "inviteForPlayer": "Vincular a un jugador (opcional)",
+    "inviteMaxUses": "Usos",
+    "revoke": "Revocar",
+    "copyLink": "Copiar enlace",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "editPlayer": "Editar",
+    "avatar": "Avatar",
+    "noAvatar": "Ninguno",
+    "paymentInfo": "Datos de pago",
+    "paymentHint": "Número de tarjeta, IBAN o PayPal. Solo los miembros de esta home los ven, para poder pagarte. Se guardan cifrados.",
+    "noPaymentInfo": "sin datos de pago",
+    "save": "Guardar",
+    "mergeTitle": "Fusionar jugadores duplicados",
+    "mergeHint": "Para dos nombres de la misma persona (p. ej. Ali y ali). Los puestos del duplicado en partidas abiertas pasan al jugador que se conserva. Las partidas cerradas nunca cambian; en las estadísticas cuentan para el jugador conservado. No es posible mientras ambos estén en la misma partida abierta.",
+    "mergeKeep": "Conservar",
+    "mergeDuplicate": "Fusionar este en él",
+    "mergeButton": "Fusionar"
   }
 }

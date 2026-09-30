@@ -1,12 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { type CloseBlocker, balancesWithOpenDebts, closeBlockers, deriveStatus, liveTotals, netResults, settle } from "@poker/domain";
-import { pendingRequests, schema } from "@poker/db";
-import { and, eq, gt, isNull, notExists, sql } from "@poker/db";
+import { openDebts, pendingRequests, schema } from "@poker/db";
+import { and, eq, gt, isNull, sql } from "@poker/db";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { addToGameAction, closeGameAction, confirmResultAction, removeFromGameAction } from "@/app/actions/homes";
 import { claimPlayerAction, makeJoinLinkAction, requestRebuyAction } from "@/app/actions/live";
 import { ErrorNotice } from "@/components/ErrorNotice";
+import { PlayerName } from "@/components/PlayerName";
 import { ShareCard } from "@/components/ShareCard";
 import { AnswerRequest, CopyButton, HostEntryControls, HostQueue, LiveRefresh } from "@/components/live";
 import { Link } from "@/i18n/navigation";
@@ -35,18 +36,8 @@ export default async function GamePage({
     const players = await tx.select().from(schema.players).where(eq(schema.players.homeId, game.homeId));
     const entries = await tx.select().from(schema.gameEntries).where(eq(schema.gameEntries.gameId, gameId));
     const settlements = await tx.select().from(schema.settlements).where(eq(schema.settlements.gameId, gameId));
-    // Open debts between tonight's players, for the settlement preview.
-    const open = await tx
-      .select({ from: schema.settlements.fromPlayer, to: schema.settlements.toPlayer, amount: schema.settlements.amount })
-      .from(schema.settlements)
-      .innerJoin(schema.games, eq(schema.games.id, schema.settlements.gameId))
-      .where(
-        and(
-          eq(schema.games.homeId, game.homeId),
-          eq(schema.games.status, "closed"),
-          notExists(tx.select({ x: sql`1` }).from(schema.debtPayments).where(eq(schema.debtPayments.settlementId, schema.settlements.id))),
-        ),
-      );
+    // Open debts between tonight's players, for the settlement preview (same query as closing).
+    const open = await openDebts(tx, game.homeId);
     const requests = game.status === "live" ? await pendingRequests(tx, game.id) : [];
     const isHost = home!.ownerId === user.id;
     const [invite] =
@@ -145,7 +136,7 @@ export default async function GamePage({
             return (
               <tr key={e.playerId} className={p?.userId === userId ? "me" : undefined}>
                 <td>
-                  {name.get(e.playerId)} {e.confirmedAt && <span className="badge" title={t("confirmed")}>✓</span>}
+                  <PlayerName name={name.get(e.playerId) ?? "?"} avatar={p?.avatar} /> {e.confirmedAt && <span className="badge" title={t("confirmed")}>✓</span>}
                 </td>
                 <td className="end num">{money(e.totalIn)}</td>
                 <td className="end">

@@ -235,7 +235,10 @@
     "TELEGRAM_TAKEN": "Ce compte Telegram est déjà lié à un autre compte.",
     "UNAUTHORIZED": "Veuillez vous reconnecter.",
     "rateLimited": "Trop de tentatives. Patientez un instant.",
-    "NOT_CLOSED": "La partie n'est pas encore clôturée."
+    "NOT_CLOSED": "La partie n'est pas encore clôturée.",
+    "MERGE_SAME_GAME": "Les deux joueurs sont dans la même partie ouverte. Retirez d'abord l'un d'eux de cette partie.",
+    "MERGE_LINKED": "Les deux joueurs sont liés à un compte : ce sont deux personnes différentes.",
+    "MERGED": "Ce joueur a été fusionné avec un autre joueur."
   },
   "stats": {
     "title": "Statistiques",
@@ -662,5 +665,40 @@
     "prevHash": "Empreinte de la partie précédente",
     "payload": "Exactement ce qui a servi à l'empreinte",
     "payloadNote": "Les joueurs apparaissent par leur identifiant interne ; les montants sont dans la plus petite unité."
+  },
+  "people": {
+    "membersTitle": "Membres",
+    "joined": "membre depuis le {date}",
+    "you": "vous",
+    "noName": "(sans nom)",
+    "remove": "Retirer",
+    "removeHint": "Un membre retiré perd l'accès immédiatement. Ses résultats passés restent, et vous pouvez l'inviter à nouveau.",
+    "invitesTitle": "Liens d'invitation",
+    "invitesNone": "Aucun lien d'invitation actif.",
+    "inviteFor": "Pour {name}",
+    "inviteAnyone": "Pour tout le monde",
+    "inviteUses": "utilisé {uses} sur {max}",
+    "inviteExpires": "expire le {date}",
+    "inviteShowQr": "Afficher le QR code",
+    "inviteQrAlt": "QR code du lien d'invitation",
+    "inviteLegacy": "Cet ancien lien n'a été affiché qu'une fois et ne peut plus l'être. Révoquez-le si vous n'en avez plus besoin.",
+    "inviteForPlayer": "Lier à un joueur (facultatif)",
+    "inviteMaxUses": "Utilisations",
+    "revoke": "Révoquer",
+    "copyLink": "Copier le lien",
+    "copy": "Copier",
+    "copied": "Copié",
+    "editPlayer": "Modifier",
+    "avatar": "Avatar",
+    "noAvatar": "Aucun",
+    "paymentInfo": "Coordonnées de paiement",
+    "paymentHint": "Numéro de carte, IBAN ou PayPal. Seuls les membres de cette home les voient, pour pouvoir vous payer. Stockées chiffrées.",
+    "noPaymentInfo": "pas de coordonnées de paiement",
+    "save": "Enregistrer",
+    "mergeTitle": "Fusionner des joueurs en double",
+    "mergeHint": "Pour deux noms d'une même personne (par ex. Ali et ali). Les places du doublon dans les parties ouvertes passent au joueur conservé. Les parties clôturées ne changent jamais ; dans les statistiques, elles comptent pour le joueur conservé. Impossible tant que les deux sont dans la même partie ouverte.",
+    "mergeKeep": "Conserver",
+    "mergeDuplicate": "Fusionner celui-ci dedans",
+    "mergeButton": "Fusionner"
   }
 }

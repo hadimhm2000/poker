@@ -235,7 +235,10 @@
     "TELEGRAM_TAKEN": "Questo account Telegram è già collegato a un altro account.",
     "UNAUTHORIZED": "Accedi di nuovo.",
     "rateLimited": "Troppi tentativi. Attendi un momento.",
-    "NOT_CLOSED": "La partita non è ancora chiusa."
+    "NOT_CLOSED": "La partita non è ancora chiusa.",
+    "MERGE_SAME_GAME": "Entrambi i giocatori sono nella stessa partita aperta. Togline prima uno da quella partita.",
+    "MERGE_LINKED": "Entrambi i giocatori sono collegati a un account, quindi sono due persone diverse.",
+    "MERGED": "Questo giocatore è stato unito a un altro giocatore."
   },
   "stats": {
     "title": "Statistiche",
@@ -662,5 +665,40 @@
     "prevHash": "Impronta della partita precedente",
     "payload": "Esattamente ciò di cui è stata calcolata l'impronta",
     "payloadNote": "I giocatori compaiono con il loro id interno; gli importi sono nell'unità più piccola."
+  },
+  "people": {
+    "membersTitle": "Membri",
+    "joined": "entrato il {date}",
+    "you": "tu",
+    "noName": "(senza nome)",
+    "remove": "Rimuovi",
+    "removeHint": "Un membro rimosso perde subito l'accesso. I suoi risultati passati restano e puoi invitarlo di nuovo.",
+    "invitesTitle": "Link di invito",
+    "invitesNone": "Nessun link di invito attivo.",
+    "inviteFor": "Per {name}",
+    "inviteAnyone": "Per chiunque",
+    "inviteUses": "usato {uses} su {max}",
+    "inviteExpires": "scade il {date}",
+    "inviteShowQr": "Mostra codice QR",
+    "inviteQrAlt": "Codice QR del link di invito",
+    "inviteLegacy": "Questo vecchio link è stato mostrato una sola volta e non può essere mostrato di nuovo. Revocalo se non ti serve più.",
+    "inviteForPlayer": "Collega a un giocatore (facoltativo)",
+    "inviteMaxUses": "Utilizzi",
+    "revoke": "Revoca",
+    "copyLink": "Copia link",
+    "copy": "Copia",
+    "copied": "Copiato",
+    "editPlayer": "Modifica",
+    "avatar": "Avatar",
+    "noAvatar": "Nessuno",
+    "paymentInfo": "Dati di pagamento",
+    "paymentHint": "Numero di carta, IBAN o PayPal. Li vedono solo i membri di questa home, per poterti pagare. Salvati cifrati.",
+    "noPaymentInfo": "nessun dato di pagamento",
+    "save": "Salva",
+    "mergeTitle": "Unisci giocatori doppi",
+    "mergeHint": "Per due nomi della stessa persona (es. Ali e ali). I posti del doppione nelle partite aperte passano al giocatore tenuto. Le partite chiuse non cambiano mai; nelle statistiche contano per il giocatore tenuto. Non possibile finché entrambi sono nella stessa partita aperta.",
+    "mergeKeep": "Tieni",
+    "mergeDuplicate": "Unisci questo in esso",
+    "mergeButton": "Unisci"
   }
 }
