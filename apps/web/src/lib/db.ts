@@ -1,8 +1,8 @@
 import "server-only";
 import { createDb } from "@poker/db";
 
-// One pool per server process. DATABASE_URL is a login role that is a member of app_user and
-// app_auth (see README); it must not be a superuser or the table owner.
+// One pool per server process. DATABASE_URL is a login role that is a member of app_user,
+// app_auth, app_jobs and app_billing (see README); never a superuser or the table owner.
 const globalForDb = globalThis as unknown as { pokerDb?: ReturnType<typeof createDb> };
 
 export function getDb() {

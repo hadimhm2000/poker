@@ -202,3 +202,11 @@ dl.small dd { margin-inline-start: 0; }
 .result-card-img { width: 100%; max-width: 360px; border-radius: 14px; border: 1px solid var(--border); display: block; }
 .seasons { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 .seasons a.current { font-weight: 700; text-decoration: underline; }
+
+/* pricing and billing */
+.pricing .price { font-size: 1.6rem; font-weight: 700; margin: 0; }
+.pricing .price .small { font-weight: 400; }
+.pricing .pro { border-color: var(--accent); }
+.facts { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 0; }
+.facts dt { color: var(--muted); }
+.facts dd { margin-inline-start: 0; }

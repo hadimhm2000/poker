@@ -1,5 +1,5 @@
-import { ledger, schema } from "@poker/db";
-import { asc, desc, eq } from "@poker/db";
+import { homePlan, ledger, schema } from "@poker/db";
+import { asc, desc, eq, sql } from "@poker/db";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -29,6 +29,7 @@ export default async function HomePage({
   const tn = await getTranslations("nights");
   const tt = await getTranslations("telegram");
   const tr = await getTranslations("rules");
+  const tb = await getTranslations("billing");
   const invite = (await cookies()).get("invite_flash")?.value;
 
   const data = await withUser(async (tx, user) => {
@@ -37,10 +38,21 @@ export default async function HomePage({
     const players = await tx.select().from(schema.players).where(eq(schema.players.homeId, homeId)).orderBy(asc(schema.players.displayName));
     const games = await tx.select().from(schema.games).where(eq(schema.games.homeId, homeId)).orderBy(desc(schema.games.createdAt));
     const debts = await ledger(tx, homeId);
-    return { home, players, games, debts, isOwner: home.ownerId === user.id, userId: user.id };
+    // Free plan: 3 games in total across the owner's homes (the trigger enforces it; this
+    // only swaps the "New game" form for the upgrade note).
+    let atGameLimit = false;
+    if (home.ownerId === user.id && (await homePlan(tx, homeId)) === "free") {
+      const [c] = await tx
+        .select({ n: sql<number>`count(*)::int` })
+        .from(schema.games)
+        .innerJoin(schema.homes, eq(schema.homes.id, schema.games.homeId))
+        .where(eq(schema.homes.ownerId, user.id));
+      atGameLimit = (c?.n ?? 0) >= 3;
+    }
+    return { home, players, games, debts, isOwner: home.ownerId === user.id, userId: user.id, atGameLimit };
   });
   if (!data) notFound();
-  const { home, players, games, debts, isOwner } = data;
+  const { home, players, games, debts, isOwner, atGameLimit } = data;
   const name = new Map(players.map((p) => [p.id, p.displayName]));
   const money = (n: number) => formatAmount(n, home, locale);
   const canWrite = isOwner && !home.readOnly;
@@ -50,12 +62,21 @@ export default async function HomePage({
     <>
       <h1>{home.name}</h1>
       <ErrorNotice code={error} />
-      {home.readOnly && <div className="alert">{t("readOnly")}</div>}
+      {home.readOnly && (
+        <div className="alert">
+          {t("readOnly")} {isOwner && <Link href="/pricing">{tb("upgradeLink")}</Link>}
+        </div>
+      )}
 
       <div className="grid">
         <section className="card">
           <h2>{t("games")}</h2>
-          {canWrite && (
+          {canWrite && atGameLimit && (
+            <p className="alert">
+              {t("gameLimit")} <Link href="/pricing">{tb("upgradeLink")}</Link>
+            </p>
+          )}
+          {canWrite && !atGameLimit && (
             <form action={newGameAction} className="row" style={{ marginBlockEnd: 12 }}>
               <input type="hidden" name="homeId" value={home.id} />
               <label style={{ flex: 1 }}>
