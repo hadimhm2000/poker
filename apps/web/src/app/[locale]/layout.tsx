@@ -53,8 +53,10 @@ export default async function LocaleLayout({
                 <Link href="/tools/sidepot">{t("sidepot")}</Link>
                 <Link href="/tools/showdown">{t("showdown")}</Link>
                 <Link href="/rules">{t("rules")}</Link>
+                <Link href="/pricing">{t("pricing")}</Link>
                 {user ? (
                   <>
+                    {!user.needsTwoFactor && <Link href="/account/billing">{t("billing")}</Link>}
                     <Link href="/settings">{t("settings")}</Link>
                     {isAdmin(user) && <Link href="/admin">{t("admin")}</Link>}
                     <form action={signOutAction}>

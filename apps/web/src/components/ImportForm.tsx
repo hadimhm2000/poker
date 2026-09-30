@@ -31,7 +31,7 @@ export function ImportForm({ homeId, divisor, suffix }: { homeId: string; diviso
     <div className="stack">
       {error && (
         <div className="alert">
-          {error === "noColumns" ? t("noColumns") : error === "tooBig" ? t("tooBig") : error === "PRO" ? ts("proOnly") : te(error)}
+          {error === "noColumns" ? t("noColumns") : error === "tooBig" ? t("tooBig") : error === "PRO" ? <Link href="/pricing">{ts("proOnly")}</Link> : te(error)}
         </div>
       )}
       <form action={previewAction} className="card row">

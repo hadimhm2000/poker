@@ -1,5 +1,5 @@
-import { AVATARS, activeInvites, ledger, memberList, schema } from "@poker/db";
-import { asc, desc, eq } from "@poker/db";
+import { AVATARS, activeInvites, homePlan, ledger, memberList, schema } from "@poker/db";
+import { asc, desc, eq, sql } from "@poker/db";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { addPlayerAction, createInviteAction, houseRulesAction, markPaidAction, newGameAction } from "@/app/actions/homes";
@@ -34,6 +34,7 @@ export default async function HomePage({
   const tt = await getTranslations("telegram");
   const tr = await getTranslations("rules");
   const tp = await getTranslations("people");
+  const tb = await getTranslations("billing");
 
   const data = await withUser(async (tx, user) => {
     const [home] = await tx.select().from(schema.homes).where(eq(schema.homes.id, homeId));
@@ -44,10 +45,21 @@ export default async function HomePage({
     const members = await memberList(tx, homeId);
     const isOwner = home.ownerId === user.id;
     const invites = isOwner ? await activeInvites(tx, homeId) : [];
-    return { home, players, games, debts, members, invites, isOwner, userId: user.id };
+    // Free plan: 3 games in total across the owner's homes (the trigger enforces it; this
+    // only swaps the "New game" form for the upgrade note).
+    let atGameLimit = false;
+    if (isOwner && (await homePlan(tx, homeId)) === "free") {
+      const [c] = await tx
+        .select({ n: sql<number>`count(*)::int` })
+        .from(schema.games)
+        .innerJoin(schema.homes, eq(schema.homes.id, schema.games.homeId))
+        .where(eq(schema.homes.ownerId, user.id));
+      atGameLimit = (c?.n ?? 0) >= 3;
+    }
+    return { home, players, games, debts, members, invites, isOwner, userId: user.id, atGameLimit };
   });
   if (!data) notFound();
-  const { home, players, games, debts, members, isOwner, userId } = data;
+  const { home, players, games, debts, members, isOwner, userId, atGameLimit } = data;
   const name = new Map(players.map((p) => [p.id, p.displayName]));
   const byId = new Map(players.map((p) => [p.id, p]));
   const active = players.filter((p) => !p.mergedInto);
@@ -71,12 +83,21 @@ export default async function HomePage({
     <>
       <h1>{home.name}</h1>
       <ErrorNotice code={error} />
-      {home.readOnly && <div className="alert">{t("readOnly")}</div>}
+      {home.readOnly && (
+        <div className="alert">
+          {t("readOnly")} {isOwner && <Link href="/pricing">{tb("upgradeLink")}</Link>}
+        </div>
+      )}
 
       <div className="grid">
         <section className="card">
           <h2>{t("games")}</h2>
-          {canWrite && (
+          {canWrite && atGameLimit && (
+            <p className="alert">
+              {t("gameLimit")} <Link href="/pricing">{tb("upgradeLink")}</Link>
+            </p>
+          )}
+          {canWrite && !atGameLimit && (
             <form action={newGameAction} className="row" style={{ marginBlockEnd: 12 }}>
               <input type="hidden" name="homeId" value={home.id} />
               <label style={{ flex: 1 }}>

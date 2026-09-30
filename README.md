@@ -21,6 +21,9 @@ it, ru, es; Persian and Arabic right-to-left). The app never holds or moves mone
   chained to the previous one, so even tampering with triggers disabled is detected.
 * Closing uses a row lock, a client idempotency key and a version check: double clicks and
   two devices produce one record.
+* The plan changes only through the signed payment webhook (a narrow `app_billing` role that
+  may only call two definer functions); the app's own roles cannot set `users.plan` or a home's
+  read-only flag.
 * Free-plan limits (1 home, 3 games) are enforced in triggers under a row lock, so concurrent
   requests cannot slip past them.
 * `audit_log` is append-only. Secrets (password hashes, TOTP secrets, payment details) never
@@ -36,7 +39,7 @@ pnpm install
 # Postgres 16. As a superuser:
 createdb poker_dev
 DATABASE_URL_ADMIN=postgres://postgres@localhost:5432/poker_dev pnpm migrate
-psql -d poker_dev -c "CREATE ROLE poker_web LOGIN PASSWORD 'devpass'; GRANT app_user, app_auth, app_jobs TO poker_web;"
+psql -d poker_dev -c "CREATE ROLE poker_web LOGIN PASSWORD 'devpass'; GRANT app_user, app_auth, app_jobs, app_billing TO poker_web;"
 cp apps/web/.env.example apps/web/.env.local   # fill FIELD_KEY and IP_HASH_SALT
 pnpm dev
 ```
@@ -65,6 +68,46 @@ posts results on close, game-night invites with answer buttons, and reminders.
 
 Live updates use Postgres `LISTEN/NOTIFY` and Server-Sent Events (no extra service). Behind a
 proxy, disable response buffering for `/api/games/*/live`.
+
+## Payments
+
+Paddle Billing is the merchant of record (it handles VAT/sales tax, invoices and refunds). The app
+never sees card details. Setup, once per environment (do it all in the sandbox first:
+[sandbox-vendors.paddle.com](https://sandbox-vendors.paddle.com)):
+
+1. **Product and prices:** Catalog > Products: one product "Poker Home Pro" with two recurring
+   prices, monthly ($3.99) and yearly ($29) as a starting point. A free trial, if wanted, is set on
+   the prices; put its length in `PRO_TRIAL_DAYS` so the pricing page mentions it. Copy the price
+   ids (`pri_...`) into `PADDLE_PRICE_MONTHLY` and `PADDLE_PRICE_YEARLY`. The prices shown on the
+   pricing page come from `PRICING_*` (display only).
+2. **Checkout:** Developer tools > Authentication: create a client-side token for
+   `PADDLE_CLIENT_TOKEN`. Checkout settings: set the default payment link to the site
+   (`https://<domain>/en/pricing`) and approve the domain. Discount codes are created in Paddle
+   (Catalog > Discounts) and entered by the buyer in the checkout; there is no coupon system here.
+3. **Webhook:** Developer tools > Notifications: new destination `https://<domain>/api/billing/webhook`,
+   events `subscription.created`, `.updated`, `.activated`, `.trialing`, `.canceled`, `.past_due`,
+   `.paused`, `.resumed` and `transaction.completed`. Put its secret key in `PADDLE_WEBHOOK_SECRET`.
+   Every request is checked (`Paddle-Signature` HMAC over the raw body, at most 5 minutes old) and
+   each event id is applied once.
+4. **Customer portal (optional):** an API key allowed to create customer portal sessions in
+   `PADDLE_API_KEY`. The billing page then shows "Cancel subscription" and "Invoices and payment
+   method"; without it those buttons are hidden.
+5. `PADDLE_ENV=sandbox` until going live, then `production` with live token, prices, secret and key.
+
+Sandbox testing: pay with Paddle's test card `4242 4242 4242 4242` (any future date, CVC `100`).
+To replay or send sample events, use Notifications > "Send test event" or the simulator, and
+watch the delivery log. Locally, expose the dev server with a tunnel so Paddle can reach the
+webhook.
+
+Plan rules: Pro while a subscription is active or trialing, and after a cancel until the paid
+period ends (the cron tick drops it if no webhook arrives); `past_due` and `paused` fall back to
+Free. When Pro ends nothing is deleted: the owner's oldest home stays writable, the others become
+read-only (past games stay visible), and all become writable again on the next payment.
+
+**Still open (plan, open questions):** Paddle, Stripe and the app stores usually do not accept
+sellers resident in Iran because of sanctions. Selling internationally needs a company and a bank
+account outside Iran; which country that is has not been decided. Nothing above works until a
+Paddle seller account for that company is approved.
 
 ## Status against the plan
 
@@ -110,6 +153,13 @@ Phase 4 rest and the result card are built:
   resvg (Persian and Arabic shaped right to left; fonts in `apps/web/assets/fonts`, SIL OFL). Its QR
   opens the public `/verify/<hash>` page, which rechecks the game and the whole hash chain behind it.
   On close the bot posts the card with the result as caption; `/last` does the same.
+
+Phase 5 (subscription) is built with Paddle Billing: pricing page (linked from the menu and every
+"limit reached" message), overlay checkout, signed and idempotent webhook, billing page with the
+Paddle customer portal, and read-only homes after a downgrade. Its exit gate is
+`packages/db/test/billing.test.ts`: limits hold under concurrent requests, also while a downgrade
+or upgrade webhook races with game creation. Taking real payments needs the company question
+in "Payments" answered first.
 
 Account module is built: email confirmation and password reset by one-time links (hash stored,
 bound to the address, reset ends every session), Google and Apple sign-in (OpenID Connect with

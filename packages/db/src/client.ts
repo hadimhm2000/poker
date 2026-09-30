@@ -50,6 +50,17 @@ export async function asJobs<T>(db: Db, fn: (tx: Tx) => Promise<T>): Promise<T> 
 }
 
 /**
+ * Payment webhook and plan expiry only: may call the billing functions (0006_billing.sql) and
+ * nothing else. Never use it to serve a user's request.
+ */
+export async function asBilling<T>(db: Db, fn: (tx: Tx) => Promise<T>): Promise<T> {
+  return db.transaction(async (tx) => {
+    await tx.execute(dsql`SET LOCAL ROLE app_billing`);
+    return fn(tx);
+  });
+}
+
+/**
  * Listen for game changes (NOTIFY from triggers; payload = game id) on a dedicated
  * connection. postgres-js reconnects and re-listens on its own.
  */

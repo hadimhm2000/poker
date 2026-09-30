@@ -92,7 +92,7 @@ export default async function StatsPage({
             </>
           ) : (
             <span className="small muted">
-              {t("exportXlsx")} · {t("exportCsv")}: {t("proOnly")}
+              {t("exportXlsx")} · {t("exportCsv")}: <Link href="/pricing">{t("proOnly")}</Link>
             </span>
           )}
           <PrintButton label={t("print")} />

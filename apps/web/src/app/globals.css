@@ -253,3 +253,10 @@ dl.small dd { margin-inline-start: 0; }
 .footer { padding-block: 24px 32px; text-align: center; }
 .footer a { color: inherit; }
 .legal h2 { font-size: 1.1rem; margin-block: 16px 4px; }
+/* pricing and billing */
+.pricing .price { font-size: 1.6rem; font-weight: 700; margin: 0; }
+.pricing .price .small { font-weight: 400; }
+.pricing .pro { border-color: var(--accent); }
+.facts { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 0; }
+.facts dt { color: var(--muted); }
+.facts dd { margin-inline-start: 0; }
