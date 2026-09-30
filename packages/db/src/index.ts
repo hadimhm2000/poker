@@ -7,3 +7,4 @@ export { and, asc, desc, eq, gt, gte, inArray, isNull, lt, lte, ne, notExists, o
 export * from "./seasons";
 export * from "./accounts";
 export * from "./players";
+export * from "./admin";

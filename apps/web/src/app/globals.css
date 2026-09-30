@@ -249,3 +249,7 @@ dl.small dd { margin-inline-start: 0; }
 .invite-link { align-items: center; }
 .invite-link .mono { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .invite-qr { display: block; margin-block-start: 8px; border-radius: 8px; background: #fff; }
+/* Footer and legal pages */
+.footer { padding-block: 24px 32px; text-align: center; }
+.footer a { color: inherit; }
+.legal h2 { font-size: 1.1rem; margin-block: 16px 4px; }

@@ -14,7 +14,10 @@
     "security": "Безопасность",
     "language": "Язык",
     "rules": "Правила",
-    "settings": "Настройки"
+    "settings": "Настройки",
+    "admin": "Админ",
+    "terms": "Условия",
+    "privacy": "Конфиденциальность"
   },
   "landing": {
     "title": "Учётная книга вашего покерного вечера",
@@ -327,7 +330,8 @@
     "opponentNet": "Итог соперника",
     "gamesOf": "Игры: {name}",
     "proOnly": "Доступно в Pro.",
-    "seasonLeaderboard": "Рейтинг: {season}"
+    "seasonLeaderboard": "Рейтинг: {season}",
+    "exportPdf": "PDF"
   },
   "import": {
     "title": "Импорт старой таблицы",
@@ -788,5 +792,54 @@
     "mergeKeep": "Оставить",
     "mergeDuplicate": "Объединить этого с ним",
     "mergeButton": "Объединить"
+  },
+  "legal": {
+    "termsTitle": "Условия использования",
+    "privacyTitle": "Политика конфиденциальности",
+    "draftNote": "Черновик: текст ещё не проверен юристом и может измениться до запуска.",
+    "untranslated": "Эта страница ещё не переведена на ваш язык; действует английский текст.",
+    "updated": "Последнее обновление: {date}"
+  },
+  "admin": {
+    "title": "Admin",
+    "intro": "Support tools. You see counts and accounts, never games, unless you open one home for a support request. Every step is logged.",
+    "done": "Done. It is in the log.",
+    "errors": {
+      "REASON": "Write a reason (at least 5 characters).",
+      "NOT_FOUND": "Not found.",
+      "ERROR": "That did not work.",
+      "FORBIDDEN": "Not allowed."
+    },
+    "stats": {
+      "users": "Accounts",
+      "usersNew30d": "New in 30 days",
+      "pro": "Pro",
+      "homes": "Homes",
+      "gamesClosed": "Closed games",
+      "gamesClosed30d": "Closed in 30 days",
+      "twoFactor": "Two-step on",
+      "telegram": "Telegram linked"
+    },
+    "findTitle": "Find an account",
+    "findPlaceholder": "Email (start) or account id",
+    "find": "Find",
+    "noUsers": "No account found.",
+    "deleted": "deleted",
+    "userLine": "Joined {created} · plan {plan} · owns {homes} · member of {memberships}",
+    "twoFactorOn": "two-step on",
+    "twoFactorOff": "two-step off",
+    "reason": "Reason (ticket number and what was asked)",
+    "reasonExample": "Ticket 42: host asks why a total is wrong",
+    "setPlan": "Set plan",
+    "endSessions": "Sign out everywhere",
+    "openTitle": "Open a home for support",
+    "openNote": "Only when the home's host asked for help. Access lasts one hour and each view is logged.",
+    "homeId": "Home id",
+    "open": "Open for one hour",
+    "logTitle": "Admin log",
+    "noAccess": "No open support access to this home. Open it from the admin page with a reason.",
+    "back": "← Admin",
+    "accessUntil": "Support access until {until}. Every view is logged.",
+    "homeLine": "Owner {owner} · {members} members · {players} players"
   }
 }

@@ -120,4 +120,12 @@ JSON, and account deletion that keeps closed games for the others with the name 
 reminders also go by email to confirmed addresses. Tests: `packages/db/test/accounts.test.ts`,
 `apps/web/src/lib/{oidc,recovery}.test.ts`.
 
+Admin, legal and PDF: a limited support panel at `/admin` (ADMIN_EMAILS, confirmed email and two-step
+verification required): counts, account lookup, plan change and "sign out everywhere" with a written
+reason, and a home's history only through a one-hour support grant; every step is in the append-only
+audit log (`packages/db/test/admin.test.ts`). Terms of use and privacy policy are drafts in English
+and Persian (`apps/web/src/content/legal.ts`, placeholders for the operator and contact until the
+company question is settled). The statistics page has a server-rendered two-page PDF when
+PDF_CHROMIUM_PATH is set.
+
 The in-memory rate limiter must move to Postgres or Redis before running more than one server instance.

@@ -19,7 +19,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   experimental: { serverActions: { bodySizeLimit: "2mb" } },
   transpilePackages: ["@poker/domain", "@poker/db"],
-  serverExternalPackages: ["@node-rs/argon2", "@resvg/resvg-js", "postgres", "exceljs"],
+  serverExternalPackages: ["@node-rs/argon2", "@resvg/resvg-js", "postgres", "exceljs", "playwright-core"],
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

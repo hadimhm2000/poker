@@ -13,6 +13,7 @@ import { signOutAction } from "../actions/auth";
 import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 import { cookies } from "next/headers";
 import { THEME_COOKIE, isTheme } from "@/lib/theme";
+import { isAdmin } from "@/lib/admin";
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -55,6 +56,7 @@ export default async function LocaleLayout({
                 {user ? (
                   <>
                     <Link href="/settings">{t("settings")}</Link>
+                    {isAdmin(user) && <Link href="/admin">{t("admin")}</Link>}
                     <form action={signOutAction}>
                       <button className="linklike" type="submit">
                         {t("signOut")}
@@ -69,6 +71,9 @@ export default async function LocaleLayout({
             </div>
           </header>
           <main className="shell">{children}</main>
+          <footer className="shell footer small muted">
+            <Link href="/terms">{t("terms")}</Link> · <Link href="/privacy">{t("privacy")}</Link>
+          </footer>
         </NextIntlClientProvider>
       </body>
     </html>

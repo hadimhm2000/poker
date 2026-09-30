@@ -9,6 +9,7 @@ import { DivergingBars, LineChart } from "@/components/charts";
 import { Link } from "@/i18n/navigation";
 import { formatAmount, formatDate } from "@/lib/format";
 import { loadHomeResults, playerSlots } from "@/lib/home";
+import { pdfEnabled } from "@/lib/pdf";
 import { withUser } from "@/lib/session";
 
 const MEDAL = { 1: "🥇", 2: "🥈", 3: "🥉" } as const;
@@ -83,6 +84,11 @@ export default async function StatsPage({
               <a className="btn secondary small" href={`/api/homes/${home.id}/export?format=csv`}>
                 {t("exportCsv")}
               </a>
+              {pdfEnabled() && (
+                <a className="btn secondary small" href={`/api/homes/${home.id}/pdf?locale=${locale}`}>
+                  {t("exportPdf")}
+                </a>
+              )}
             </>
           ) : (
             <span className="small muted">
