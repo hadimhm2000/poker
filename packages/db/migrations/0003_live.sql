@@ -146,7 +146,7 @@ CREATE POLICY link_codes_auth ON telegram_link_codes TO app_auth USING (true) WI
 
 DO $$ BEGIN
   CREATE ROLE app_jobs NOLOGIN NOBYPASSRLS;
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+EXCEPTION WHEN duplicate_object OR unique_violation THEN NULL; END $$;
 GRANT USAGE ON SCHEMA public, app TO app_jobs;
 
 CREATE TABLE debt_reminders (

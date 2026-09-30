@@ -16,12 +16,12 @@ export interface TestDb {
 
 export async function freshDb(): Promise<TestDb> {
   const name = `poker_test_${process.pid}_${Math.random().toString(36).slice(2, 8)}`;
-  const root = postgres(base, { max: 1, onnotice: () => {} });
-  await root.unsafe(`CREATE DATABASE ${name}`);
-  await root.end();
   const url = new URL(base);
   url.pathname = `/${name}`;
-  await migrate(url.toString());
+  await withClusterLock(async (root) => {
+    await root.unsafe(`CREATE DATABASE ${name}`);
+    await migrate(url.toString());
+  });
   const { db, client } = createDb(url.toString(), { max: 20 });
   const admin = postgres(url.toString(), { max: 2, onnotice: () => {} });
   let n = 0;
@@ -52,4 +52,19 @@ export async function pgError(p: Promise<unknown>): Promise<string> {
     return `${err.message ?? ""} ${err.cause?.message ?? ""}`;
   }
   throw new Error("expected the operation to fail");
+}
+
+/**
+ * Roles are shared by the whole Postgres cluster, so test files that migrate their own
+ * databases at the same time would race creating them. Migrate one at a time.
+ */
+export async function withClusterLock<T>(fn: (root: ReturnType<typeof postgres>) => Promise<T>): Promise<T> {
+  const root = postgres(base, { max: 1, onnotice: () => {} });
+  try {
+    await root`SELECT pg_advisory_lock(727274)`;
+    return await fn(root);
+  } finally {
+    await root`SELECT pg_advisory_unlock(727274)`.catch(() => {});
+    await root.end();
+  }
 }

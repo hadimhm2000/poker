@@ -15,10 +15,10 @@ CREATE SCHEMA IF NOT EXISTS app;
 
 DO $$ BEGIN
   CREATE ROLE app_user NOLOGIN NOBYPASSRLS;
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+EXCEPTION WHEN duplicate_object OR unique_violation THEN NULL; END $$;
 DO $$ BEGIN
   CREATE ROLE app_auth NOLOGIN NOBYPASSRLS;
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+EXCEPTION WHEN duplicate_object OR unique_violation THEN NULL; END $$;
 
 GRANT USAGE ON SCHEMA public, app TO app_user, app_auth;
 

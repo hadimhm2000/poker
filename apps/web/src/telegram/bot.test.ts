@@ -88,12 +88,18 @@ async function send(update: object) {
 const texts = (cs: Call[]) => cs.filter((c) => c.method === "sendMessage" || c.method === "editMessageText").map((c) => String(c.payload.text));
 
 beforeAll(async () => {
-  const root = postgres(base, { max: 1, onnotice: () => {} });
-  await root.unsafe(`CREATE DATABASE ${name}`);
-  await root.end();
   const url = new URL(base);
   url.pathname = `/${name}`;
-  await migrate(url.toString());
+  // Roles are cluster-wide: migrate one test database at a time (same lock as packages/db tests).
+  const root = postgres(base, { max: 1, onnotice: () => {} });
+  try {
+    await root`SELECT pg_advisory_lock(727274)`;
+    await root.unsafe(`CREATE DATABASE ${name}`);
+    await migrate(url.toString());
+  } finally {
+    await root`SELECT pg_advisory_unlock(727274)`.catch(() => {});
+    await root.end();
+  }
   const made = createDb(url.toString(), { max: 10 });
   db = made.db;
   admin = postgres(url.toString(), { max: 1, onnotice: () => {} });
