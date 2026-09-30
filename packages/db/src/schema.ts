@@ -10,6 +10,7 @@ import {
   jsonb,
   pgEnum,
   pgTable,
+  pgView,
   primaryKey,
   text,
   timestamp,
@@ -152,9 +153,12 @@ export const settlements = pgTable("settlements", {
 
 export const debtPayments = pgTable("debt_payments", {
   id: uuid("id").primaryKey().defaultRandom(),
-  settlementId: uuid("settlement_id").notNull().unique(),
-  kind: text("kind", { enum: ["paid", "carried"] }).notNull().default("paid"),
+  settlementId: uuid("settlement_id").notNull(),
+  kind: text("kind", { enum: ["paid", "carried", "netted"] }).notNull().default("paid"),
   carriedToGame: uuid("carried_to_game"),
+  /** Only for 'netted': the part of the debt cancelled by a cross-home netting. */
+  amount: money("amount"),
+  nettingId: uuid("netting_id"),
   markedBy: uuid("marked_by").notNull(),
   markedAt: ts("marked_at").notNull().defaultNow(),
 });
@@ -242,5 +246,81 @@ export const seasons = pgTable("seasons", {
   startsOn: date("starts_on", { mode: "string" }).notNull(),
   endsOn: date("ends_on", { mode: "string" }),
   createdBy: uuid("created_by").notNull(),
+  createdAt: ts("created_at").notNull().defaultNow(),
+});
+
+// ---------------------------------------------------------------- special ideas (0007)
+
+export const gameRulings = pgTable("game_rulings", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  gameId: uuid("game_id").notNull(),
+  homeId: uuid("home_id").notNull(),
+  variant: text("variant", { enum: ["holdem", "omaha"] }).notNull(),
+  board: text("board").array().notNull(),
+  hands: jsonb("hands").$type<{ label: string; cards: string[]; key: string; best: string[] }[]>().notNull(),
+  winners: text("winners").array().notNull(),
+  decidedBy: jsonb("decided_by").$type<{ kind: "category" | "tie" | "uncontested" } | { kind: "tiebreak"; index: number }>().notNull(),
+  situation: text("situation"),
+  via: text("via", { enum: ["web", "telegram"] }).notNull().default("web"),
+  actorId: uuid("actor_id").notNull(),
+  createdAt: ts("created_at").notNull().defaultNow(),
+});
+
+/** The secret seed column is deliberately not mirrored: app roles cannot read it. */
+export const gameDraws = pgTable("game_draws", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  gameId: uuid("game_id").notNull(),
+  homeId: uuid("home_id").notNull(),
+  commit: text("commit").notNull(),
+  seed: text("seed"),
+  players: uuid("players").array().notNull(),
+  createdBy: uuid("created_by").notNull(),
+  createdAt: ts("created_at").notNull().defaultNow(),
+  revealedAt: ts("revealed_at"),
+});
+
+export const drawContributions = pgTable(
+  "draw_contributions",
+  {
+    drawId: uuid("draw_id").notNull(),
+    playerId: uuid("player_id").notNull(),
+    userId: uuid("user_id").notNull(),
+    value: text("value").notNull(),
+    createdAt: ts("created_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.drawId, t.playerId] })],
+);
+
+export const nettingProposals = pgTable("netting_proposals", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  proposer: uuid("proposer").notNull(),
+  responder: uuid("responder").notNull(),
+  proposerDebt: uuid("proposer_debt").notNull(),
+  responderDebt: uuid("responder_debt").notNull(),
+  amount: money("amount").notNull(),
+  status: text("status", { enum: ["pending", "accepted", "declined", "canceled"] }).notNull().default("pending"),
+  createdAt: ts("created_at").notNull().defaultNow(),
+  answeredAt: ts("answered_at"),
+});
+
+/** Settlements of closed games that are not settled yet, with what is still owed. */
+export const openDebts = pgView("open_debts", {
+  id: uuid("id").notNull(),
+  gameId: uuid("game_id").notNull(),
+  homeId: uuid("home_id").notNull(),
+  gameNumber: integer("game_number"),
+  closedAt: ts("closed_at"),
+  fromPlayer: uuid("from_player").notNull(),
+  toPlayer: uuid("to_player").notNull(),
+  amount: money("amount").notNull(),
+  remaining: money("remaining").notNull(),
+}).existing();
+
+export const gameStories = pgTable("game_stories", {
+  gameId: uuid("game_id").primaryKey(),
+  homeId: uuid("home_id").notNull(),
+  locale: text("locale").notNull(),
+  body: text("body").notNull(),
+  model: text("model").notNull(),
   createdAt: ts("created_at").notNull().defaultNow(),
 });

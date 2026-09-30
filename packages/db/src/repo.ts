@@ -6,10 +6,10 @@ import {
   computeClose,
   gameHash,
 } from "@poker/domain";
-import { and, asc, desc, eq, inArray, isNull, notExists, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 import type { Tx } from "./client";
-import { debtPayments, gameEntries, gameEvents, games, homes, players, settlements } from "./schema";
+import { debtPayments, gameEntries, gameEvents, games, homes, openDebts as openDebtsView, players, settlements } from "./schema";
 
 // All functions take a transaction already scoped with asUser(): RLS is the backstop,
 // but each function also states its own rules so errors are clear and early.
@@ -125,19 +125,12 @@ export async function gameBlockers(tx: Tx, gameId: string): Promise<CloseBlocker
   );
 }
 
-/** Unpaid, not-yet-carried settlements from earlier games in this home. */
+/** Unpaid, not-yet-carried settlements from earlier games in this home, with what is still owed. */
 async function openDebts(tx: Tx, homeId: string) {
   return tx
-    .select({ id: settlements.id, from: settlements.fromPlayer, to: settlements.toPlayer, amount: settlements.amount })
-    .from(settlements)
-    .innerJoin(games, eq(games.id, settlements.gameId))
-    .where(
-      and(
-        eq(games.homeId, homeId),
-        eq(games.status, "closed"),
-        notExists(tx.select({ x: sql`1` }).from(debtPayments).where(eq(debtPayments.settlementId, settlements.id))),
-      ),
-    );
+    .select({ id: openDebtsView.id, from: openDebtsView.fromPlayer, to: openDebtsView.toPlayer, amount: openDebtsView.remaining })
+    .from(openDebtsView)
+    .where(eq(openDebtsView.homeId, homeId));
 }
 
 export const closeGameInput = z.object({
@@ -300,21 +293,23 @@ export async function history(tx: Tx, q: z.input<typeof historyQuery>) {
     .limit(v.limit);
 }
 
-/** Open debts in a home (the ledger). */
+/**
+ * Open debts in a home (the ledger). `amount` is what is still owed; it is less than
+ * `original` when part of the debt was netted against a debt in another home.
+ */
 export async function ledger(tx: Tx, homeId: string) {
   return tx
     .select({
-      settlementId: settlements.id,
-      gameNumber: games.number,
-      from: settlements.fromPlayer,
-      to: settlements.toPlayer,
-      amount: settlements.amount,
+      settlementId: openDebtsView.id,
+      gameNumber: openDebtsView.gameNumber,
+      from: openDebtsView.fromPlayer,
+      to: openDebtsView.toPlayer,
+      amount: openDebtsView.remaining,
+      original: openDebtsView.amount,
     })
-    .from(settlements)
-    .innerJoin(games, eq(games.id, settlements.gameId))
-    .leftJoin(debtPayments, eq(debtPayments.settlementId, settlements.id))
-    .where(and(eq(games.homeId, id.parse(homeId)), isNull(debtPayments.id)))
-    .orderBy(asc(games.number));
+    .from(openDebtsView)
+    .where(eq(openDebtsView.homeId, id.parse(homeId)))
+    .orderBy(asc(openDebtsView.gameNumber));
 }
 
 export async function markPaid(tx: Tx, userId: string, settlementId: string) {

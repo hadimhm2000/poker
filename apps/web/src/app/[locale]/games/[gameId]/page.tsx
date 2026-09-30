@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { type CloseBlocker, balancesWithOpenDebts, closeBlockers, deriveStatus, liveTotals, netResults, settle } from "@poker/domain";
 import { pendingRequests, schema } from "@poker/db";
-import { and, eq, gt, isNull, notExists, sql } from "@poker/db";
+import { and, eq, gt, isNull, sql } from "@poker/db";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { addToGameAction, closeGameAction, confirmResultAction, removeFromGameAction } from "@/app/actions/homes";
@@ -37,16 +37,9 @@ export default async function GamePage({
     const settlements = await tx.select().from(schema.settlements).where(eq(schema.settlements.gameId, gameId));
     // Open debts between tonight's players, for the settlement preview.
     const open = await tx
-      .select({ from: schema.settlements.fromPlayer, to: schema.settlements.toPlayer, amount: schema.settlements.amount })
-      .from(schema.settlements)
-      .innerJoin(schema.games, eq(schema.games.id, schema.settlements.gameId))
-      .where(
-        and(
-          eq(schema.games.homeId, game.homeId),
-          eq(schema.games.status, "closed"),
-          notExists(tx.select({ x: sql`1` }).from(schema.debtPayments).where(eq(schema.debtPayments.settlementId, schema.settlements.id))),
-        ),
-      );
+      .select({ from: schema.openDebts.fromPlayer, to: schema.openDebts.toPlayer, amount: schema.openDebts.remaining })
+      .from(schema.openDebts)
+      .where(eq(schema.openDebts.homeId, game.homeId));
     const requests = game.status === "live" ? await pendingRequests(tx, game.id) : [];
     const isHost = home!.ownerId === user.id;
     const [invite] =

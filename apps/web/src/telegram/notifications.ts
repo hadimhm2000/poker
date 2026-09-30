@@ -167,30 +167,22 @@ export async function runReminders(db: Db, api: Api, opts: ReminderOptions = {})
   const debts = await asJobs(db, (tx) =>
     tx
       .select({
-        settlementId: schema.settlements.id,
-        amount: schema.settlements.amount,
-        number: schema.games.number,
-        closedAt: schema.games.closedAt,
+        settlementId: schema.openDebts.id,
+        amount: schema.openDebts.remaining,
+        number: schema.openDebts.gameNumber,
+        closedAt: schema.openDebts.closedAt,
         home: schema.homes,
-        to: sql<string>`(SELECT display_name FROM players WHERE id = ${schema.settlements.toPlayer})`,
+        to: sql<string>`(SELECT display_name FROM players WHERE id = ${schema.openDebts.toPlayer})`,
         debtorTg: schema.users.telegramId,
         debtorLocale: schema.users.locale,
-        count: sql<number>`(SELECT count(*) FROM debt_reminders r WHERE r.settlement_id = ${schema.settlements.id})`.mapWith(Number),
-        last: sql<Date | null>`(SELECT max(sent_at) FROM debt_reminders r WHERE r.settlement_id = ${schema.settlements.id})`,
+        count: sql<number>`(SELECT count(*) FROM debt_reminders r WHERE r.settlement_id = ${schema.openDebts.id})`.mapWith(Number),
+        last: sql<Date | null>`(SELECT max(sent_at) FROM debt_reminders r WHERE r.settlement_id = ${schema.openDebts.id})`,
       })
-      .from(schema.settlements)
-      .innerJoin(schema.games, eq(schema.games.id, schema.settlements.gameId))
-      .innerJoin(schema.homes, eq(schema.homes.id, schema.games.homeId))
-      .innerJoin(schema.players, eq(schema.players.id, schema.settlements.fromPlayer))
+      .from(schema.openDebts)
+      .innerJoin(schema.homes, eq(schema.homes.id, schema.openDebts.homeId))
+      .innerJoin(schema.players, eq(schema.players.id, schema.openDebts.fromPlayer))
       .innerJoin(schema.users, eq(schema.users.id, schema.players.userId))
-      .where(
-        and(
-          eq(schema.games.status, "closed"),
-          isNull(schema.homes.deletedAt),
-          sql`NOT EXISTS (SELECT 1 FROM debt_payments p WHERE p.settlement_id = ${schema.settlements.id})`,
-          lt(schema.games.closedAt, new Date(now.getTime() - 864e5)),
-        ),
-      ),
+      .where(and(isNull(schema.homes.deletedAt), lt(schema.openDebts.closedAt, new Date(now.getTime() - 864e5)))),
   );
   for (const d of debts) {
     const days = Number((d.home.settings as { debtReminderDays?: number })?.debtReminderDays ?? defaultDays);
