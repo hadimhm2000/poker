@@ -19,7 +19,7 @@ export async function adminOverview(tx: Tx, actor: string): Promise<AdminOvervie
   return Object.fromEntries(Object.entries(r!.o).map(([k, v]) => [k, Number(v)])) as unknown as AdminOverview;
 }
 
-export interface AdminUserRow {
+export type AdminUserRow = {
   id: string;
   email: string | null;
   display_name: string;
@@ -30,7 +30,7 @@ export interface AdminUserRow {
   homes_owned: number;
   memberships: number;
   deleted: boolean;
-}
+};
 
 export async function adminFindUsers(tx: Tx, actor: string, q: string): Promise<AdminUserRow[]> {
   return [...(await tx.execute<AdminUserRow>(sql`SELECT * FROM app.admin_find_users(${actor}, ${q.trim().slice(0, 254)})`))];
@@ -74,13 +74,13 @@ export async function adminViewHome(tx: Tx, actor: string, homeId: string): Prom
   return r!.v;
 }
 
-export interface AdminLogRow {
+export type AdminLogRow = {
   at: string;
   actor_email: string | null;
   action: string;
   target: string | null;
   details: Record<string, unknown> | null;
-}
+};
 
 export async function adminRecent(tx: Tx, actor: string, n = 50): Promise<AdminLogRow[]> {
   return [...(await tx.execute<AdminLogRow>(sql`SELECT * FROM app.admin_recent(${actor}, ${n})`))];
