@@ -178,9 +178,24 @@ export const subscriptions = pgTable("subscriptions", {
   userId: uuid("user_id").notNull(),
   provider: text("provider").notNull(),
   providerRef: text("provider_ref").notNull(),
-  status: text("status").notNull(),
+  customerRef: text("customer_ref"),
+  status: text("status").$type<"active" | "trialing" | "past_due" | "paused" | "canceled">().notNull(),
+  priceRef: text("price_ref"),
+  billingInterval: text("billing_interval").$type<"day" | "week" | "month" | "year">(),
   currentPeriodEnd: ts("current_period_end"),
+  cancelAt: ts("cancel_at"),
+  statusAt: ts("status_at"),
   createdAt: ts("created_at").notNull().defaultNow(),
+  updatedAt: ts("updated_at").notNull().defaultNow(),
+});
+
+export const billingEvents = pgTable("billing_events", {
+  eventId: text("event_id").primaryKey(),
+  eventType: text("event_type").notNull(),
+  occurredAt: ts("occurred_at").notNull(),
+  userId: uuid("user_id"),
+  outcome: text("outcome").notNull().default("applied"),
+  processedAt: ts("processed_at").notNull().defaultNow(),
 });
 
 export const auditLog = pgTable("audit_log", {

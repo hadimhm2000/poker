@@ -8,3 +8,4 @@ export * from "./sidepot";
 export * from "./stats";
 export * from "./rules";
 export * from "./badges";
+export * from "./billing";
