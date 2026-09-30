@@ -1,12 +1,15 @@
 import { randomUUID } from "node:crypto";
 import { type CloseBlocker, balancesWithOpenDebts, closeBlockers, deriveStatus, liveTotals, netResults, settle } from "@poker/domain";
-import { pendingRequests, schema } from "@poker/db";
+import { gameStory, latestDraw, listRulings, pendingRequests, schema } from "@poker/db";
 import { and, eq, gt, isNull, sql } from "@poker/db";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { addToGameAction, closeGameAction, confirmResultAction, removeFromGameAction } from "@/app/actions/homes";
+import { startDrawAction } from "@/app/actions/ideas";
 import { claimPlayerAction, makeJoinLinkAction, requestRebuyAction } from "@/app/actions/live";
 import { ErrorNotice } from "@/components/ErrorNotice";
+import { Ruling } from "@/components/Ruling";
+import { RefereeForm } from "@/components/ideas";
 import { ShareCard } from "@/components/ShareCard";
 import { AnswerRequest, CopyButton, HostEntryControls, HostQueue, LiveRefresh } from "@/components/live";
 import { Link } from "@/i18n/navigation";
@@ -27,6 +30,7 @@ export default async function GamePage({
   const locale = await getLocale();
   const t = await getTranslations("game");
   const tc = await getTranslations("card");
+  const ti = await getTranslations("ideas");
 
   const data = await withUser(async (tx, user) => {
     const [game] = await tx.select().from(schema.games).where(eq(schema.games.id, gameId));
@@ -57,10 +61,13 @@ export default async function GamePage({
             )
             .limit(1)
         : [];
-    return { game, home: home!, players, entries, settlements, open, requests, invite, userId: user.id };
+    const rulings = await listRulings(tx, game.id);
+    const draw = await latestDraw(tx, game.id);
+    const story = game.status === "closed" ? await gameStory(tx, game.id) : null;
+    return { game, home: home!, players, entries, settlements, open, requests, invite, rulings, draw, story, userId: user.id };
   });
   if (!data) notFound();
-  const { game, home, players, entries, settlements, open, requests, invite, userId } = data;
+  const { game, home, players, entries, settlements, open, requests, invite, rulings, draw, story, userId } = data;
   const name = new Map(players.map((p) => [p.id, p.displayName]));
   const byId = new Map(players.map((p) => [p.id, p]));
   const moneyHome = { currency: home.currency, unitSuffix: home.unitSuffix, unitDivisor: home.unitDivisor };
@@ -300,6 +307,54 @@ export default async function GamePage({
         </section>
       )}
 
+      {(rulings.length > 0 || (isLive && (canWrite || myEntry))) && (
+        <section className="card stack" id="referee">
+          <h2>{ti("refereeTitle")}</h2>
+          {isLive && (canWrite || myEntry) && (
+            <details open={rulings.length === 0}>
+              <summary>{ti("refereeIntro")}</summary>
+              <div style={{ marginBlockStart: 12 }}>
+                <RefereeForm gameId={game.id} names={entries.map((e) => name.get(e.playerId) ?? "").filter(Boolean)} />
+              </div>
+            </details>
+          )}
+          {rulings.length === 0 ? (
+            <p className="muted small">{ti("refereeEmpty")}</p>
+          ) : (
+            <>
+              <h3 style={{ margin: 0 }}>{ti("refereeLog")}</h3>
+              {rulings.map((r) => (
+                <Ruling key={r.id} r={r} />
+              ))}
+            </>
+          )}
+        </section>
+      )}
+
+      {(draw || (canWrite && isLive)) && (
+        <section className="card stack" id="draw">
+          <h2>{ti("drawTitle")}</h2>
+          {draw ? (
+            <p>
+              {draw.check
+                ? ti("drawDealer", { name: draw.names.get(draw.check.result.order[0]!) ?? "?" })
+                : ti("drawOpen", { count: draw.contributions.length, total: draw.draw.players.length })}{" "}
+              <Link href={`/draws/${draw.draw.id}`}>{ti("drawViewLink")}</Link>
+            </p>
+          ) : (
+            <p className="small muted">{ti("drawIntro")}</p>
+          )}
+          {canWrite && isLive && (!draw || draw.check) && (
+            <form action={startDrawAction}>
+              <input type="hidden" name="gameId" value={game.id} />
+              <button className="btn secondary" type="submit" disabled={entries.length < 2}>
+                {ti("drawStart")}
+              </button>
+            </form>
+          )}
+        </section>
+      )}
+
       {(game.status === "closed" || summary || blockers.length === 0) && (
         <section className="card">
           <h2>{t("settlement")}</h2>
@@ -349,6 +404,14 @@ export default async function GamePage({
               {t("close")}
             </Link>
           )}
+        </section>
+      )}
+
+      {story && (
+        <section className="card stack" id="story">
+          <h2>📖 {ti("storyTitle")}</h2>
+          <p className="house-rules">{story.body}</p>
+          <p className="small muted">{ti("storyNote")}</p>
         </section>
       )}
 

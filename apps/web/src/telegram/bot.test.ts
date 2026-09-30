@@ -15,12 +15,14 @@ import {
   createNight,
   migrate,
   setCashOut,
+  setHomeSettings,
 } from "@poker/db";
 import { InputFile } from "grammy";
 import postgres from "postgres";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createBot } from "./bot";
-import { runReminders, sendGameClosed } from "./notifications";
+import { type StoryClient, writeNightStory } from "../lib/night-story";
+import { runReminders, sendGameClosed, sendStory } from "./notifications";
 
 const base = process.env.TEST_DATABASE_URL ?? "postgres://postgres@localhost:5432/postgres";
 const name = `poker_bot_${process.pid}_${Math.random().toString(36).slice(2, 8)}`;
@@ -127,7 +129,7 @@ beforeAll(async () => {
   await admin`UPDATE players SET user_id = ${friend} WHERE id = ${pFriend}`;
   await admin`INSERT INTO home_members(home_id, user_id, role, player_id) VALUES (${homeId}, ${friend}, 'member', ${pFriend})`;
 
-  b = createBot({
+  botCfg = {
     token: "1:test",
     db,
     appUrl: "https://poker.test",
@@ -146,8 +148,18 @@ beforeAll(async () => {
       can_manage_bots: false,
       supports_join_request_queries: false,
     },
-  });
-  b.api.config.use(async (_prev, method, payload) => {
+  };
+  b = createBot(botCfg);
+  capture(b);
+});
+afterAll(() => end());
+
+type BotCfg = Parameters<typeof createBot>[0];
+let botCfg: BotCfg;
+
+/** Every Telegram call of this bot is recorded in `calls` instead of sent. */
+function capture(bb: ReturnType<typeof createBot>) {
+  bb.api.config.use(async (_prev, method, payload) => {
     calls.push({ method, payload: payload as Record<string, unknown> });
     const result =
       method === "sendMessage"
@@ -155,8 +167,7 @@ beforeAll(async () => {
         : true;
     return { ok: true, result } as never;
   });
-});
-afterAll(() => end());
+}
 
 describe("linking", () => {
   it("an unlinked user is told how to connect", async () => {
@@ -315,5 +326,169 @@ describe("a game night from Telegram", () => {
     expect(String(calls[0]!.payload.text)).toMatch(/you owe Hadi/);
     // Not again the same day.
     expect((await runReminders(db, bot().api, { now: later })).debts).toBe(0);
+  });
+});
+
+describe("special ideas from Telegram", () => {
+  let live: string;
+  function voice(from: number, fileId: string, duration = 3) {
+    return {
+      update_id: updateId++,
+      message: {
+        message_id: nextMessageId++,
+        date: Math.floor(Date.now() / 1000),
+        chat: { id: GROUP, type: "supergroup" as const, title: "Friday poker" },
+        from: { id: from, is_bot: false, first_name: "U", language_code: "fa" },
+        voice: { file_id: fileId, file_unique_id: `u-${fileId}`, duration, mime_type: "audio/ogg", file_size: 4000 },
+      },
+    };
+  }
+
+  it("/judge records the verdict with the reason and a link to the rule", async () => {
+    live = await asUser(db, host, async (tx) => {
+      const g = await createGame(tx, host, homeId, 100_000);
+      for (const p of [pHost, pFriend, pThird]) await addToGame(tx, host, g.id, p);
+      return g.id;
+    });
+    const out = await send(message(FRIEND_TG, GROUP, "/judge As Kd 7h 7c 2s | Abol: Qc 4h | Hadi: Ac 2h"));
+    const [text] = texts(out);
+    expect(text).toMatch(/🏆 Hadi/);
+    const kb = (out[0]!.payload.reply_markup as { inline_keyboard: { url: string }[][] }).inline_keyboard[0]!;
+    expect(kb[0]!.url).toMatch(/^https:\/\/poker\.test\/fa\/rules#/);
+    const rows = await admin`SELECT winners, via, actor_id FROM game_rulings WHERE game_id = ${live}`;
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.winners).toEqual(["Hadi"]);
+    expect(rows[0]!.via).toBe("telegram");
+    expect(rows[0]!.actor_id).toBe(friend);
+    // Nonsense is refused with the card rules; nothing recorded.
+    expect(texts(await send(message(FRIEND_TG, GROUP, "/judge As As 7h 7c 2s | Qc 4h | Ac 2h")))[0]).toMatch(/پنج کارت/);
+    expect(await admin`SELECT 1 FROM game_rulings WHERE game_id = ${live}`).toHaveLength(1);
+  });
+
+  it("/draw: only the host starts and reveals; the result carries the proof", async () => {
+    await send(message(FRIEND_TG, GROUP, "/draw"));
+    expect(await admin`SELECT 1 FROM game_draws WHERE game_id = ${live}`).toHaveLength(0);
+    const out = await send(message(HOST_TG, GROUP, "/draw"));
+    const [d] = await admin`SELECT id, commit FROM game_draws WHERE game_id = ${live}`;
+    expect(texts(out)[0]).toContain(d!.commit);
+    const kb = (out[0]!.payload.reply_markup as { inline_keyboard: { callback_data?: string; url?: string }[][] }).inline_keyboard;
+    expect(kb[0]![0]!.url).toBe(`https://poker.test/fa/draws/${d!.id}`);
+    const reveal = kb[1]![0]!.callback_data!;
+    expect(reveal).toBe(`dr:r:${d!.id}`);
+    // /draw again shows the same open draw.
+    await send(message(HOST_TG, GROUP, "/draw"));
+    expect(await admin`SELECT 1 FROM game_draws WHERE game_id = ${live}`).toHaveLength(1);
+    const denied = await send(callback(FRIEND_TG, reveal));
+    expect(denied.find((c) => c.method === "answerCallbackQuery")?.payload.show_alert).toBe(true);
+    const ok = await send(callback(HOST_TG, reveal));
+    const edited = ok.find((c) => c.method === "editMessageText")!;
+    const [r] = await admin`SELECT seed, revealed_at FROM game_draws WHERE id = ${d!.id}`;
+    expect(r!.revealed_at).not.toBeNull();
+    expect(String(edited.payload.text)).toContain(r!.seed);
+    expect(String(edited.payload.text)).toMatch(/Hadi|Abol|Reza/);
+    // A second reveal is refused.
+    expect((await send(callback(HOST_TG, reveal))).find((c) => c.method === "answerCallbackQuery")?.payload.show_alert).toBe(true);
+  });
+
+  it("a voice message says voice is off when no speech-to-text is configured", async () => {
+    expect(texts(await send(voice(FRIEND_TG, "f0")))[0]).toMatch(/صوتی/);
+  });
+
+  it("a voice rebuy becomes a request the host approves with a tap", async () => {
+    const heard: { audio: Uint8Array; language?: string }[] = [];
+    let say = "";
+    const vb = createBot({
+      ...botCfg,
+      transcribe: async (audio, opts) => {
+        heard.push({ audio, language: opts.language });
+        return say;
+      },
+      downloadFile: async (fileId) => new TextEncoder().encode(fileId),
+    });
+    capture(vb);
+    const sendV = async (u: object) => {
+      calls = [];
+      await vb.handleUpdate(u as never);
+      return calls;
+    };
+
+    // No rebuy word: silence.
+    say = "سلام به همه";
+    expect(await sendV(voice(HOST_TG, "v1"))).toHaveLength(0);
+    expect(new TextDecoder().decode(heard[0]!.audio)).toBe("v1");
+    expect(heard[0]!.language).toBe("fa");
+
+    // Too long: refused before transcribing.
+    expect(texts(await sendV(voice(HOST_TG, "v2", 90)))).toHaveLength(1);
+    expect(heard).toHaveLength(1);
+
+    // A member may ask only for themselves.
+    say = "رضا ۲۰۰ ری‌بای";
+    expect(texts(await sendV(voice(FRIEND_TG, "v3")))[0]).toMatch(/فقط خود Reza/);
+
+    // The host asks for Reza: 200 in a "k" home is 200,000.
+    const out = await sendV(voice(HOST_TG, "v4"));
+    const msg = out.find((c) => c.method === "sendMessage")!;
+    expect(msg.payload.chat_id).toBe(GROUP);
+    expect(String(msg.payload.text)).toMatch(/Reza/);
+    const kb = (msg.payload.reply_markup as { inline_keyboard: { callback_data: string }[][] }).inline_keyboard[0]!;
+    expect(kb.map((k) => k.callback_data.slice(0, 5))).toEqual(["rq:a:", "rq:r:"]);
+    const [req] = await admin`SELECT amount, details FROM game_events WHERE game_id = ${live} AND type = 'request' AND player_id = ${pThird}`;
+    expect(Number(req!.amount)).toBe(200_000);
+    expect(req!.details).toMatchObject({ via: "voice" });
+    await send(callback(HOST_TG, kb[0]!.callback_data));
+    const [e] = await admin`SELECT total_in FROM game_entries WHERE game_id = ${live} AND player_id = ${pThird}`;
+    expect(Number(e!.total_in)).toBe(300_000);
+
+    // English, own name, no amount: the game's default buy-in.
+    say = "Abol rebuy please";
+    const own = await sendV(voice(FRIEND_TG, "v5"));
+    expect(texts(own)[0]).toMatch(/Abol/);
+    const [req2] = await admin`SELECT amount FROM game_events WHERE game_id = ${live} AND type = 'request' AND player_id = ${pFriend} ORDER BY at DESC LIMIT 1`;
+    expect(Number(req2!.amount)).toBe(100_000);
+    // The host turns it down, so the game can close later.
+    const kb2 = (own.find((c) => c.method === "sendMessage")!.payload.reply_markup as { inline_keyboard: { callback_data: string }[][] })
+      .inline_keyboard[0]!;
+    await send(callback(HOST_TG, kb2[1]!.callback_data));
+
+    // Nobody by that name.
+    say = "Zorro rebuy";
+    expect(texts(await sendV(voice(HOST_TG, "v6")))[0]).toMatch(/Zorro/);
+  });
+
+  it("after close, the night story is written once and posted after the result card", async () => {
+    await asUser(db, host, (tx) => setHomeSettings(tx, homeId, { nightStory: true }));
+    await asUser(db, host, async (tx) => {
+      await setCashOut(tx, host, live, pHost, 100_000);
+      await setCashOut(tx, host, live, pFriend, 100_000);
+      await setCashOut(tx, host, live, pThird, 300_000);
+    });
+    const [v] = await admin`SELECT version FROM games WHERE id = ${live}`;
+    await asUser(db, host, (tx) => closeGame(tx, host, { gameId: live, closeKey: randomUUID(), expectedVersion: v!.version }));
+    const prompts: string[] = [];
+    const client = {
+      beta: {
+        messages: {
+          create: async (p: { messages: { content: string }[] }) => {
+            prompts.push(p.messages[0]!.content);
+            return { stop_reason: "end_turn", content: [{ type: "text", text: "Reza stole the night; Hadi and Abol just watched." }] };
+          },
+        },
+      },
+    } as unknown as StoryClient;
+    calls = [];
+    await sendGameClosed(db, bot().api, live, "https://poker.test");
+    expect(await writeNightStory(db, live, client)).toMatch(/Reza stole/);
+    await sendStory(db, bot().api, live);
+    expect(calls.map((c) => c.method)).toEqual(["sendPhoto", "sendMessage"]);
+    expect(String(calls[1]!.payload.text)).toMatch(/روایت شب[\s\S]*Reza stole/);
+    // Only names and numbers of this game went to the model.
+    expect(prompts[0]).toMatch(/Reza/);
+    expect(prompts[0]).not.toMatch(/Friday|@t\.local|Hadi's/);
+    // Once only.
+    expect(await writeNightStory(db, live, client)).toBeNull();
+    expect(prompts).toHaveLength(1);
+    const [s] = await admin`SELECT body FROM game_stories WHERE game_id = ${live}`;
+    expect(s!.body).toMatch(/Reza stole/);
   });
 });

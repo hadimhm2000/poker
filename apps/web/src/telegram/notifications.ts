@@ -6,8 +6,8 @@ import type { Api } from "grammy";
 import { InlineKeyboard, InputFile } from "grammy";
 import { formatAmount, formatDate } from "@/lib/format";
 import { resultCardPng } from "@/lib/result-card";
-import { botT, esc } from "./i18n";
-import { gameResultText, nightText } from "./text";
+import { botT, esc, textsFor } from "./i18n";
+import { drawText, gameResultText, nightText } from "./text";
 
 /** "X asks for a rebuy": a private message to the host with approve / reject buttons. */
 export async function hostRequestMessage(db: Db, requestId: string) {
@@ -107,6 +107,37 @@ export async function sendNight(db: Db, api: Api, nightId: string) {
   await asJobs(db, (tx) =>
     tx.update(schema.gameNights).set({ telegramMessageId: sent.message_id }).where(eq(schema.gameNights.id, nightId)),
   );
+}
+
+/** The night story, posted to the group after the result card. */
+export async function sendStory(db: Db, api: Api, gameId: string) {
+  const m = await asJobs(db, async (tx) => {
+    const [row] = await tx
+      .select({ body: schema.gameStories.body, home: schema.homes })
+      .from(schema.gameStories)
+      .innerJoin(schema.homes, eq(schema.homes.id, schema.gameStories.homeId))
+      .where(eq(schema.gameStories.gameId, gameId));
+    return row?.home.telegramChatId ? { chatId: row.home.telegramChatId, locale: row.home.locale, body: row.body } : null;
+  });
+  if (m) {
+    const t = textsFor(m.locale, "ideas");
+    await api.sendMessage(m.chatId, `📖 <b>${esc(t("storyTitle"))}</b>\n${esc(m.body)}`, { parse_mode: "HTML" });
+  }
+}
+
+/** A fair draw to the home's group: the commit when it starts, the seat order when revealed. */
+export async function sendDraw(db: Db, api: Api, drawId: string, appUrl: string) {
+  const m = await asJobs(db, async (tx) => {
+    const [row] = await tx
+      .select({ home: schema.homes })
+      .from(schema.gameDraws)
+      .innerJoin(schema.homes, eq(schema.homes.id, schema.gameDraws.homeId))
+      .where(eq(schema.gameDraws.id, drawId));
+    if (!row?.home.telegramChatId) return null;
+    const r = await drawText(tx, row.home.locale, drawId, appUrl);
+    return r && { chatId: row.home.telegramChatId, ...r };
+  });
+  if (m) await api.sendMessage(m.chatId, m.text, { parse_mode: "HTML", reply_markup: m.keyboard });
 }
 
 export interface ReminderOptions {

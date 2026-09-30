@@ -1,7 +1,7 @@
 // Message builders shared by bot commands (run as the Telegram user, under RLS) and
 // automatic posts (run as the jobs role). Same queries either way; RLS decides what is seen.
-import { type RuleExample, SITUATIONS, exampleWinners, homeStats, parseCards, searchRules } from "@poker/domain";
-import { type Tx, ledger, nightAnswers, resultRows, schema } from "@poker/db";
+import { type RuleExample, SITUATIONS, exampleWinners, homeStats, parseCards, rulingAnchor, searchRules } from "@poker/domain";
+import { type RulingRow, type Tx, drawDetails, ledger, nightAnswers, resultRows, schema } from "@poker/db";
 import { and, desc, eq } from "@poker/db";
 import { InlineKeyboard } from "grammy";
 import { type HomeMoney, formatAmount, formatDate } from "@/lib/format";
@@ -190,5 +190,71 @@ export function rulesText(query: string, locale: string, appUrl: string, house?:
   return {
     text: [...lines, ...houseLines].join("\n"),
     keyboard: new InlineKeyboard().url(tb("openRules"), link),
+  };
+}
+
+// ---------------------------------------------------------------- /judge
+
+/** A recorded verdict: winner, each hand's best five, the reason and the rule it falls under. */
+export function rulingText(r: RulingRow, locale: string, appUrl: string) {
+  const l = botLocale(locale);
+  const ti = textsFor(l, "ideas");
+  const th = textsFor(l, "hand") as unknown as Loose;
+  const tr = textsFor(l, "rules") as unknown as Loose;
+  const reason =
+    r.decidedBy.kind === "category"
+      ? ti("byCategory")
+      : r.decidedBy.kind === "tiebreak"
+        ? ti("byTiebreak", { n: r.decidedBy.index + 1 })
+        : r.decidedBy.kind === "tie"
+          ? ti("byTie")
+          : "";
+  const lines = [
+    `<b>⚖️ ${esc(r.winners.length > 1 ? ti("verdictSplit", { names: r.winners.join(" · ") }) : ti("verdictWinner", { name: r.winners[0]! }))}</b>`,
+    `${esc(ti("board"))}: ${cardsText(r.board.join(" "))}`,
+    ...r.hands.map(
+      (h) =>
+        `${r.winners.includes(h.label) ? "🏆" : "▫️"} ${esc(h.label)}: ${cardsText(h.cards.join(" "))} → ${cardsText(h.best.join(" "))} (${esc(th(h.key))})`,
+    ),
+    esc(reason),
+  ];
+  const link = `${appUrl}/${l}/rules${rulingAnchor(r.situation)}`;
+  if (r.situation) lines.push(`${esc(ti("ruleLabel"))}: ${esc(tr(`s.${r.situation}.title`))}`);
+  return { text: lines.join("\n"), keyboard: new InlineKeyboard().url(textsFor(l, "bot")("openRules"), link) };
+}
+
+// ---------------------------------------------------------------- /draw
+
+/** The draw message: commit and contributions while open; seat order and proof once revealed. */
+export async function drawText(tx: Tx, locale: string, drawId: string, appUrl: string) {
+  const d = await drawDetails(tx, drawId);
+  if (!d) return null;
+  const l = botLocale(locale);
+  const ti = textsFor(l, "ideas");
+  const link = `${appUrl}/${l}/draws/${d.draw.id}`;
+  const name = (id: string) => d.names.get(id) ?? "?";
+  if (!d.check) {
+    return {
+      text: [
+        `<b>🎲 ${esc(ti("drawTitle"))}</b>`,
+        esc(ti("drawOpenIntro")),
+        `${esc(ti("commit"))}: <code>${d.draw.commit}</code>`,
+        esc(ti("contributions", { count: d.contributions.length, total: d.draw.players.length })),
+      ].join("\n"),
+      keyboard: new InlineKeyboard().url(ti("addRandomness"), link).row().text(ti("reveal"), `dr:r:${d.draw.id}`),
+    };
+  }
+  return {
+    text: [
+      `<b>🎲 ${esc(ti("drawResult"))}</b>`,
+      ...d.check.result.order.map((p, i) =>
+        esc(i === 0 ? ti("seatDealer", { seat: i + 1, name: name(p) }) : ti("seat", { seat: i + 1, name: name(p) })),
+      ),
+      "",
+      `${esc(ti("commit"))}: <code>${d.draw.commit}</code>`,
+      `${esc(ti("seed"))}: <code>${d.draw.seed}</code>`,
+      esc(d.check.commitOk ? ti("commitOk") : ti("commitBad")),
+    ].join("\n"),
+    keyboard: new InlineKeyboard().url(ti("verifyDraw"), link),
   };
 }
