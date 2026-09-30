@@ -341,7 +341,14 @@ export async function ledger(tx: Tx, homeId: string) {
     .innerJoin(toOf, eq(toOf.id, settlements.toPlayer))
     .leftJoin(keptTo, eq(keptTo.id, toOf.mergedInto))
     .leftJoin(debtPayments, eq(debtPayments.settlementId, settlements.id))
-    .where(and(eq(games.homeId, id.parse(homeId)), isNull(debtPayments.id)))
+    .where(
+      and(
+        eq(games.homeId, id.parse(homeId)),
+        isNull(debtPayments.id),
+        // A debt between a duplicate and the player it was merged into is owed to oneself.
+        sql`coalesce(${keptFrom.id}, ${settlements.fromPlayer}) <> coalesce(${keptTo.id}, ${settlements.toPlayer})`,
+      ),
+    )
     .orderBy(asc(games.number));
 }
 

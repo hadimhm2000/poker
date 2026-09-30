@@ -327,6 +327,8 @@ describe("merging duplicates", () => {
     expect(debts.length).toBeGreaterThan(0);
     expect(debts.some((d) => d.from === dup || d.to === dup)).toBe(false);
     expect(debts.some((d) => d.to === keep)).toBe(true);
+    // The duplicate owed the kept player in the game both sat in: that is owed to oneself now.
+    expect(debts.some((d) => d.from === d.to)).toBe(false);
   });
 
   it("a merged player cannot join a game again or be merged twice", async () => {

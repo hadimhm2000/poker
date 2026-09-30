@@ -54,6 +54,7 @@ export default async function HomePage({
   // Decrypted on the server, for members of this home only (RLS returned these rows).
   const payment = new Map(players.map((p) => [p.id, openPayment(p.paymentInfoEnc)]));
   const money = (n: number) => formatAmount(n, home, locale);
+  const num = (n: number) => new Intl.NumberFormat(locale).format(n);
   const canWrite = isOwner && !home.readOnly;
   const canEdit = (p: (typeof players)[number]) => canWrite || p.userId === userId;
   const origin = await appOrigin();
@@ -310,7 +311,7 @@ export default async function HomePage({
                     <span>
                       <strong>{i.playerId ? tp("inviteFor", { name: name.get(i.playerId) ?? "?" }) : tp("inviteAnyone")}</strong>{" "}
                       <span className="muted small">
-                        {tp("inviteUses", { uses: i.uses, max: i.maxUses })} ·{" "}
+                        {tp("inviteUses", { uses: num(i.uses), max: num(i.maxUses) })} ·{" "}
                         {tp("inviteExpires", { date: formatDate(i.expiresAt, locale, true) })}
                       </span>
                     </span>
@@ -364,7 +365,7 @@ export default async function HomePage({
                 <select name="maxUses" style={{ width: "auto" }} defaultValue="1">
                   {[1, 5, 20].map((n) => (
                     <option key={n} value={n}>
-                      {new Intl.NumberFormat(locale).format(n)}
+                      {num(n)}
                     </option>
                   ))}
                 </select>
