@@ -7,8 +7,8 @@ import { InlineKeyboard, InputFile } from "grammy";
 import { formatAmount, formatDate } from "@/lib/format";
 import { type Mail, sendMail } from "@/lib/mail";
 import { resultCardPng } from "@/lib/result-card";
-import { botT, esc } from "./i18n";
-import { gameResultText, nightText } from "./text";
+import { botT, esc, textsFor } from "./i18n";
+import { drawText, gameResultText, nightText } from "./text";
 
 /** "X asks for a rebuy": a private message to the host with approve / reject buttons. */
 export async function hostRequestMessage(db: Db, requestId: string) {
@@ -110,6 +110,37 @@ export async function sendNight(db: Db, api: Api, nightId: string) {
   );
 }
 
+/** The night story, posted to the group after the result card. */
+export async function sendStory(db: Db, api: Api, gameId: string) {
+  const m = await asJobs(db, async (tx) => {
+    const [row] = await tx
+      .select({ body: schema.gameStories.body, home: schema.homes })
+      .from(schema.gameStories)
+      .innerJoin(schema.homes, eq(schema.homes.id, schema.gameStories.homeId))
+      .where(eq(schema.gameStories.gameId, gameId));
+    return row?.home.telegramChatId ? { chatId: row.home.telegramChatId, locale: row.home.locale, body: row.body } : null;
+  });
+  if (m) {
+    const t = textsFor(m.locale, "ideas");
+    await api.sendMessage(m.chatId, `📖 <b>${esc(t("storyTitle"))}</b>\n${esc(m.body)}`, { parse_mode: "HTML" });
+  }
+}
+
+/** A fair draw to the home's group: the commit when it starts, the seat order when revealed. */
+export async function sendDraw(db: Db, api: Api, drawId: string, appUrl: string) {
+  const m = await asJobs(db, async (tx) => {
+    const [row] = await tx
+      .select({ home: schema.homes })
+      .from(schema.gameDraws)
+      .innerJoin(schema.homes, eq(schema.homes.id, schema.gameDraws.homeId))
+      .where(eq(schema.gameDraws.id, drawId));
+    if (!row?.home.telegramChatId) return null;
+    const r = await drawText(tx, row.home.locale, drawId, appUrl);
+    return r && { chatId: row.home.telegramChatId, ...r };
+  });
+  if (m) await api.sendMessage(m.chatId, m.text, { parse_mode: "HTML", reply_markup: m.keyboard });
+}
+
 export interface ReminderOptions {
   now?: Date;
   /** Remind a game night this long before it starts. */
@@ -196,31 +227,23 @@ export async function runReminders(db: Db, api: Api | null, opts: ReminderOption
   const debts = await asJobs(db, (tx) =>
     tx
       .select({
-        settlementId: schema.settlements.id,
-        amount: schema.settlements.amount,
-        number: schema.games.number,
-        closedAt: schema.games.closedAt,
+        settlementId: schema.openDebts.id,
+        amount: schema.openDebts.remaining,
+        number: schema.openDebts.gameNumber,
+        closedAt: schema.openDebts.closedAt,
         home: schema.homes,
-        to: sql<string>`(SELECT display_name FROM players WHERE id = ${schema.settlements.toPlayer})`,
+        to: sql<string>`(SELECT display_name FROM players WHERE id = ${schema.openDebts.toPlayer})`,
         debtorTg: schema.users.telegramId,
         debtorLocale: schema.users.locale,
         debtorSettings: schema.users.settings,
-        count: sql<number>`(SELECT count(*) FROM debt_reminders r WHERE r.settlement_id = ${schema.settlements.id})`.mapWith(Number),
-        last: sql<Date | null>`(SELECT max(sent_at) FROM debt_reminders r WHERE r.settlement_id = ${schema.settlements.id})`,
+        count: sql<number>`(SELECT count(*) FROM debt_reminders r WHERE r.settlement_id = ${schema.openDebts.id})`.mapWith(Number),
+        last: sql<Date | null>`(SELECT max(sent_at) FROM debt_reminders r WHERE r.settlement_id = ${schema.openDebts.id})`,
       })
-      .from(schema.settlements)
-      .innerJoin(schema.games, eq(schema.games.id, schema.settlements.gameId))
-      .innerJoin(schema.homes, eq(schema.homes.id, schema.games.homeId))
-      .innerJoin(schema.players, eq(schema.players.id, schema.settlements.fromPlayer))
+      .from(schema.openDebts)
+      .innerJoin(schema.homes, eq(schema.homes.id, schema.openDebts.homeId))
+      .innerJoin(schema.players, eq(schema.players.id, schema.openDebts.fromPlayer))
       .innerJoin(schema.users, eq(schema.users.id, schema.players.userId))
-      .where(
-        and(
-          eq(schema.games.status, "closed"),
-          isNull(schema.homes.deletedAt),
-          sql`NOT EXISTS (SELECT 1 FROM debt_payments p WHERE p.settlement_id = ${schema.settlements.id})`,
-          lt(schema.games.closedAt, new Date(now.getTime() - 864e5)),
-        ),
-      ),
+      .where(and(isNull(schema.homes.deletedAt), lt(schema.openDebts.closedAt, new Date(now.getTime() - 864e5)))),
   );
   for (const d of debts) {
     const days = Number((d.home.settings as { debtReminderDays?: number })?.debtReminderDays ?? defaultDays);

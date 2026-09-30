@@ -36,7 +36,14 @@ export function errorCode(e: unknown): string {
   if (/players_avatar_check|players_payment_len|into itself/.test(text)) return "INVALID";
   if (/not allowed/.test(text)) return "FORBIDDEN";
   if (/closed and cannot be changed/.test(text)) return "FROZEN";
+  if (/netting is not possible/.test(text)) return "NETTING_INVALID";
+  if (/more than the open debt/.test(text)) return "NETTING_STALE";
+  if (/netting_one_pending/.test(text)) return "NETTING_PENDING";
+  if (/game_draws_one_open/.test(text)) return "DRAW_OPEN";
+  if (/at least two players/.test(text)) return "DRAW_PLAYERS";
+  if (/already answered|already revealed/.test(text)) return "ALREADY_ANSWERED";
+  if (/already settled/.test(text)) return "ALREADY_SETTLED";
   if (/players_home_name_idx|duplicate key/.test(text)) return "DUPLICATE";
-  if (/row-level security|permission denied/.test(text)) return "FORBIDDEN";
+  if (/row-level security|permission denied|not allowed/.test(text)) return "FORBIDDEN";
   return "ERROR";
 }

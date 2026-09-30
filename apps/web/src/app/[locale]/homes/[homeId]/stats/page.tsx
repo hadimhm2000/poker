@@ -1,4 +1,4 @@
-import { homePlan, listSeasons, seasonPeriod } from "@poker/db";
+import { goodPayerIndex, homePlan, listSeasons, seasonPeriod } from "@poker/db";
 import { badges, homeStats, rowsInPeriod } from "@poker/domain";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -29,6 +29,7 @@ export default async function StatsPage({
   const t = await getTranslations("stats");
   const tse = await getTranslations("seasons");
   const tb = await getTranslations("badges");
+  const ti = await getTranslations("ideas");
   const data = await withUser(async (tx, user) => {
     const loaded = await loadHomeResults(tx, homeId);
     return (
@@ -36,6 +37,7 @@ export default async function StatsPage({
         ...loaded,
         plan: await homePlan(tx, homeId),
         seasons: await listSeasons(tx, homeId),
+        payers: await goodPayerIndex(tx, homeId),
         canWrite: loaded.home.ownerId === user.id && !loaded.home.readOnly,
       }
     );
@@ -248,6 +250,37 @@ export default async function StatsPage({
               </div>
             )}
           </section>
+
+          {data.payers && data.payers.length > 0 && (
+            <section className="card table-wrap" id="payers">
+              <h2>{ti("payerTitle")}</h2>
+              <p className="small muted">{ti("payerIntro")}</p>
+              <table>
+                <thead>
+                  <tr>
+                    <th>{t("player")}</th>
+                    <th className="end">{ti("payerDays")}</th>
+                    <th className="end">{ti("payerDebts")}</th>
+                    <th className="end">{ti("payerOpen")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.payers.map((p) => (
+                    <tr key={p.playerId}>
+                      <td>{p.name}</td>
+                      <td className="end num">
+                        {p.averageDays === null
+                          ? "—"
+                          : ti("payerDaysValue", { days: new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(p.averageDays) })}
+                      </td>
+                      <td className="end num">{num(p.debts)}</td>
+                      <td className="end num">{num(p.open)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+          )}
 
           <div>
             <section className="card">

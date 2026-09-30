@@ -5,6 +5,7 @@ import { createHash } from "node:crypto";
 import {
   type Db,
   DomainError,
+  addRuling,
   answerRequest,
   asAuth,
   asJobs,
@@ -12,20 +13,25 @@ import {
   consumeLinkCode,
   linkTelegramAccount,
   liveGame,
+  latestDraw,
   markPaid,
   requestRebuy,
+  requestRebuyFor,
+  revealDraw,
   rsvp,
   schema,
+  startDraw,
   upcomingNights,
 } from "@poker/db";
 import { and, eq, isNull } from "@poker/db";
-import { liveTotals } from "@poker/domain";
+import { liveTotals, parseVoiceRebuy, voiceAmountToMoney } from "@poker/domain";
 import { Bot, type Context, InlineKeyboard } from "grammy";
 import type { UserFromGetMe } from "grammy/types";
 import { formatAmount, parseAmount } from "@/lib/format";
+import type { Transcribe } from "@/lib/stt";
 import { botLocale, botT, esc } from "./i18n";
 import { cardOrNull, postResult, sendRebuyRequest } from "./notifications";
-import { type Home, debtsText, lastGameText, nightText, rulesText, statsText } from "./text";
+import { type Home, debtsText, drawText, lastGameText, nightText, rulesText, rulingText, statsText } from "./text";
 
 export interface BotConfig {
   token: string;
@@ -36,11 +42,19 @@ export interface BotConfig {
   appName?: string;
   /** Given in tests (and after the first getMe) so no network call is needed. */
   botInfo?: UserFromGetMe;
+  /** Speech to text for voice rebuys; null or absent turns voice off. */
+  transcribe?: Transcribe | null;
+  /** Download a Telegram file (voice message); given in tests. */
+  downloadFile?: (fileId: string) => Promise<Uint8Array>;
 }
+
+/** Voice messages longer than this, or bigger, are not transcribed. */
+const VOICE_MAX_SECONDS = 30;
+const VOICE_MAX_BYTES = 1_000_000;
 
 const UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 const codeHash = (code: string) => createHash("sha256").update(code).digest();
-const helpText = (t: ReturnType<typeof botT>) => `${t("help")}\n${t("helpRules")}`;
+const helpText = (t: ReturnType<typeof botT>) => `${t("help")}\n${t("helpRules")}\n${t("helpIdeas")}`;
 
 interface Linked {
   id: string;
@@ -338,6 +352,145 @@ export function createBot(cfg: BotConfig) {
       return ctx.editMessageText(r!.text, { parse_mode: "HTML", reply_markup: r!.keyboard }).catch(() => {});
     } catch {
       return ctx.answerCallbackQuery({ text: t("notAllowed"), show_alert: true });
+    }
+  });
+
+  // ------------------------------------------------------------ companion referee
+
+  /** /judge <board> | <hand> | <hand> ... ; a hand may start with a name: "Ali: As Kd". */
+  bot.command("judge", async (ctx) => {
+    const c = await context(ctx);
+    if (!c) return;
+    const g = await asUser(db, c.user.id, (tx) => liveGame(tx, c.home.id));
+    if (!g) return ctx.reply(esc(c.t("noLiveGame")), { parse_mode: "HTML" });
+    const parts = ctx.match.split("|").map((x) => x.trim());
+    if (parts.length < 3 || parts.length > 11 || parts.some((x) => !x)) {
+      return ctx.reply(esc(c.t("judgeUsage")), { parse_mode: "HTML" });
+    }
+    const hands = parts.slice(1).map((h, i) => {
+      const m = /^([^:：]{1,40})[:：]\s*(.+)$/.exec(h);
+      return m ? { label: m[1]!.trim(), cards: m[2]!.trim() } : { label: String(i + 1), cards: h };
+    });
+    const variant = hands.some((h) => h.cards.split(/[\s,]+/).filter(Boolean).length > 2) ? "omaha" : "holdem";
+    try {
+      const r = await asUser(db, c.user.id, (tx) => addRuling(tx, c.user.id, g.id, { variant, board: parts[0]!, hands }, "telegram"));
+      const out = rulingText(r, c.home.locale, appUrl);
+      return ctx.reply(out.text, { parse_mode: "HTML", reply_markup: out.keyboard, link_preview_options: { is_disabled: true } });
+    } catch (e) {
+      const code = errorText(e);
+      return ctx.reply(esc(c.t(code === "INVALID" ? "judgeInvalid" : "judgeNotAllowed")), { parse_mode: "HTML" });
+    }
+  });
+
+  // ------------------------------------------------------------ fair draw
+
+  /** /draw: the host starts a draw (or shows the open one); the commit goes to the group. */
+  bot.command("draw", async (ctx) => {
+    const c = await context(ctx);
+    if (!c) return;
+    const g = await asUser(db, c.user.id, (tx) => liveGame(tx, c.home.id));
+    if (!g) return ctx.reply(esc(c.t("noLiveGame")), { parse_mode: "HTML" });
+    try {
+      const drawId = await asUser(db, c.user.id, async (tx) => {
+        const open = await latestDraw(tx, g.id);
+        return open && !open.draw.revealedAt ? open.draw.id : startDraw(tx, g.id);
+      });
+      const r = await asUser(db, c.user.id, (tx) => drawText(tx, c.home.locale, drawId, appUrl));
+      return ctx.reply(r!.text, { parse_mode: "HTML", reply_markup: r!.keyboard });
+    } catch (e) {
+      const msg = `${(e as Error)?.message ?? ""} ${(e as { cause?: Error })?.cause?.message ?? ""}`;
+      return ctx.reply(esc(c.t(/at least two players/.test(msg) ? "drawNeedsPlayers" : "notAllowed")), { parse_mode: "HTML" });
+    }
+  });
+
+  bot.callbackQuery(new RegExp(`^dr:r:(${UUID})$`), async (ctx) => {
+    const user = await siteUser(ctx.from.id);
+    const t = tFor(ctx, user);
+    if (!user) return ctx.answerCallbackQuery({ text: t("notLinked"), show_alert: true });
+    try {
+      const r = await asUser(db, user.id, async (tx) => {
+        await revealDraw(tx, ctx.match[1]!);
+        const [row] = await tx
+          .select({ locale: schema.homes.locale })
+          .from(schema.gameDraws)
+          .innerJoin(schema.homes, eq(schema.homes.id, schema.gameDraws.homeId))
+          .where(eq(schema.gameDraws.id, ctx.match[1]!));
+        return drawText(tx, row!.locale, ctx.match[1]!, appUrl);
+      });
+      await ctx.answerCallbackQuery();
+      return ctx.editMessageText(r!.text, { parse_mode: "HTML", reply_markup: r!.keyboard });
+    } catch (e) {
+      const msg = `${(e as Error)?.message ?? ""} ${(e as { cause?: Error })?.cause?.message ?? ""}`;
+      return ctx.answerCallbackQuery({ text: t(/already revealed/.test(msg) ? "alreadyAnswered" : "notAllowed"), show_alert: true });
+    }
+  });
+
+  // ------------------------------------------------------------ voice rebuys
+
+  const download =
+    cfg.downloadFile ??
+    (async (fileId: string) => {
+      const f = await bot.api.getFile(fileId);
+      if (!f.file_path) throw new Error("no file path");
+      const res = await fetch(`https://api.telegram.org/file/bot${cfg.token}/${f.file_path}`, { signal: AbortSignal.timeout(20_000) });
+      if (!res.ok) throw new Error(`download failed: ${res.status}`);
+      return new Uint8Array(await res.arrayBuffer());
+    });
+
+  /**
+   * «علی ۲۰۰ ری‌بای» as a voice message in the home's group during a live game becomes a rebuy
+   * request with approve / reject buttons for the host. Voice without a rebuy word is ignored.
+   */
+  bot.on("message:voice", async (ctx) => {
+    if (!isGroup(ctx)) return;
+    const user = await siteUser(ctx.from.id);
+    if (!user) return;
+    const home = await homeFor(ctx, user);
+    if (!home) return;
+    const t = tFor(ctx, user, home);
+    const reply = (text: string, extra: Record<string, unknown> = {}) =>
+      ctx.reply(text, { parse_mode: "HTML", reply_parameters: { message_id: ctx.msg.message_id }, ...extra });
+    const g = await asUser(db, user.id, (tx) => liveGame(tx, home.id));
+    if (!g) return;
+    if (!cfg.transcribe) return reply(esc(t("voiceOff")));
+    const v = ctx.msg.voice;
+    if (v.duration > VOICE_MAX_SECONDS || (v.file_size ?? 0) > VOICE_MAX_BYTES) return reply(esc(t("voiceTooLong")));
+    let heard: string;
+    try {
+      const audio = await download(v.file_id);
+      heard = await cfg.transcribe(audio, { filename: "voice.ogg", mime: v.mime_type ?? "audio/ogg", language: home.locale });
+    } catch (e) {
+      console.error("voice transcription failed", e);
+      return reply(esc(t("voiceFailed")));
+    }
+    const inGame = await asUser(db, user.id, (tx) =>
+      tx
+        .select({ id: schema.players.id, name: schema.players.displayName })
+        .from(schema.gameEntries)
+        .innerJoin(schema.players, eq(schema.players.id, schema.gameEntries.playerId))
+        .where(eq(schema.gameEntries.gameId, g.id)),
+    );
+    const parsed = parseVoiceRebuy(heard, inGame);
+    if (!parsed.ok) {
+      if (parsed.reason === "no_keyword") return;
+      if (parsed.reason === "ambiguous") {
+        return reply(esc(t("voiceAmbiguous", { heard, names: (parsed.candidates ?? []).join(" · ") })));
+      }
+      return reply(esc(t("voiceNoPlayer", { heard })));
+    }
+    const amount = parsed.amount ? voiceAmountToMoney(parsed.amount, home.unitDivisor) : undefined;
+    if (amount === null) return reply(esc(t("badAmount")));
+    try {
+      const r = await asUser(db, user.id, (tx) => requestRebuyFor(tx, user.id, g.id, parsed.playerId, amount, { via: "voice" }));
+      const money = formatAmount(r.amount, home, home.locale);
+      return reply(`${esc(t("voiceHeard", { heard }))}\n<b>${esc(t("voiceRequest", { name: parsed.name, amount: money }))}</b>`, {
+        reply_markup: new InlineKeyboard().text(t("approve"), `rq:a:${r.requestId}`).text(t("reject"), `rq:r:${r.requestId}`),
+      });
+    } catch (e) {
+      const code = errorText(e);
+      const key =
+        code === "ALREADY_REQUESTED" ? "rebuyAlready" : code === "FORBIDDEN" ? "voiceOnlySelf" : code === "NOT_IN_GAME" ? "notInGame" : "notAllowed";
+      return reply(esc(t(key, { name: parsed.name })));
     }
   });
 

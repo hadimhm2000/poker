@@ -178,4 +178,33 @@ and Persian (`apps/web/src/content/legal.ts`, placeholders for the operator and 
 company question is settled). The statistics page has a server-rendered two-page PDF when
 PDF_CHROMIUM_PATH is set.
 
+Special ideas #2 to #7 are built (migration `0007_ideas.sql`; tests in
+`packages/domain/test/{referee,draw,voice,payer}.test.ts`, `packages/db/test/ideas.test.ts`,
+`apps/web/src/lib/{stt,night-story}.test.ts` and `apps/web/src/telegram/bot.test.ts`):
+
+* Companion referee: during a live game anyone in it enters the board and the hands (game page or
+  `/judge <board> | <hand> | <hand>`, a hand may start with "Name:"). The hand engine decides; the
+  verdict shows the cards, the reason (category, kicker, split) and a link to the matching rule. Every
+  ruling is kept in the append-only `game_rulings` (members read it; new rows only before close) and
+  stays visible on the game page after close.
+* Fair draw of seats and first dealer (commit-reveal): the host starts a draw; the server commits to
+  sha256(seed) before anything is known, each player may add their own randomness from their phone,
+  and on reveal the order is a deterministic shuffle of the players (sorted by id) keyed by
+  sha256(seed || contributions in player order). `/draws/<id>` shows the commit, seed, contributions
+  and every step, and rechecks it in the browser. `/draw` posts the commit and then the result.
+* Debt netting across homes: when A owes B in one home and B owes A in another (linked accounts),
+  either proposes on the home page and it happens only when the other accepts. The smaller amount is
+  recorded as `netted` payments on both debts; frozen games are never touched. Only A and B see the
+  proposal; a double accept or a stale proposal is refused.
+* Voice rebuys: a voice message in the group during a live game («علی ۲۰۰ ری‌بای», "Ali rebuy 200",
+  in any of the 7 languages) is transcribed (`STT_*` settings) and becomes a normal rebuy request
+  with approve / reject buttons for the host. The bot must see group messages: turn privacy mode off
+  with @BotFather `/setprivacy` or make it a group admin.
+* Good-payer index: average days from close to "paid" per player, on the statistics page, inside the
+  home only and only when the host turns it on (home settings).
+* Night story: when `ANTHROPIC_API_KEY` is set and the host turns it on, a short story of the closed
+  game in the home's language, from that game's names and numbers only. Written once in the background
+  after close (never blocks it), kept outside the hash, shown on the game page and posted to the group
+  after the result card. A story with a number that is not in the game is dropped.
+
 The in-memory rate limiter must move to Postgres or Redis before running more than one server instance.

@@ -2,7 +2,7 @@ import { and, asc, desc, eq, gt, inArray, isNull, ne, sql } from "drizzle-orm";
 import { z } from "zod";
 import type { Tx } from "./client";
 import { DomainError, rebuy, setCashOut } from "./repo";
-import { gameEntries, gameEvents, gameNights, games, invites, nightRsvps, players, telegramLinkCodes, users } from "./schema";
+import { gameEntries, gameEvents, gameNights, games, homes, invites, nightRsvps, players, telegramLinkCodes, users } from "./schema";
 
 // Phase 3: live game (join by QR, rebuy requests, queued host changes), game nights and
 // Telegram link codes. Same rule as repo.ts: every function runs inside asUser() (or
@@ -38,6 +38,48 @@ async function myEntry(tx: Tx, userId: string, gameId: string) {
 export async function requestRebuy(tx: Tx, userId: string, gameId: string, amount?: number) {
   const e = await myEntry(tx, userId, gameId);
   if (!e) throw new DomainError("NOT_IN_GAME");
+  return insertRequest(tx, userId, gameId, e, amount);
+}
+
+/**
+ * A rebuy request for a named player (voice messages): allowed for that player themselves or
+ * the host. It still waits for the host's tap like any other request.
+ */
+export async function requestRebuyFor(
+  tx: Tx,
+  userId: string,
+  gameId: string,
+  playerId: string,
+  amount?: number,
+  details?: Record<string, unknown>,
+) {
+  const [e] = await tx
+    .select({
+      playerId: gameEntries.playerId,
+      gameStatus: games.status,
+      defaultBuyIn: games.defaultBuyIn,
+      playerUser: players.userId,
+      ownerId: homes.ownerId,
+      readOnly: homes.readOnly,
+    })
+    .from(gameEntries)
+    .innerJoin(players, eq(players.id, gameEntries.playerId))
+    .innerJoin(games, eq(games.id, gameEntries.gameId))
+    .innerJoin(homes, eq(homes.id, games.homeId))
+    .where(and(eq(gameEntries.gameId, id.parse(gameId)), eq(gameEntries.playerId, id.parse(playerId))));
+  if (!e) throw new DomainError("NOT_IN_GAME");
+  if (e.playerUser !== userId && (e.ownerId !== userId || e.readOnly)) throw new DomainError("FORBIDDEN");
+  return insertRequest(tx, userId, gameId, e, amount, details);
+}
+
+async function insertRequest(
+  tx: Tx,
+  userId: string,
+  gameId: string,
+  e: { playerId: string; gameStatus: string; defaultBuyIn: number },
+  amount?: number,
+  details?: Record<string, unknown>,
+) {
   if (e.gameStatus === "closed") throw new DomainError("FROZEN");
   const a = money.parse(amount ?? e.defaultBuyIn);
   // Serialize requests of this player so two taps make one request.
@@ -46,7 +88,7 @@ export async function requestRebuy(tx: Tx, userId: string, gameId: string, amoun
   if (open.some((r) => r.playerId === e.playerId)) throw new DomainError("ALREADY_REQUESTED");
   const [r] = await tx
     .insert(gameEvents)
-    .values({ gameId, type: "request", playerId: e.playerId, amount: a, actorId: userId })
+    .values({ gameId, type: "request", playerId: e.playerId, amount: a, actorId: userId, details: details ?? null })
     .returning({ id: gameEvents.id });
   return { requestId: r!.id, playerId: e.playerId, amount: a };
 }

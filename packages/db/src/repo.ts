@@ -10,7 +10,7 @@ import { and, asc, desc, eq, inArray, isNull, notExists, sql } from "drizzle-orm
 import { alias } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import type { Tx } from "./client";
-import { debtPayments, gameEntries, gameEvents, games, homes, players, settlements } from "./schema";
+import { debtPayments, gameEntries, gameEvents, games, homes, openDebts as openDebtsView, players, settlements } from "./schema";
 
 // All functions take a transaction already scoped with asUser(): RLS is the backstop,
 // but each function also states its own rules so errors are clear and early.
@@ -137,30 +137,23 @@ export async function gameBlockers(tx: Tx, gameId: string): Promise<CloseBlocker
 }
 
 /**
- * Unpaid, not-yet-carried settlements from earlier games in this home, with merged players
- * mapped to the player they were merged into.
+ * Unpaid, not-yet-carried settlements from earlier games in this home, with what is still
+ * owed (less after netting) and merged players mapped to the player they were merged into.
  */
 export async function openDebts(tx: Tx, homeId: string) {
   return tx
     .select({
-      id: settlements.id,
-      from: sql<string>`coalesce(${keptFrom.id}, ${settlements.fromPlayer})`,
-      to: sql<string>`coalesce(${keptTo.id}, ${settlements.toPlayer})`,
-      amount: settlements.amount,
+      id: openDebtsView.id,
+      from: sql<string>`coalesce(${keptFrom.id}, ${openDebtsView.fromPlayer})`,
+      to: sql<string>`coalesce(${keptTo.id}, ${openDebtsView.toPlayer})`,
+      amount: openDebtsView.remaining,
     })
-    .from(settlements)
-    .innerJoin(games, eq(games.id, settlements.gameId))
-    .innerJoin(fromOf, eq(fromOf.id, settlements.fromPlayer))
+    .from(openDebtsView)
+    .innerJoin(fromOf, eq(fromOf.id, openDebtsView.fromPlayer))
     .leftJoin(keptFrom, eq(keptFrom.id, fromOf.mergedInto))
-    .innerJoin(toOf, eq(toOf.id, settlements.toPlayer))
+    .innerJoin(toOf, eq(toOf.id, openDebtsView.toPlayer))
     .leftJoin(keptTo, eq(keptTo.id, toOf.mergedInto))
-    .where(
-      and(
-        eq(games.homeId, id.parse(homeId)),
-        eq(games.status, "closed"),
-        notExists(tx.select({ x: sql`1` }).from(debtPayments).where(eq(debtPayments.settlementId, settlements.id))),
-      ),
-    );
+    .where(eq(openDebtsView.homeId, id.parse(homeId)));
 }
 
 export const closeGameInput = z.object({
@@ -324,32 +317,33 @@ export async function history(tx: Tx, q: z.input<typeof historyQuery>) {
     .limit(v.limit);
 }
 
-/** Open debts in a home (the ledger), merged players mapped like in openDebts. */
+/**
+ * Open debts in a home (the ledger), merged players mapped like in openDebts. `amount` is
+ * what is still owed; it is less than `original` when part was netted in another home.
+ */
 export async function ledger(tx: Tx, homeId: string) {
   return tx
     .select({
-      settlementId: settlements.id,
-      gameNumber: games.number,
-      from: sql<string>`coalesce(${keptFrom.id}, ${settlements.fromPlayer})`,
-      to: sql<string>`coalesce(${keptTo.id}, ${settlements.toPlayer})`,
-      amount: settlements.amount,
+      settlementId: openDebtsView.id,
+      gameNumber: openDebtsView.gameNumber,
+      from: sql<string>`coalesce(${keptFrom.id}, ${openDebtsView.fromPlayer})`,
+      to: sql<string>`coalesce(${keptTo.id}, ${openDebtsView.toPlayer})`,
+      amount: openDebtsView.remaining,
+      original: openDebtsView.amount,
     })
-    .from(settlements)
-    .innerJoin(games, eq(games.id, settlements.gameId))
-    .innerJoin(fromOf, eq(fromOf.id, settlements.fromPlayer))
+    .from(openDebtsView)
+    .innerJoin(fromOf, eq(fromOf.id, openDebtsView.fromPlayer))
     .leftJoin(keptFrom, eq(keptFrom.id, fromOf.mergedInto))
-    .innerJoin(toOf, eq(toOf.id, settlements.toPlayer))
+    .innerJoin(toOf, eq(toOf.id, openDebtsView.toPlayer))
     .leftJoin(keptTo, eq(keptTo.id, toOf.mergedInto))
-    .leftJoin(debtPayments, eq(debtPayments.settlementId, settlements.id))
     .where(
       and(
-        eq(games.homeId, id.parse(homeId)),
-        isNull(debtPayments.id),
+        eq(openDebtsView.homeId, id.parse(homeId)),
         // A debt between a duplicate and the player it was merged into is owed to oneself.
-        sql`coalesce(${keptFrom.id}, ${settlements.fromPlayer}) <> coalesce(${keptTo.id}, ${settlements.toPlayer})`,
+        sql`coalesce(${keptFrom.id}, ${openDebtsView.fromPlayer}) <> coalesce(${keptTo.id}, ${openDebtsView.toPlayer})`,
       ),
     )
-    .orderBy(asc(games.number));
+    .orderBy(asc(openDebtsView.gameNumber));
 }
 
 export async function markPaid(tx: Tx, userId: string, settlementId: string) {

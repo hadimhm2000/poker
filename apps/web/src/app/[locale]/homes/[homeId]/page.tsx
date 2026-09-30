@@ -1,9 +1,10 @@
-import { AVATARS, activeInvites, homePlan, ledger, memberList, schema } from "@poker/db";
+import { AVATARS, activeInvites, homePlan, homeSettings, ledger, listNetting, memberList, nettingCandidates, schema } from "@poker/db";
 import { asc, desc, eq, sql } from "@poker/db";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { addPlayerAction, createInviteAction, houseRulesAction, markPaidAction, newGameAction } from "@/app/actions/homes";
 import { mergePlayersAction, playerProfileAction, removeMemberAction, revokeInviteAction } from "@/app/actions/players";
+import { answerNettingAction, cancelNettingAction, homeOptionsAction, proposeNettingAction } from "@/app/actions/ideas";
 import { connectGroupAction, disconnectGroupAction } from "@/app/actions/telegram";
 import { ErrorNotice } from "@/components/ErrorNotice";
 import { PlayerName } from "@/components/PlayerName";
@@ -35,6 +36,7 @@ export default async function HomePage({
   const tr = await getTranslations("rules");
   const tp = await getTranslations("people");
   const tb = await getTranslations("billing");
+  const ti = await getTranslations("ideas");
 
   const data = await withUser(async (tx, user) => {
     const [home] = await tx.select().from(schema.homes).where(eq(schema.homes.id, homeId));
@@ -56,10 +58,14 @@ export default async function HomePage({
         .where(eq(schema.homes.ownerId, user.id));
       atGameLimit = (c?.n ?? 0) >= 3;
     }
-    return { home, players, games, debts, members, invites, isOwner, userId: user.id, atGameLimit };
+    // Cross-home netting: only the two people involved ever see these.
+    const candidates = (await nettingCandidates(tx, user.id)).filter((c) => c.mine.homeId === homeId || c.theirs.homeId === homeId);
+    const proposals = await listNetting(tx, { homeId, status: "pending" });
+    return { home, players, games, debts, members, invites, candidates, proposals, isOwner, userId: user.id, atGameLimit };
   });
   if (!data) notFound();
-  const { home, players, games, debts, members, isOwner, userId, atGameLimit } = data;
+  const { home, players, games, debts, members, candidates, proposals, isOwner, userId, atGameLimit } = data;
+  const settings = homeSettings(home.settings);
   const name = new Map(players.map((p) => [p.id, p.displayName]));
   const byId = new Map(players.map((p) => [p.id, p]));
   const active = players.filter((p) => !p.mergedInto);
@@ -78,6 +84,7 @@ export default async function HomePage({
       return { ...i, url, qr: url ? await qrDataUrl(url) : null };
     }),
   );
+  const storyAvailable = !!process.env.ANTHROPIC_API_KEY;
 
   return (
     <>
@@ -210,7 +217,10 @@ export default async function HomePage({
                         )}
                         {tg("pays", { from: name.get(d.from) ?? "?", to: name.get(d.to) ?? "?" })}
                       </td>
-                      <td className="end num">{money(d.amount)}</td>
+                      <td className="end num">
+                        {money(d.amount)}
+                        {d.amount !== d.original && <span className="small muted"> {ti("ofOriginal", { original: money(d.original) })}</span>}
+                      </td>
                       <td className="muted small">#{d.gameNumber === null ? "" : new Intl.NumberFormat(locale).format(d.gameNumber)}</td>
                       <td>
                         {info ? (
@@ -242,6 +252,74 @@ export default async function HomePage({
         )}
       </section>
 
+      {(candidates.length > 0 || proposals.length > 0) && (
+        <section className="card stack" id="netting">
+          <h2>{ti("nettingTitle")}</h2>
+          <p className="small muted">{ti("nettingIntro")}</p>
+          <ul className="plain stack">
+            {proposals.map(({ p, a, b }) => {
+              const homes = { homeA: a.homeName ?? "?", homeB: b.homeName ?? "?", amount: money(p.amount) };
+              return (
+                <li key={p.id} className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
+                  {p.responder === userId ? (
+                    <>
+                      <span>{ti("nettingFromThem", { name: a.from ?? "?", ...homes })}</span>
+                      <span className="row">
+                        {(["accept", "decline"] as const).map((answer) => (
+                          <form key={answer} action={answerNettingAction}>
+                            <input type="hidden" name="homeId" value={home.id} />
+                            <input type="hidden" name="proposalId" value={p.id} />
+                            <input type="hidden" name="answer" value={answer} />
+                            <button className={`btn small${answer === "accept" ? "" : " secondary"}`} type="submit">
+                              {ti(answer)}
+                            </button>
+                          </form>
+                        ))}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span>{ti("nettingFromMe", { name: a.to ?? "?", ...homes })}</span>
+                      <form action={cancelNettingAction}>
+                        <input type="hidden" name="homeId" value={home.id} />
+                        <input type="hidden" name="proposalId" value={p.id} />
+                        <button className="btn small secondary" type="submit">
+                          {ti("withdraw")}
+                        </button>
+                      </form>
+                    </>
+                  )}
+                </li>
+              );
+            })}
+            {candidates
+              .filter((c) => !proposals.some(({ p }) => [p.proposerDebt, p.responderDebt].includes(c.mine.settlementId) && [p.proposerDebt, p.responderDebt].includes(c.theirs.settlementId)))
+              .map((c) => (
+                <li key={`${c.mine.settlementId}-${c.theirs.settlementId}`} className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
+                  <span>
+                    {ti("nettingOffer", {
+                      name: c.otherName,
+                      mine: money(c.mine.amount),
+                      mineHome: c.mine.homeName,
+                      theirs: money(c.theirs.amount),
+                      theirsHome: c.theirs.homeName,
+                      amount: money(c.amount),
+                    })}
+                  </span>
+                  <form action={proposeNettingAction}>
+                    <input type="hidden" name="homeId" value={home.id} />
+                    <input type="hidden" name="mine" value={c.mine.settlementId} />
+                    <input type="hidden" name="theirs" value={c.theirs.settlementId} />
+                    <button className="btn small" type="submit">
+                      {ti("propose")}
+                    </button>
+                  </form>
+                </li>
+              ))}
+          </ul>
+        </section>
+      )}
+
       <section className="card stack">
         <h2>{tr("houseTitle")}</h2>
         {canWrite ? (
@@ -264,6 +342,32 @@ export default async function HomePage({
           <p className="muted">{tr("houseNone")}</p>
         )}
       </section>
+
+      {canWrite && (
+        <section className="card stack" id="options">
+          <h2>{ti("optionsTitle")}</h2>
+          <form action={homeOptionsAction} className="stack">
+            <input type="hidden" name="homeId" value={home.id} />
+            <label className="row" style={{ alignItems: "center", gap: 8 }}>
+              <input type="checkbox" name="goodPayerIndex" defaultChecked={!!settings.goodPayerIndex} style={{ width: "auto" }} />
+              {ti("optionGoodPayer")}
+            </label>
+            <p className="small muted" style={{ margin: 0 }}>{ti("optionGoodPayerHint")}</p>
+            <label className="row" style={{ alignItems: "center", gap: 8 }}>
+              <input type="checkbox" name="nightStory" defaultChecked={!!settings.nightStory} style={{ width: "auto" }} />
+              {ti("optionStory")}
+            </label>
+            <p className="small muted" style={{ margin: 0 }}>
+              {ti("optionStoryHint")} {!storyAvailable && ti("optionStoryOff")}
+            </p>
+            <div>
+              <button className="btn secondary" type="submit">
+                {ti("saveOptions")}
+              </button>
+            </div>
+          </form>
+        </section>
+      )}
 
       {canWrite && telegramConfigured() && (
         <section className="card stack">
