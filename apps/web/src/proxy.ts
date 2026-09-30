@@ -18,7 +18,10 @@ export function proxy(request: NextRequest) {
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
-    "frame-ancestors 'none'",
+    // Telegram Login Widget iframe.
+    "frame-src https://oauth.telegram.org",
+    // Only Telegram Web may frame us (it shows the Mini App in an iframe).
+    "frame-ancestors 'self' https://web.telegram.org",
     ...(isDev ? [] : ["upgrade-insecure-requests"]),
   ].join("; ");
 

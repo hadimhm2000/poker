@@ -15,12 +15,14 @@ import {
 import { and, eq, sql } from "@poker/db";
 import { cookies } from "next/headers";
 import { unstable_rethrow } from "next/navigation";
+import { after } from "next/server";
 import { getLocale } from "next-intl/server";
 import { z } from "zod";
 import { redirect } from "@/i18n/navigation";
 import { randomToken, sha256 } from "@/lib/crypto";
 import { parseAmount } from "@/lib/format";
 import { errorCode, withUser } from "@/lib/session";
+import { notifyGameClosed } from "@/telegram/notify";
 
 const uuid = z.string().uuid();
 
@@ -180,7 +182,10 @@ export async function closeGameAction(form: FormData) {
   const closeKey = uuid.parse(form.get("closeKey"));
   const expectedVersion = z.coerce.number().int().positive().parse(form.get("version"));
   try {
-    await withUser((tx, user) => closeGame(tx, user.id, { gameId, closeKey, expectedVersion }));
+    const r = await withUser((tx, user) => closeGame(tx, user.id, { gameId, closeKey, expectedVersion }));
+    if (!r.alreadyClosed) {
+      after(() => notifyGameClosed(gameId).catch((e: unknown) => console.error("telegram notify failed", e)));
+    }
   } catch (e) {
     if (e instanceof DomainError) return go(`/games/${gameId}?summary=1`, e.code);
     return go(`/games/${gameId}?summary=1`, errorCode(e));

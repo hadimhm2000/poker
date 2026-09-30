@@ -137,6 +137,7 @@ export const gameEvents = pgTable("game_events", {
   details: jsonb("details"),
   actorId: uuid("actor_id").notNull(),
   at: ts("at").notNull().defaultNow(),
+  opKey: uuid("op_key").unique(),
 });
 
 export const settlements = pgTable("settlements", {
@@ -165,6 +166,7 @@ export const invites = pgTable("invites", {
   maxUses: integer("max_uses").notNull().default(1),
   uses: integer("uses").notNull().default(0),
   revokedAt: ts("revoked_at"),
+  gameId: uuid("game_id"),
   createdBy: uuid("created_by").notNull(),
   createdAt: ts("created_at").notNull().defaultNow(),
 });
@@ -189,4 +191,44 @@ export const auditLog = pgTable("audit_log", {
   details: jsonb("details"),
   ipHash: bytea("ip_hash"),
   at: ts("at").notNull().defaultNow(),
+});
+
+export const gameNights = pgTable("game_nights", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  homeId: uuid("home_id").notNull(),
+  startsAt: ts("starts_at").notNull(),
+  place: text("place").notNull().default(""),
+  note: text("note").notNull().default(""),
+  createdBy: uuid("created_by").notNull(),
+  createdAt: ts("created_at").notNull().defaultNow(),
+  canceledAt: ts("canceled_at"),
+  remindedAt: ts("reminded_at"),
+  telegramMessageId: bigint("telegram_message_id", { mode: "number" }),
+});
+
+export const nightRsvps = pgTable(
+  "night_rsvps",
+  {
+    nightId: uuid("night_id").notNull(),
+    userId: uuid("user_id").notNull(),
+    answer: text("answer", { enum: ["yes", "no", "maybe"] }).notNull(),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.nightId, t.userId] })],
+);
+
+export const telegramLinkCodes = pgTable("telegram_link_codes", {
+  codeHash: bytea("code_hash").primaryKey(),
+  purpose: text("purpose", { enum: ["account", "group"] }).notNull(),
+  userId: uuid("user_id").notNull(),
+  homeId: uuid("home_id"),
+  expiresAt: ts("expires_at").notNull(),
+  usedAt: ts("used_at"),
+  createdAt: ts("created_at").notNull().defaultNow(),
+});
+
+export const debtReminders = pgTable("debt_reminders", {
+  id: bigserial("id", { mode: "number" }).primaryKey(),
+  settlementId: uuid("settlement_id").notNull(),
+  sentAt: ts("sent_at").notNull().defaultNow(),
 });

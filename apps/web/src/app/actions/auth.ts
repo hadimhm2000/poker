@@ -20,6 +20,7 @@ import {
 } from "@/lib/auth";
 import { decryptField, encryptField } from "@/lib/crypto";
 import { getDb } from "@/lib/db";
+import { safeNext } from "@/lib/next-path";
 import { rateLimit } from "@/lib/rate-limit";
 import { requireUser, withUser } from "@/lib/session";
 
@@ -28,12 +29,36 @@ const credentials = z.object({
   password: z.string().min(10).max(200),
 });
 
+const AFTER_SIGN_IN = "after_signin";
+
+async function rememberNext(form: FormData) {
+  const next = safeNext(form.get("next"));
+  if (next) {
+    (await cookies()).set(AFTER_SIGN_IN, next, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 900,
+    });
+  }
+}
+
+/** Where to go once fully signed in: the page that sent the user to sign in, else their homes. */
+async function signedIn(): Promise<never> {
+  const jar = await cookies();
+  const next = safeNext(jar.get(AFTER_SIGN_IN)?.value);
+  jar.delete(AFTER_SIGN_IN);
+  return back(next ?? "/homes");
+}
+
 async function back(path: string, error?: string): Promise<never> {
   const locale = await getLocale();
   return redirect({ href: error ? `${path}?error=${error}` : path, locale });
 }
 
 export async function signUpAction(form: FormData) {
+  await rememberNext(form);
   const ip = await clientKey();
   if (!rateLimit(`signup:${ip}`, 5, 60 * 60e3)) return back("/signup", "rateLimited");
   const parsed = credentials.extend({ displayName: z.string().trim().min(1).max(80) }).safeParse({
@@ -55,10 +80,11 @@ export async function signUpAction(form: FormData) {
   );
   if (!created[0]) return back("/signup", "cannotCreate");
   await createSession(created[0].id, false);
-  return back("/homes");
+  return signedIn();
 }
 
 export async function signInAction(form: FormData) {
+  await rememberNext(form);
   const ip = await clientKey();
   const email = String(form.get("email") ?? "").trim().toLowerCase().slice(0, 254);
   // Per-IP and per-account limits. The response is the same whether or not the email exists.
@@ -76,7 +102,7 @@ export async function signInAction(form: FormData) {
   if (!user || !ok) return back("/signin", "invalid");
   await destroySession();
   await createSession(user.id, false);
-  return back(user.totp ? "/signin/2fa" : "/homes");
+  return user.totp ? back("/signin/2fa") : signedIn();
 }
 
 export async function verifyTwoFactorAction(form: FormData) {
@@ -94,7 +120,7 @@ export async function verifyTwoFactorAction(form: FormData) {
   await destroySession();
   await createSession(user.id, true);
   await markTwoFactorPassed(user.sessionId).catch(() => {});
-  return back("/homes");
+  return signedIn();
 }
 
 /** Step 1: create a secret, keep it encrypted in a short-lived httpOnly cookie until verified. */

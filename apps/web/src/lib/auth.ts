@@ -61,8 +61,12 @@ export async function clientKey(): Promise<string> {
   return h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? h.get("x-real-ip") ?? "local";
 }
 
-/** Creates a fresh session (new id every sign-in: no session fixation). */
-export async function createSession(userId: string, twoFactorPassed: boolean) {
+/**
+ * Creates a fresh session (new id every sign-in: no session fixation).
+ * `embedded`: the Telegram Mini App runs inside web.telegram.org's iframe, where only a
+ * SameSite=None, partitioned (CHIPS) cookie is kept. Server Actions still check Origin.
+ */
+export async function createSession(userId: string, twoFactorPassed: boolean, opts: { embedded?: boolean } = {}) {
   const token = randomToken();
   const expiresAt = new Date(Date.now() + SESSION_DAYS * 864e5);
   const ipHash = await clientIpHash();
@@ -73,7 +77,8 @@ export async function createSession(userId: string, twoFactorPassed: boolean) {
   (await cookies()).set(SESSION_COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    sameSite: opts.embedded && process.env.NODE_ENV === "production" ? "none" : "lax",
+    partitioned: opts.embedded && process.env.NODE_ENV === "production" ? true : undefined,
     path: "/",
     expires: expiresAt,
   });

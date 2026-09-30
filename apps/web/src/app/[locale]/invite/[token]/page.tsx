@@ -6,7 +6,7 @@ import { currentUser } from "@/lib/auth";
 export default async function Invite({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
   const user = await currentUser();
-  if (!user) return redirect({ href: "/signup", locale: await getLocale() });
+  if (!user) return redirect({ href: `/signup?next=${encodeURIComponent(`/invite/${token}`)}`, locale: await getLocale() });
   const t = await getTranslations("homes");
   return (
     <div className="card" style={{ maxWidth: 420, marginInline: "auto" }}>

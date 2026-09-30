@@ -27,6 +27,9 @@ export function errorCode(e: unknown): string {
   if (err.code && /^[A-Z_]+$/.test(err.code)) return err.code;
   if (err.cause?.hint === "upgrade" || /limit|free plan/.test(text)) return "LIMIT";
   if (/read-only/.test(text)) return "READ_ONLY";
+  if (/already have a player/.test(text)) return "ALREADY_LINKED";
+  if (/cannot be claimed/.test(text)) return "NOT_FOUND";
+  if (/invite is not valid/.test(text)) return "INVITE_INVALID";
   if (/closed and cannot be changed/.test(text)) return "FROZEN";
   if (/players_home_name_idx|duplicate key/.test(text)) return "DUPLICATE";
   if (/row-level security|permission denied/.test(text)) return "FORBIDDEN";

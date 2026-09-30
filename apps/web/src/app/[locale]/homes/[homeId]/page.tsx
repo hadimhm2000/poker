@@ -4,10 +4,13 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { addPlayerAction, createInviteAction, markPaidAction, newGameAction } from "@/app/actions/homes";
+import { connectGroupAction, disconnectGroupAction } from "@/app/actions/telegram";
 import { ErrorNotice } from "@/components/ErrorNotice";
 import { Link } from "@/i18n/navigation";
 import { formatAmount, formatDate } from "@/lib/format";
+import { appOrigin } from "@/lib/live";
 import { withUser } from "@/lib/session";
+import { telegramConfigured } from "@/telegram/instance";
 
 export default async function HomePage({
   params,
@@ -23,6 +26,8 @@ export default async function HomePage({
   const t = await getTranslations("homes");
   const tg = await getTranslations("game");
   const ts = await getTranslations("stats");
+  const tn = await getTranslations("nights");
+  const tt = await getTranslations("telegram");
   const invite = (await cookies()).get("invite_flash")?.value;
 
   const data = await withUser(async (tx, user) => {
@@ -38,7 +43,7 @@ export default async function HomePage({
   const name = new Map(players.map((p) => [p.id, p.displayName]));
   const money = (n: number) => formatAmount(n, home, locale);
   const canWrite = isOwner && !home.readOnly;
-  const origin = process.env.APP_ORIGIN ?? "";
+  const origin = await appOrigin();
 
   return (
     <>
@@ -74,7 +79,8 @@ export default async function HomePage({
           </ul>
           <p style={{ marginBlockEnd: 0 }}>
             <Link href={`/homes/${home.id}/history`}>{t("history")}</Link> ·{" "}
-            <Link href={`/homes/${home.id}/stats`}>{ts("title")}</Link>
+            <Link href={`/homes/${home.id}/stats`}>{ts("title")}</Link> ·{" "}
+            <Link href={`/homes/${home.id}/nights`}>{tn("title")}</Link>
             {canWrite && (
               <>
                 {" "}
@@ -137,6 +143,34 @@ export default async function HomePage({
           </div>
         )}
       </section>
+
+      {canWrite && telegramConfigured() && (
+        <section className="card stack">
+          <h2>{tt("groupTitle")}</h2>
+          {home.telegramChatId ? (
+            <>
+              <p>{tt("groupLinked")}</p>
+              <form action={disconnectGroupAction}>
+                <input type="hidden" name="homeId" value={home.id} />
+                <button className="btn secondary" type="submit">
+                  {tt("disconnect")}
+                </button>
+              </form>
+            </>
+          ) : (
+            <>
+              <p className="muted">{tt("groupNotLinked")}</p>
+              <form action={connectGroupAction}>
+                <input type="hidden" name="homeId" value={home.id} />
+                <button className="btn" type="submit">
+                  {tt("connectGroup")}
+                </button>
+              </form>
+              <p className="small muted">{tt("groupHint")}</p>
+            </>
+          )}
+        </section>
+      )}
 
       {canWrite && (
         <section className="card stack">

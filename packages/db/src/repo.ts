@@ -70,7 +70,7 @@ export async function addToGame(tx: Tx, userId: string, gameId: string, playerId
   await tx.insert(gameEvents).values({ gameId: g.id, playerId, type: "buy_in", amount, actorId: userId });
 }
 
-export async function rebuy(tx: Tx, userId: string, gameId: string, playerId: string, amount?: number) {
+export async function rebuy(tx: Tx, userId: string, gameId: string, playerId: string, amount?: number, opKey?: string) {
   const g = await openGame(tx, gameId);
   const a = money.parse(amount ?? g.defaultBuyIn);
   const updated = await tx
@@ -79,10 +79,17 @@ export async function rebuy(tx: Tx, userId: string, gameId: string, playerId: st
     .where(and(eq(gameEntries.gameId, g.id), eq(gameEntries.playerId, id.parse(playerId))))
     .returning();
   if (!updated.length) throw new DomainError("NOT_IN_GAME");
-  await tx.insert(gameEvents).values({ gameId: g.id, playerId, type: "rebuy", amount: a, actorId: userId });
+  await tx.insert(gameEvents).values({ gameId: g.id, playerId, type: "rebuy", amount: a, actorId: userId, opKey: opKey ?? null });
 }
 
-export async function setCashOut(tx: Tx, userId: string, gameId: string, playerId: string, cashOut: number | null) {
+export async function setCashOut(
+  tx: Tx,
+  userId: string,
+  gameId: string,
+  playerId: string,
+  cashOut: number | null,
+  opKey?: string,
+) {
   const g = await openGame(tx, gameId);
   const v = cashOut === null ? null : money.parse(cashOut);
   const updated = await tx
@@ -91,7 +98,7 @@ export async function setCashOut(tx: Tx, userId: string, gameId: string, playerI
     .where(and(eq(gameEntries.gameId, g.id), eq(gameEntries.playerId, id.parse(playerId))))
     .returning();
   if (!updated.length) throw new DomainError("NOT_IN_GAME");
-  await tx.insert(gameEvents).values({ gameId: g.id, playerId, type: "cash_out", amount: v, actorId: userId });
+  await tx.insert(gameEvents).values({ gameId: g.id, playerId, type: "cash_out", amount: v, actorId: userId, opKey: opKey ?? null });
 }
 
 async function loadEntries(tx: Tx, gameId: string) {

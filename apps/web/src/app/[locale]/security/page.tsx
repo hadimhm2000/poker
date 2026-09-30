@@ -3,6 +3,8 @@ import { eq } from "@poker/db";
 import { getLocale, getTranslations } from "next-intl/server";
 import QRCode from "qrcode";
 import { enableTwoFactorAction, signOutAllAction, startTwoFactorAction } from "@/app/actions/auth";
+import { connectTelegramAction, disconnectTelegramAction } from "@/app/actions/telegram";
+import { telegramConfigured } from "@/telegram/instance";
 import { getDb } from "@/lib/db";
 import { formatDate } from "@/lib/format";
 import { requireUser, withUser } from "@/lib/session";
@@ -13,8 +15,12 @@ export default async function Security({ searchParams }: { searchParams: Promise
   const locale = await getLocale();
   const { error } = await searchParams;
   const t = await getTranslations("auth");
+  const tt = await getTranslations("telegram");
   const [row] = await asAuth(getDb(), (tx) =>
-    tx.select({ on: schema.users.totpEnabledAt }).from(schema.users).where(eq(schema.users.id, user.id)),
+    tx
+      .select({ on: schema.users.totpEnabledAt, telegramId: schema.users.telegramId })
+      .from(schema.users)
+      .where(eq(schema.users.id, user.id)),
   );
   const sessions = await withUser((tx) =>
     tx
@@ -59,6 +65,30 @@ export default async function Security({ searchParams }: { searchParams: Promise
           </>
         )}
       </section>
+      {telegramConfigured() && (
+        <section className="card stack">
+          <h2>{tt("accountTitle")}</h2>
+          {row?.telegramId ? (
+            <>
+              <p>{tt("accountLinked")}</p>
+              <form action={disconnectTelegramAction}>
+                <button className="btn secondary" type="submit">
+                  {tt("disconnect")}
+                </button>
+              </form>
+            </>
+          ) : (
+            <>
+              <p className="muted">{tt("accountNotLinked")}</p>
+              <form action={connectTelegramAction}>
+                <button className="btn" type="submit">
+                  {tt("connect")}
+                </button>
+              </form>
+            </>
+          )}
+        </section>
+      )}
       <section className="card">
         <h2>{t("sessions")}</h2>
         <ul>

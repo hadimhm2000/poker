@@ -36,13 +36,35 @@ pnpm install
 # Postgres 16. As a superuser:
 createdb poker_dev
 DATABASE_URL_ADMIN=postgres://postgres@localhost:5432/poker_dev pnpm migrate
-psql -d poker_dev -c "CREATE ROLE poker_web LOGIN PASSWORD 'devpass'; GRANT app_user, app_auth TO poker_web;"
+psql -d poker_dev -c "CREATE ROLE poker_web LOGIN PASSWORD 'devpass'; GRANT app_user, app_auth, app_jobs TO poker_web;"
 cp apps/web/.env.example apps/web/.env.local   # fill FIELD_KEY and IP_HASH_SALT
 pnpm dev
 ```
 
-Tests: `pnpm test` (the db tests need `TEST_DATABASE_URL`, default
+Tests: `pnpm test` (the db and bot tests need `TEST_DATABASE_URL`, default
 `postgres://postgres@localhost:5432/postgres`; each test file creates and drops its own database).
+
+## Telegram
+
+The bot is another door into the same backend: every command runs as the linked site user
+under the same Row Level Security as the website. Setup, once per environment:
+
+1. Create a bot with @BotFather; put the token and username in `TELEGRAM_BOT_TOKEN` and
+   `TELEGRAM_BOT_USERNAME`. Set `TELEGRAM_WEBHOOK_SECRET` and `CRON_SECRET` to random strings
+   (16+ characters) and `APP_URL` to the public https address.
+2. In @BotFather: `/setdomain` to the site's domain (Login Widget), and optionally `/newapp`
+   for a Mini App link (`t.me/<bot>/<name>`, then set `TELEGRAM_APP_NAME`).
+3. After deploying: `curl -X POST -H "Authorization: Bearer $CRON_SECRET" $APP_URL/api/telegram/setup`
+   (sets the webhook with its secret, the command menu in 7 languages and the Mini App menu button).
+4. Schedule `POST /api/cron/tick` with the same bearer every 10 minutes (game-night and
+   debt reminders).
+
+Players link Telegram on the Security page (or just open the bot: the Mini App creates an
+account from Telegram's signed data). Hosts connect a group from the home page; the bot then
+posts results on close, game-night invites with answer buttons, and reminders.
+
+Live updates use Postgres `LISTEN/NOTIFY` and Server-Sent Events (no extra service). Behind a
+proxy, disable response buffering for `/api/games/*/live`.
 
 ## Status against the plan
 
@@ -63,8 +85,17 @@ CSV, a two-page landscape print view (browser Print to PDF), and spreadsheet imp
 Solar Hijri dates and duplicate detection. Its exit gate (importing Hadi's real workbook reproduces
 sheet 3: abol +2,980k over 28 games) still needs that file.
 
-Not yet built: result card image (Satori), server-side PDF, Google/Apple/Telegram login, email verification and password reset (need a
-mail provider), TOTP recovery codes, live game over
-WebSocket, Telegram bot and Mini App (phase 3), seasons and badges, rules section, payments
-(phase 5). The in-memory rate limiter must move to Postgres or Redis before running more than
-one server instance.
+Phase 3 (live game and Telegram) is built: players join a live game by QR code and see it change
+in real time, ask for a rebuy from their phone and the host approves with one tap (on the site or
+in Telegram), players confirm their own result, the host's changes queue on the phone while the
+connection is down and are applied exactly once when it returns, game-night invites with
+coming/maybe/not coming, and the Telegram bot (`/start`, `/link`, `/game`, `/rebuy`, `/stats`,
+`/last`, `/debts`, `/next`, `/sidepot`), Mini App sign-in, Telegram Login, automatic result posts
+to the group on close, and private debt reminders. Tests: `packages/db/test/live.test.ts` and
+`apps/web/src/telegram/*.test.ts` (the bot runs end to end against a real database). Its exit gate
+(a real game night of the group run entirely from Telegram) needs a bot token and a deployment.
+
+Not yet built: result card image (Satori), server-side PDF, Google/Apple login, email verification
+and password reset (need a mail provider), TOTP recovery codes, `/rules` (with the rules section),
+voice rebuys, seasons and badges, payments (phase 5). The in-memory rate limiter must move to
+Postgres or Redis before running more than one server instance.

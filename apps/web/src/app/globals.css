@@ -84,9 +84,10 @@ main { padding-block: 28px 64px; }
 .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; overflow-wrap: anywhere; direction: ltr; unicode-bidi: isolate; }
 
 label { display: block; font-size: 0.875rem; color: var(--muted); }
-label > input, label > select { margin-block-start: 4px; }
-input, select, button { font: inherit; }
-input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="date"], input:not([type]), select {
+label > input, label > select, label > textarea { margin-block-start: 4px; }
+input, select, button, textarea { font: inherit; }
+input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="date"],
+input[type="datetime-local"], input:not([type]), select, textarea {
   width: 100%;
   padding: 9px 11px;
   border: 1px solid var(--border);
@@ -95,7 +96,7 @@ input[type="text"], input[type="email"], input[type="password"], input[type="num
   color: var(--text);
   min-width: 0;
 }
-input:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible {
+textarea:focus-visible, input:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible {
   outline: 2px solid var(--accent); outline-offset: 2px;
 }
 .checkbox { display: flex; gap: 8px; align-items: center; color: var(--text); }
@@ -171,3 +172,12 @@ td.end, th.end { text-align: end; }
   .print-break { break-before: page; }
   main { padding: 0; }
 }
+
+/* ---- live game ---- */
+ul.plain { list-style: none; padding: 0; margin: 0; }
+tr.me td:first-child { font-weight: 600; }
+.live-dot { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--muted); margin-block-end: 12px; }
+.live-dot::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.live-dot.live::before { background: var(--win); box-shadow: 0 0 0 3px color-mix(in srgb, var(--win) 25%, transparent); }
+.live-dot.offline::before { background: var(--loss); }
+details.card > summary { cursor: pointer; font-weight: 600; }

@@ -7,7 +7,8 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 // src/proxy.ts because it has to change on every request.
 const securityHeaders = [
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
-  { key: "X-Frame-Options", value: "DENY" },
+  // No X-Frame-Options: the CSP frame-ancestors in src/proxy.ts allows only Telegram Web
+  // (for the Mini App) and replaces it in every current browser.
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "camera=(self), microphone=(), geolocation=(), payment=()" },

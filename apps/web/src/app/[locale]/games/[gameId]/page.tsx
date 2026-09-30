@@ -1,20 +1,16 @@
 import { randomUUID } from "node:crypto";
 import { type CloseBlocker, balancesWithOpenDebts, closeBlockers, deriveStatus, liveTotals, netResults, settle } from "@poker/domain";
-import { schema } from "@poker/db";
-import { and, eq, notExists, sql } from "@poker/db";
+import { pendingRequests, schema } from "@poker/db";
+import { and, eq, gt, isNull, notExists, sql } from "@poker/db";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
-import {
-  addToGameAction,
-  cashOutAction,
-  closeGameAction,
-  confirmResultAction,
-  rebuyAction,
-  removeFromGameAction,
-} from "@/app/actions/homes";
+import { addToGameAction, closeGameAction, confirmResultAction, removeFromGameAction } from "@/app/actions/homes";
+import { claimPlayerAction, makeJoinLinkAction, requestRebuyAction } from "@/app/actions/live";
 import { ErrorNotice } from "@/components/ErrorNotice";
+import { AnswerRequest, CopyButton, HostEntryControls, HostQueue, LiveRefresh } from "@/components/live";
 import { Link } from "@/i18n/navigation";
-import { formatAmount, formatDate, toInputValue } from "@/lib/format";
+import { formatAmount, formatDate } from "@/lib/format";
+import { appOrigin, joinToken, qrDataUrl } from "@/lib/live";
 import { withUser } from "@/lib/session";
 
 export default async function GamePage({
@@ -49,13 +45,31 @@ export default async function GamePage({
           notExists(tx.select({ x: sql`1` }).from(schema.debtPayments).where(eq(schema.debtPayments.settlementId, schema.settlements.id))),
         ),
       );
-    return { game, home: home!, players, entries, settlements, open, userId: user.id };
+    const requests = game.status === "live" ? await pendingRequests(tx, game.id) : [];
+    const isHost = home!.ownerId === user.id;
+    const [invite] =
+      isHost && game.status === "live"
+        ? await tx
+            .select({ id: schema.invites.id })
+            .from(schema.invites)
+            .where(
+              and(
+                eq(schema.invites.gameId, game.id),
+                isNull(schema.invites.revokedAt),
+                gt(schema.invites.expiresAt, sql`now()`),
+                sql`${schema.invites.uses} < ${schema.invites.maxUses}`,
+              ),
+            )
+            .limit(1)
+        : [];
+    return { game, home: home!, players, entries, settlements, open, requests, invite, userId: user.id };
   });
   if (!data) notFound();
-  const { game, home, players, entries, settlements, open, userId } = data;
+  const { game, home, players, entries, settlements, open, requests, invite, userId } = data;
   const name = new Map(players.map((p) => [p.id, p.displayName]));
   const byId = new Map(players.map((p) => [p.id, p]));
-  const money = (n: number, signed = false) => formatAmount(n, home, locale, signed);
+  const moneyHome = { currency: home.currency, unitSuffix: home.unitSuffix, unitDivisor: home.unitDivisor };
+  const money = (n: number, signed = false) => formatAmount(n, moneyHome, locale, signed);
   const canWrite = home.ownerId === userId && !home.readOnly && game.status !== "closed";
   const rules = { requireConfirmation: home.requireConfirmation };
   const domainEntries = entries.map((e) => ({
@@ -70,6 +84,12 @@ export default async function GamePage({
   const blockers = game.status === "closed" ? [] : closeBlockers(domainEntries, rules);
   const inGame = new Set(entries.map((e) => e.playerId));
   const myEntry = entries.find((e) => byId.get(e.playerId)?.userId === userId);
+  const isLive = game.status === "live";
+  const hasPlayerInHome = players.some((p) => p.userId === userId);
+  const claimable = isLive && !canWrite && !hasPlayerInHome ? entries.filter((e) => !byId.get(e.playerId)?.userId) : [];
+  const myRequest = myEntry ? requests.find((r) => r.playerId === myEntry.playerId) : undefined;
+  const joinUrl = canWrite && invite ? `${await appOrigin()}/${locale}/join/${joinToken(invite.id)}` : null;
+  const joinQr = joinUrl ? await qrDataUrl(joinUrl) : null;
 
   const describe = (b: CloseBlocker) => {
     const names = "playerIds" in b ? new Intl.ListFormat(locale).format(b.playerIds.map((id) => name.get(id) ?? "?")) : "";
@@ -90,6 +110,91 @@ export default async function GamePage({
         ? settle(balancesWithOpenDebts(netResults(domainEntries), open.filter((d) => inGame.has(d.from) && inGame.has(d.to))))
         : [];
 
+  const requestList = requests.length > 0 && (
+    <section className="card">
+      <h2>{t("requests")}</h2>
+      <ul className="plain stack">
+        {requests.map((r) => (
+          <li key={r.id} className="row" style={{ justifyContent: "space-between" }}>
+            <span>{t("requestLine", { name: name.get(r.playerId) ?? "?", amount: money(r.amount) })}</span>
+            {canWrite ? <AnswerRequest requestId={r.id} /> : <span className="badge">{t("waitingHost")}</span>}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+
+  const table = (
+    <section className="card table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>{t("player")}</th>
+            <th className="end">{t("in")}</th>
+            <th className="end">{t("cashOut")}</th>
+            <th className="end">{t("net")}</th>
+            {canWrite && <th />}
+          </tr>
+        </thead>
+        <tbody>
+          {entries.map((e) => {
+            const net = e.cashOut === null ? null : e.cashOut - e.totalIn;
+            const p = byId.get(e.playerId);
+            return (
+              <tr key={e.playerId} className={p?.userId === userId ? "me" : undefined}>
+                <td>
+                  {name.get(e.playerId)} {e.confirmedAt && <span className="badge" title={t("confirmed")}>✓</span>}
+                </td>
+                <td className="end num">{money(e.totalIn)}</td>
+                <td className="end">
+                  {canWrite ? (
+                    <HostEntryControls playerId={e.playerId} defaultBuyIn={game.defaultBuyIn} cashOut={e.cashOut} home={moneyHome} />
+                  ) : (
+                    <span className="num">{e.cashOut === null ? "—" : money(e.cashOut)}</span>
+                  )}
+                </td>
+                <td className={`end num ${net === null ? "" : net > 0 ? "win" : net < 0 ? "loss" : ""}`}>
+                  {net === null ? "—" : money(net, true)}
+                </td>
+                {canWrite && (
+                  <td className="end">
+                    {e.totalIn === 0 && (
+                      <form action={removeFromGameAction}>
+                        <input type="hidden" name="gameId" value={game.id} />
+                        <input type="hidden" name="playerId" value={e.playerId} />
+                        <button className="linklike" type="submit" aria-label="remove">
+                          ✕
+                        </button>
+                      </form>
+                    )}
+                  </td>
+                )}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+
+      {canWrite && players.some((p) => !inGame.has(p.id) && !p.mergedInto) && (
+        <form action={addToGameAction} className="row" style={{ marginBlockStart: 12 }}>
+          <input type="hidden" name="gameId" value={game.id} />
+          <select name="playerId" style={{ width: "auto" }} aria-label={t("player")} required>
+            {players
+              .filter((p) => !inGame.has(p.id) && !p.mergedInto)
+              .map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.displayName}
+                </option>
+              ))}
+          </select>
+          <button className="btn secondary" type="submit">
+            {t("addToGame")} ({money(game.defaultBuyIn)})
+          </button>
+        </form>
+      )}
+    </section>
+  );
+
   return (
     <>
       <p className="small">
@@ -99,6 +204,7 @@ export default async function GamePage({
         {game.number ? t("title", { number: new Intl.NumberFormat(locale).format(game.number) }) : t("untitled")}{" "}
         <span className={`badge ${game.status === "closed" ? "closed" : "live"}`}>{t(`status_${status}`)}</span>
       </h1>
+      {isLive && <LiveRefresh gameId={game.id} />}
       <ErrorNotice code={error} />
       {game.status === "closed" && (
         <div className="alert">
@@ -121,106 +227,82 @@ export default async function GamePage({
         </div>
       </div>
 
-      <section className="card table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>{t("player")}</th>
-              <th className="end">{t("in")}</th>
-              <th className="end">{t("cashOut")}</th>
-              <th className="end">{t("net")}</th>
-              {canWrite && <th />}
-            </tr>
-          </thead>
-          <tbody>
-            {entries.map((e) => {
-              const net = e.cashOut === null ? null : e.cashOut - e.totalIn;
-              return (
-                <tr key={e.playerId}>
-                  <td>
-                    {name.get(e.playerId)} {e.confirmedAt && <span className="badge">✓</span>}
-                  </td>
-                  <td className="end num">
-                    {money(e.totalIn)}
-                    {canWrite && (
-                      <form action={rebuyAction} style={{ display: "inline", marginInlineStart: 8 }}>
-                        <input type="hidden" name="gameId" value={game.id} />
-                        <input type="hidden" name="playerId" value={e.playerId} />
-                        <button className="btn small secondary" type="submit" title={money(game.defaultBuyIn)}>
-                          + {t("rebuy")}
-                        </button>
-                      </form>
-                    )}
-                  </td>
-                  <td className="end">
-                    {canWrite ? (
-                      <form action={cashOutAction} className="row" style={{ justifyContent: "flex-end", flexWrap: "nowrap" }}>
-                        <input type="hidden" name="gameId" value={game.id} />
-                        <input type="hidden" name="playerId" value={e.playerId} />
-                        <input
-                          name="cashOut"
-                          inputMode="decimal"
-                          defaultValue={toInputValue(e.cashOut, home.unitDivisor)}
-                          style={{ maxWidth: 110 }}
-                          dir="ltr"
-                          aria-label={t("cashOut")}
-                        />
-                        <button className="btn small" type="submit">
-                          {t("save")}
-                        </button>
-                      </form>
-                    ) : (
-                      <span className="num">{e.cashOut === null ? "—" : money(e.cashOut)}</span>
-                    )}
-                  </td>
-                  <td className={`end num ${net === null ? "" : net > 0 ? "win" : net < 0 ? "loss" : ""}`}>
-                    {net === null ? "—" : money(net, true)}
-                  </td>
-                  {canWrite && (
-                    <td className="end">
-                      {e.totalIn === 0 && (
-                        <form action={removeFromGameAction}>
-                          <input type="hidden" name="gameId" value={game.id} />
-                          <input type="hidden" name="playerId" value={e.playerId} />
-                          <button className="linklike" type="submit" aria-label="remove">
-                            ✕
-                          </button>
-                        </form>
-                      )}
-                    </td>
-                  )}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      {canWrite ? (
+        <HostQueue gameId={game.id}>
+          {requestList}
+          {table}
+        </HostQueue>
+      ) : (
+        <>
+          {requestList}
+          {table}
+        </>
+      )}
 
-        {canWrite && (
-          <form action={addToGameAction} className="row" style={{ marginBlockStart: 12 }}>
-            <input type="hidden" name="gameId" value={game.id} />
-            <select name="playerId" style={{ width: "auto" }} aria-label={t("player")} required>
-              {players
-                .filter((p) => !inGame.has(p.id) && !p.mergedInto)
-                .map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.displayName}
-                  </option>
-                ))}
-            </select>
-            <button className="btn secondary" type="submit">
-              {t("addToGame")} ({money(game.defaultBuyIn)})
-            </button>
-          </form>
-        )}
-      </section>
+      {claimable.length > 0 && (
+        <section className="card stack">
+          <h2>{t("whoAreYou")}</h2>
+          <p className="small muted">{t("whoAreYouHint")}</p>
+          <div className="row">
+            {claimable.map((e) => (
+              <form key={e.playerId} action={claimPlayerAction}>
+                <input type="hidden" name="gameId" value={game.id} />
+                <input type="hidden" name="playerId" value={e.playerId} />
+                <button className="btn secondary" type="submit">
+                  {t("thisIsMe", { name: name.get(e.playerId) ?? "?" })}
+                </button>
+              </form>
+            ))}
+          </div>
+        </section>
+      )}
 
-      {game.status !== "closed" && myEntry && !myEntry.confirmedAt && (
+      {isLive && myEntry && !canWrite && (
+        <section className="card row">
+          {myRequest ? (
+            <span className="badge">{t("requestSent", { amount: money(myRequest.amount) })}</span>
+          ) : (
+            <form action={requestRebuyAction}>
+              <input type="hidden" name="gameId" value={game.id} />
+              <button className="btn" type="submit" disabled={game.defaultBuyIn <= 0}>
+                {t("askRebuy", { amount: money(game.defaultBuyIn) })}
+              </button>
+            </form>
+          )}
+        </section>
+      )}
+
+      {game.status !== "closed" && myEntry && !myEntry.confirmedAt && myEntry.cashOut !== null && (
         <form action={confirmResultAction} style={{ marginBlockEnd: 16 }}>
           <input type="hidden" name="gameId" value={game.id} />
           <button className="btn secondary" type="submit">
             {t("confirmMine")}
           </button>
         </form>
+      )}
+
+      {canWrite && isLive && (
+        <section className="card" id="join">
+          <h2>{t("joinQr")}</h2>
+          {joinUrl && joinQr ? (
+            <div className="stack" style={{ alignItems: "center", marginBlockStart: 12 }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={joinQr} width={260} height={260} alt={t("joinQrAlt")} />
+              <p className="small muted">{t("joinQrHint")}</p>
+              <p className="mono small" dir="ltr" style={{ overflowWrap: "anywhere" }}>
+                {joinUrl}
+              </p>
+              <CopyButton text={joinUrl} label={t("copyLink")} done={t("copied")} />
+            </div>
+          ) : (
+            <form action={makeJoinLinkAction} style={{ marginBlockStart: 12 }}>
+              <input type="hidden" name="gameId" value={game.id} />
+              <button className="btn secondary" type="submit">
+                {t("makeJoinQr")}
+              </button>
+            </form>
+          )}
+        </section>
       )}
 
       {(game.status === "closed" || summary || blockers.length === 0) && (

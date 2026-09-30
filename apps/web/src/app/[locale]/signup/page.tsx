@@ -4,8 +4,8 @@ import { Link } from "@/i18n/navigation";
 
 const ERRORS = ["weak", "breached", "cannotCreate", "rateLimited"] as const;
 
-export default async function SignUp({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
-  const { error } = await searchParams;
+export default async function SignUp({ searchParams }: { searchParams: Promise<{ error?: string; next?: string }> }) {
+  const { error, next } = await searchParams;
   const t = await getTranslations("auth");
   return (
     <div className="card" style={{ maxWidth: 420, marginInline: "auto" }}>
@@ -14,6 +14,7 @@ export default async function SignUp({ searchParams }: { searchParams: Promise<{
         <div className="alert">{t(error as (typeof ERRORS)[number])}</div>
       )}
       <form action={signUpAction} className="stack">
+        {next && <input type="hidden" name="next" value={next} />}
         <label>
           {t("displayName")}
           <input name="displayName" autoComplete="nickname" required maxLength={80} />
@@ -32,7 +33,7 @@ export default async function SignUp({ searchParams }: { searchParams: Promise<{
         </button>
       </form>
       <p className="small muted">
-        {t("haveAccount")} <Link href="/signin">{t("submitSignIn")}</Link>
+        {t("haveAccount")} <Link href={next ? `/signin?next=${encodeURIComponent(next)}` : "/signin"}>{t("submitSignIn")}</Link>
       </p>
     </div>
   );

@@ -37,3 +37,29 @@ export async function asAuth<T>(db: Db, fn: (tx: Tx) => Promise<T>): Promise<T> 
     return fn(tx);
   });
 }
+
+/**
+ * Background jobs only (reminders): reads what a reminder needs across homes, writes only
+ * reminder bookkeeping. Never use it to serve a request.
+ */
+export async function asJobs<T>(db: Db, fn: (tx: Tx) => Promise<T>): Promise<T> {
+  return db.transaction(async (tx) => {
+    await tx.execute(dsql`SET LOCAL ROLE app_jobs`);
+    return fn(tx);
+  });
+}
+
+/**
+ * Listen for game changes (NOTIFY from triggers; payload = game id) on a dedicated
+ * connection. postgres-js reconnects and re-listens on its own.
+ */
+export async function listenGameChanges(url: string, fn: (gameId: string) => void) {
+  const client = postgres(url, { max: 1, onnotice: () => {} });
+  const sub = await client.listen("game_changed", fn);
+  return {
+    stop: async () => {
+      await sub.unlisten();
+      await client.end();
+    },
+  };
+}
