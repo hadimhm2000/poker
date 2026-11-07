@@ -33,7 +33,7 @@ const SYNONYMS: Record<Column, string[]> = {
   date: ["date", "تاریخ", "التاريخ", "تاريخ", "data", "fecha", "дата", "day", "روز"],
   number: ["#", "game", "no", "number", "شماره", "بازی", "رقم", "لعبة", "partita", "partie", "игра", "№", "partida", "gameno"],
   player: ["player", "name", "بازیکن", "اسم", "نام", "لاعب", "اللاعب", "joueur", "nom", "giocatore", "nome", "jugador", "nombre", "игрок", "имя"],
-  in: ["in", "buyin", "buy-in", "ورودی", "ورود", "خرید", "دخول", "entrée", "entree", "cave", "entrata", "entrada", "вход", "байин", "бай-ин"],
+  in: ["in", "totalin", "buyin", "buy-in", "ورودی", "ورود", "خرید", "دخول", "entrée", "entree", "cave", "entrata", "entrada", "вход", "байин", "бай-ин"],
   out: ["out", "cashout", "cash-out", "خروجی", "خروج", "نقد", "sortie", "uscita", "salida", "кэшаут", "кэш-аут", "выход"],
   net: ["net", "profit", "result", "p/l", "pnl", "سود", "سود/زیان", "نتیجه", "برد/باخت", "صافي", "الصافي", "résultat", "resultat", "netto", "neto", "итог", "результат"],
 };

@@ -10,6 +10,7 @@
   },
   "scripts": {
     "migrate": "tsx src/migrate.ts",
+    "fix-history": "tsx src/fix-history.ts",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json"
   },

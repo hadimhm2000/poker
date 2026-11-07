@@ -37,8 +37,11 @@ export async function previewImportAction(_prev: PreviewState, form: FormData): 
   if (file.size > MAX_BYTES) return { stage: "error", code: "tooBig" };
   const access = await checkAccess(homeId);
   if (!access.ok) return { stage: "error", code: access.code };
+  // Amounts in the file may be in another unit than the home (e.g. 200 meaning 200 thousand
+  // toman while the home stores rial): the multiplier converts file amounts to stored units.
+  const multiplier = z.coerce.number().int().min(1).max(1_000_000_000).catch(1).parse(form.get("multiplier") || 1);
   try {
-    const r = await readUpload(file, access.home.unitDivisor, access.existing);
+    const r = await readUpload(file, access.home.unitDivisor * multiplier, access.existing);
     if (r.error) return { stage: "error", code: r.error };
     return { stage: "preview", games: r.games, columns: Object.values(r.columns), sheet: r.sheet };
   } catch {

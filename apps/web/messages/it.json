@@ -440,6 +440,8 @@
     "title": "Importa un vecchio foglio",
     "intro": "Carica un file .xlsx o .csv con una riga per giocatore per partita. Colonne necessarie: data, giocatore e poi entrata e uscita, oppure entrata e netto. Il numero di partita è facoltativo; senza, le righe della stessa data formano una partita.",
     "file": "File",
+    "multiplier": "Moltiplica gli importi del file per",
+    "multiplierHint": "Usa 1 se il file è già nell'unità memorizzata. Esempio: «200» = 200.000 toman e la casa memorizza in rial → 10000.",
     "preview": "Anteprima",
     "confirm": "Importa {count} partite",
     "games": "Partite trovate",

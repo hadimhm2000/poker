@@ -40,6 +40,16 @@ export function ImportForm({ homeId, divisor, suffix }: { homeId: string; diviso
           {t("file")}
           <input type="file" name="file" accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required />
         </label>
+        <label>
+          {t("multiplier")}
+          <input type="number" name="multiplier" min={1} step={1} defaultValue={1} dir="ltr" list="import-multipliers" />
+          <datalist id="import-multipliers">
+            {[1, 10, 100, 1000, 10000, 100000, 1000000].map((m) => (
+              <option key={m} value={m} />
+            ))}
+          </datalist>
+          <span className="small muted">{t("multiplierHint")}</span>
+        </label>
         <button className="btn secondary" type="submit" disabled={previewing}>
           {t("preview")}
         </button>
