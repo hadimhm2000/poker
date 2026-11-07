@@ -16,6 +16,7 @@
  * Needs DATABASE_URL_ADMIN (the same variable `pnpm migrate` uses).
  */
 import { GENESIS_HASH, gameHash, verifyChain } from "@poker/domain";
+import { pathToFileURL } from "node:url";
 import postgres from "postgres";
 
 const FREEZE: [string, string][] = [
@@ -148,7 +149,7 @@ async function main() {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
   main().catch((e) => {
     console.error(e instanceof Error ? e.message : e);
     process.exit(1);
