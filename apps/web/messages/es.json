@@ -330,6 +330,7 @@
     "DEDUCT_TOO_MUCH": "El descuento es mayor que el total de entrada del jugador."
   },
   "stats": {
+    "unitNote": "Todos los importes en {unit}",
     "status": "Estado",
     "settledRow": "✓ Saldado",
     "totalRow": "Total",

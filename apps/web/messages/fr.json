@@ -330,6 +330,7 @@
     "DEDUCT_TOO_MUCH": "La déduction dépasse la mise totale du joueur."
   },
   "stats": {
+    "unitNote": "Tous les montants en {unit}",
     "status": "Statut",
     "settledRow": "✓ Réglé",
     "totalRow": "Total",
