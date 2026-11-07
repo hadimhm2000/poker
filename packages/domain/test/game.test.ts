@@ -91,4 +91,34 @@ describe("closing a game", () => {
       { from: "a", to: "c", amount: 200 },
     ]);
   });
+  it("force close: no confirmations, a missing cash-out counts as lost (0)", () => {
+    // Without force this game has MISSING_CASH_OUT and UNCONFIRMED; with force both are gone:
+    // a's null cash-out is 0, so 100+200 in and 0+300 out balances.
+    const entries = [
+      { playerId: "a", totalIn: 100, cashOut: null, hasAccount: true, confirmed: false },
+      { playerId: "b", totalIn: 200, cashOut: 300, hasAccount: true, confirmed: false },
+    ];
+    expect(closeBlockers(entries, { requireConfirmation: true })).toEqual([
+      { code: "MISSING_CASH_OUT", playerIds: ["a"] },
+      { code: "UNCONFIRMED", playerIds: ["a", "b"] },
+    ]);
+    expect(closeBlockers(entries, { requireConfirmation: true, force: true })).toEqual([]);
+    expect(computeClose(entries, { requireConfirmation: true, force: true }).net).toEqual([
+      { playerId: "a", amount: -100 },
+      { playerId: "b", amount: 100 },
+    ]);
+  });
+
+  it("force close accepts a zero buy-in and a single player, but still needs a balanced pot", () => {
+    expect(closeBlockers([{ playerId: "a", totalIn: 0, cashOut: 0 }], { requireConfirmation: false, force: true })).toEqual([]);
+    expect(
+      closeBlockers(
+        [
+          { playerId: "a", totalIn: 100, cashOut: null },
+          { playerId: "b", totalIn: 200, cashOut: 350 },
+        ],
+        { requireConfirmation: true, force: true },
+      ),
+    ).toEqual([{ code: "UNBALANCED", totalIn: 300, totalOut: 350, difference: 50 }]);
+  });
 });

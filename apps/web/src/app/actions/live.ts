@@ -1,12 +1,14 @@
 "use server";
 
-import { claimPlayer, ensureJoinInvite, joinGame, requestRebuy } from "@poker/db";
+import { claimPlayer, ensureJoinInvite, joinGame, requestRebuy, schema } from "@poker/db";
+import { eq } from "@poker/db";
 import { getLocale } from "next-intl/server";
 import { unstable_rethrow } from "next/navigation";
 import { after } from "next/server";
 import { z } from "zod";
 import { redirect } from "@/i18n/navigation";
 import { sha256 } from "@/lib/crypto";
+import { parseAmount } from "@/lib/format";
 import { joinTokenHash } from "@/lib/live";
 import { errorCode, withUser } from "@/lib/session";
 import { notifyRebuyRequest } from "@/telegram/notify";
@@ -52,10 +54,29 @@ export async function claimPlayerAction(form: FormData) {
   return go(`/games/${gameId}`);
 }
 
-/** Player: ask the host for a rebuy of the game's default buy-in. */
+/** Player: ask the host for a rebuy — of a chosen amount, or the game's default buy-in. */
 export async function requestRebuyAction(form: FormData) {
   const gameId = uuid.parse(form.get("gameId"));
-  const r = await attempt(`/games/${gameId}`, () => withUser((tx, user) => requestRebuy(tx, user.id, gameId)));
+  const raw = String(form.get("amount") ?? "").trim();
+  let amount: number | undefined;
+  if (raw !== "") {
+    // Parse in the home's shorthand units ("200" can mean 200,000).
+    const divisor = await attempt(`/games/${gameId}`, () =>
+      withUser(async (tx) => {
+        const [g] = await tx
+          .select({ divisor: schema.homes.unitDivisor })
+          .from(schema.games)
+          .innerJoin(schema.homes, eq(schema.homes.id, schema.games.homeId))
+          .where(eq(schema.games.id, gameId));
+        if (!g) throw new z.ZodError([]);
+        return g.divisor;
+      }),
+    );
+    const parsed = parseAmount(raw, divisor);
+    if (parsed === null || parsed <= 0) return go(`/games/${gameId}`, "INVALID");
+    amount = parsed;
+  }
+  const r = await attempt(`/games/${gameId}`, () => withUser((tx, user) => requestRebuy(tx, user.id, gameId, amount)));
   after(() => notifyRebuyRequest(r.requestId).catch((e: unknown) => console.error("telegram notify failed", e)));
   return go(`/games/${gameId}`);
 }

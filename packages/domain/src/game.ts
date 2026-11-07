@@ -32,6 +32,12 @@ export interface CloseRules {
    * even, so a zero buy-in is accepted. Live games always require a buy-in.
    */
   allowZeroBuyIn?: boolean;
+  /**
+   * Host override ("close anyway"): no confirmations are needed, players without a
+   * cash-out count as having lost everything (null → 0), and a zero buy-in is accepted.
+   * An unbalanced pot still blocks the close: settlement math needs sum in = sum out.
+   */
+  force?: boolean;
 }
 
 export const MIN_PLAYERS = 2;
@@ -43,21 +49,23 @@ export function closeBlockers(entries: readonly GameEntry[], rules: CloseRules):
     if (e.cashOut !== null) assertNonNegative(e.cashOut, `cashOut of ${e.playerId}`);
   }
   const blockers: CloseBlocker[] = [];
-  if (entries.length < MIN_PLAYERS) {
+  if (!rules.force && entries.length < MIN_PLAYERS) {
     blockers.push({ code: "MIN_PLAYERS", min: MIN_PLAYERS, actual: entries.length });
   }
-  const noBuyIn = rules.allowZeroBuyIn ? [] : entries.filter((e) => e.totalIn <= 0).map((e) => e.playerId);
+  const noBuyIn =
+    rules.force || rules.allowZeroBuyIn ? [] : entries.filter((e) => e.totalIn <= 0).map((e) => e.playerId);
   if (noBuyIn.length) blockers.push({ code: "NO_BUY_IN", playerIds: noBuyIn });
 
-  const missing = entries.filter((e) => e.cashOut === null).map((e) => e.playerId);
+  const missing = rules.force ? [] : entries.filter((e) => e.cashOut === null).map((e) => e.playerId);
   if (missing.length) blockers.push({ code: "MISSING_CASH_OUT", playerIds: missing });
 
+  // Under force a missing cash-out is "lost everything" (null counts as 0 above too).
   const totalIn = sum(entries.map((e) => e.totalIn));
   const totalOut = sum(entries.map((e) => e.cashOut ?? 0));
   if (totalIn !== totalOut) {
     blockers.push({ code: "UNBALANCED", totalIn, totalOut, difference: totalOut - totalIn });
   }
-  if (rules.requireConfirmation) {
+  if (rules.requireConfirmation && !rules.force) {
     const unconfirmed = entries
       .filter((e) => e.hasAccount && !e.confirmed)
       .map((e) => e.playerId);

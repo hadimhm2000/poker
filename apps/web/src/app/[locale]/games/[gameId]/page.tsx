@@ -1,10 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { type CloseBlocker, balancesWithOpenDebts, closeBlockers, deriveStatus, liveTotals, netResults, settle } from "@poker/domain";
-import { gameStory, latestDraw, listRulings, openDebts, pendingRequests, schema } from "@poker/db";
+import { type CloseBlocker, closeBlockers, deriveStatus, liveTotals, netResults, settle } from "@poker/domain";
+import { gameStory, latestDraw, listRulings, pendingRequests, schema } from "@poker/db";
 import { and, eq, gt, isNull, sql } from "@poker/db";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
-import { addToGameAction, closeGameAction, confirmResultAction, removeFromGameAction } from "@/app/actions/homes";
+import { addToGameAction, closeGameAction, confirmResultAction, deleteGameAction, removeFromGameAction } from "@/app/actions/homes";
 import { startDrawAction } from "@/app/actions/ideas";
 import { claimPlayerAction, makeJoinLinkAction, requestRebuyAction } from "@/app/actions/live";
 import { ErrorNotice } from "@/components/ErrorNotice";
@@ -14,8 +14,9 @@ import { RefereeForm } from "@/components/ideas";
 import { ShareCard } from "@/components/ShareCard";
 import { AnswerRequest, CopyButton, HostEntryControls, HostQueue, LiveRefresh } from "@/components/live";
 import { Link } from "@/i18n/navigation";
-import { formatAmount, formatDate } from "@/lib/format";
+import { formatAmount, formatDate, toInputValue } from "@/lib/format";
 import { appOrigin, joinToken, qrDataUrl } from "@/lib/live";
+import { openPayment } from "@/lib/payment";
 import { withUser } from "@/lib/session";
 
 export default async function GamePage({
@@ -23,15 +24,18 @@ export default async function GamePage({
   searchParams,
 }: {
   params: Promise<{ gameId: string }>;
-  searchParams: Promise<{ error?: string; summary?: string }>;
+  searchParams: Promise<{ error?: string; summary?: string; force?: string; delete?: string }>;
 }) {
   const { gameId } = await params;
-  const { error, summary } = await searchParams;
+  const { error, summary, force, delete: del } = await searchParams;
+  const forceClose = force === "1";
+  const deleteConfirm = del === "1";
   if (!/^[0-9a-f-]{36}$/i.test(gameId)) notFound();
   const locale = await getLocale();
   const t = await getTranslations("game");
   const tc = await getTranslations("card");
   const ti = await getTranslations("ideas");
+  const tp = await getTranslations("people");
 
   const data = await withUser(async (tx, user) => {
     const [game] = await tx.select().from(schema.games).where(eq(schema.games.id, gameId));
@@ -40,8 +44,6 @@ export default async function GamePage({
     const players = await tx.select().from(schema.players).where(eq(schema.players.homeId, game.homeId));
     const entries = await tx.select().from(schema.gameEntries).where(eq(schema.gameEntries.gameId, gameId));
     const settlements = await tx.select().from(schema.settlements).where(eq(schema.settlements.gameId, gameId));
-    // Open debts between tonight's players, for the settlement preview (same query as closing).
-    const open = await openDebts(tx, game.homeId);
     const requests = game.status === "live" ? await pendingRequests(tx, game.id) : [];
     const isHost = home!.ownerId === user.id;
     const [invite] =
@@ -62,12 +64,14 @@ export default async function GamePage({
     const rulings = await listRulings(tx, game.id);
     const draw = await latestDraw(tx, game.id);
     const story = game.status === "closed" ? await gameStory(tx, game.id) : null;
-    return { game, home: home!, players, entries, settlements, open, requests, invite, rulings, draw, story, userId: user.id };
+    return { game, home: home!, players, entries, settlements, requests, invite, rulings, draw, story, userId: user.id };
   });
   if (!data) notFound();
-  const { game, home, players, entries, settlements, open, requests, invite, rulings, draw, story, userId } = data;
+  const { game, home, players, entries, settlements, requests, invite, rulings, draw, story, userId } = data;
   const name = new Map(players.map((p) => [p.id, p.displayName]));
   const byId = new Map(players.map((p) => [p.id, p]));
+  // Payment details of the payees, decrypted on the server for members of this home only.
+  const payInfo = new Map(players.map((p) => [p.id, openPayment(p.paymentInfoEnc)]));
   const moneyHome = { currency: home.currency, unitSuffix: home.unitSuffix, unitDivisor: home.unitDivisor };
   const money = (n: number, signed = false) => formatAmount(n, moneyHome, locale, signed);
   const canWrite = home.ownerId === userId && !home.readOnly && game.status !== "closed";
@@ -103,11 +107,18 @@ export default async function GamePage({
     }
   };
 
+  // On the force-close summary the preview shows what will really be settled: a player
+  // without a cash-out counts as having lost everything (0).
+  const forceEntries = forceClose ? domainEntries.map((e) => ({ ...e, cashOut: e.cashOut ?? 0 })) : domainEntries;
+  const forceBlockers = forceClose ? closeBlockers(forceEntries, { ...rules, force: true }) : [];
+  // The settlement of THIS game only: who won and who lost around tonight's table. Old unpaid
+  // debts from earlier games are a separate ledger on the home page, so they never silently
+  // change who tonight's losers pay (that mixing is what made the numbers look wrong).
   const transfers =
     game.status === "closed"
       ? settlements.map((s) => ({ from: s.fromPlayer, to: s.toPlayer, amount: s.amount }))
-      : blockers.length === 0
-        ? settle(balancesWithOpenDebts(netResults(domainEntries), open.filter((d) => inGame.has(d.from) && inGame.has(d.to))))
+      : blockers.length === 0 || (forceClose && forceBlockers.length === 0)
+        ? settle(netResults(forceClose ? forceEntries : domainEntries))
         : [];
 
   const requestList = requests.length > 0 && (
@@ -258,15 +269,25 @@ export default async function GamePage({
       )}
 
       {isLive && myEntry && !canWrite && (
-        <section className="card row">
+        <section className="card stack">
           {myRequest ? (
             <span className="badge">{t("requestSent", { amount: money(myRequest.amount) })}</span>
           ) : (
-            <form action={requestRebuyAction}>
+            <form action={requestRebuyAction} className="row" style={{ flexWrap: "nowrap", gap: 8 }}>
               <input type="hidden" name="gameId" value={game.id} />
-              <button className="btn" type="submit" disabled={game.defaultBuyIn <= 0}>
-                {t("askRebuy", { amount: money(game.defaultBuyIn) })}
+              <input
+                name="amount"
+                inputMode="decimal"
+                dir="ltr"
+                style={{ maxWidth: 110 }}
+                placeholder={game.defaultBuyIn > 0 ? toInputValue(game.defaultBuyIn, home.unitDivisor) : t("rebuyAmount")}
+                aria-label={t("rebuyAmount")}
+                required={game.defaultBuyIn <= 0}
+              />
+              <button className="btn" type="submit">
+                {t("askRebuy")}
               </button>
+              {game.defaultBuyIn > 0 && <span className="small muted">{t("askRebuyDefault", { amount: money(game.defaultBuyIn) })}</span>}
             </form>
           )}
         </section>
@@ -354,19 +375,35 @@ export default async function GamePage({
       )}
 
       {(game.status === "closed" || summary || blockers.length === 0) && (
-        <section className="card">
+        <section className="card table-wrap">
           <h2>{t("settlement")}</h2>
+          <p className="small muted">{t("settleGameOnly")}</p>
           {transfers.length === 0 ? (
             <p className="muted">{t("nothingToSettle")}</p>
           ) : (
             <table>
               <tbody>
-                {transfers.map((tr, i) => (
-                  <tr key={i}>
-                    <td>{t("pays", { from: name.get(tr.from) ?? "?", to: name.get(tr.to) ?? "?" })}</td>
-                    <td className="end num">{money(tr.amount)}</td>
-                  </tr>
-                ))}
+                {transfers.map((tr, i) => {
+                  const info = payInfo.get(tr.to);
+                  return (
+                    <tr key={i}>
+                      <td>{t("pays", { from: name.get(tr.from) ?? "?", to: name.get(tr.to) ?? "?" })}</td>
+                      <td className="end num">{money(tr.amount)}</td>
+                      <td className="end">
+                        {info ? (
+                          <span className="pay-info">
+                            <span className="mono small" dir="ltr">
+                              {info}
+                            </span>
+                            <CopyButton text={info} label={tp("copy")} done={tp("copied")} />
+                          </span>
+                        ) : (
+                          <span className="muted small">{tp("noPaymentInfo")}</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}
@@ -375,12 +412,52 @@ export default async function GamePage({
 
       {canWrite && (
         <section className="card stack">
-          {blockers.length > 0 ? (
-            <ul className="alert" style={{ paddingInlineStart: 28 }}>
-              {blockers.map((b) => (
-                <li key={b.code}>{describe(b)}</li>
-              ))}
-            </ul>
+          {forceClose && summary ? (
+            <>
+              <h2>{t("forceClose")}</h2>
+              <div className="alert">
+                <strong>{t("forceCloseWarn")}</strong>
+              </div>
+              <ul className="plain stack small muted" style={{ paddingInlineStart: 18, margin: 0 }}>
+                <li>{t("forceCloseRule1")}</li>
+                <li>{t("forceCloseRule2")}</li>
+                <li>{t("forceCloseRule3")}</li>
+              </ul>
+              {forceBlockers.some((b) => b.code === "UNBALANCED") && (
+                <ul className="alert" style={{ paddingInlineStart: 28 }}>
+                  <li>{describe(forceBlockers.find((b) => b.code === "UNBALANCED")!)}</li>
+                </ul>
+              )}
+              <form action={closeGameAction} className="row">
+                <input type="hidden" name="gameId" value={game.id} />
+                <input type="hidden" name="closeKey" value={randomUUID()} />
+                <input type="hidden" name="version" value={game.version} />
+                <input type="hidden" name="force" value="1" />
+                <button className="btn danger" type="submit">
+                  {t("confirmForceClose")}
+                </button>
+                <Link className="btn secondary" href={`/games/${game.id}`}>
+                  {t("cancel")}
+                </Link>
+              </form>
+            </>
+          ) : blockers.length > 0 ? (
+            <>
+              <ul className="alert" style={{ paddingInlineStart: 28 }}>
+                {blockers.map((b) => (
+                  <li key={b.code}>{describe(b)}</li>
+                ))}
+              </ul>
+              <details style={{ marginBlockStart: 8 }}>
+                <summary>{t("forceClose")}</summary>
+                <p className="small muted" style={{ marginBlockStart: 8 }}>
+                  {t("forceCloseHint")}
+                </p>
+                <Link className="btn secondary" href={`/games/${game.id}?summary=1&force=1`}>
+                  {t("forceCloseGo")}
+                </Link>
+              </details>
+            </>
           ) : summary ? (
             <>
               <h2>{t("summary")}</h2>
@@ -401,6 +478,38 @@ export default async function GamePage({
             <Link className="btn" href={`/games/${game.id}?summary=1`}>
               {t("close")}
             </Link>
+          )}
+        </section>
+      )}
+
+      {canWrite && (
+        <section className="card" id="delete">
+          {deleteConfirm ? (
+            <>
+              <h2>{t("deleteGame")}</h2>
+              <div className="alert">
+                <strong>{t("deleteWarn")}</strong>
+              </div>
+              <form action={deleteGameAction} className="row">
+                <input type="hidden" name="gameId" value={game.id} />
+                <button className="btn danger" type="submit">
+                  {t("deleteConfirm")}
+                </button>
+                <Link className="btn secondary" href={`/games/${game.id}`}>
+                  {t("cancel")}
+                </Link>
+              </form>
+            </>
+          ) : (
+            <details>
+              <summary>{t("deleteGame")}</summary>
+              <p className="small muted" style={{ marginBlockStart: 8 }}>
+                {t("deleteHint")}
+              </p>
+              <Link className="btn small danger" href={`/games/${game.id}?delete=1`}>
+                {t("deleteGo")}
+              </Link>
+            </details>
           )}
         </section>
       )}

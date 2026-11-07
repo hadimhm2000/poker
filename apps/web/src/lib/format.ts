@@ -20,11 +20,15 @@ export function formatAmount(amount: number, home: HomeMoney, locale: string, si
 
 /** Accepts Persian and Arabic-Indic digits and common thousands separators. */
 export function normalizeDigits(input: string): string {
-  return input
+  const s = input
     .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
     .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
     .replace(/[,\s٬،']/g, "")
     .replace(/٫/g, ".");
+  // Iranian (and European) habit: a dot between groups of exactly three digits is a
+  // thousands separator ("200.000" means 200 thousand, not 200.0). A dot followed by any
+  // other digit count stays a decimal point ("2.5").
+  return /^\d{1,3}(\.\d{3})+$/.test(s) ? s.replace(/\./g, "") : s;
 }
 
 /** Parse a typed amount into the stored integer, or null when it is not a valid amount. */

@@ -27,6 +27,7 @@ export const gameStatus = pgEnum("game_status", ["draft", "live", "closed"]);
 export const gameEventType = pgEnum("game_event_type", [
   "buy_in",
   "rebuy",
+  "deduct",
   "cash_out",
   "request",
   "approve",

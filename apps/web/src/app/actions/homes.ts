@@ -13,6 +13,7 @@ import {
   schema,
   setCashOut,
   setHouseRules,
+  updateMoneySettings,
 } from "@poker/db";
 import { and, eq, sql } from "@poker/db";
 import { unstable_rethrow } from "next/navigation";
@@ -23,6 +24,7 @@ import { redirect } from "@/i18n/navigation";
 import { sha256 } from "@/lib/crypto";
 import { parseAmount } from "@/lib/format";
 import { inviteTokenHash } from "@/lib/live";
+import { moneySettingsOf } from "@/lib/money-units";
 import { errorCode, withUser } from "@/lib/session";
 import { notifyGameClosed } from "@/telegram/notify";
 
@@ -128,6 +130,31 @@ export async function markPaidAction(form: FormData) {
   return go(`/homes/${homeId}`);
 }
 
+/** Host: every open debt of this home was paid outside the app — mark them all at once. */
+export async function markAllPaidAction(form: FormData) {
+  const homeId = uuid.parse(form.get("homeId"));
+  await attempt(`/homes/${homeId}`, () =>
+    withUser(async (tx, user) => {
+      const [home] = await tx
+        .select({ ownerId: schema.homes.ownerId })
+        .from(schema.homes)
+        .where(eq(schema.homes.id, homeId));
+      if (!home) throw new DomainError("NOT_FOUND");
+      if (home.ownerId !== user.id) throw new DomainError("FORBIDDEN");
+      const open = await tx
+        .select({ id: schema.openDebts.id })
+        .from(schema.openDebts)
+        .where(eq(schema.openDebts.homeId, homeId));
+      if (open.length) {
+        await tx.insert(schema.debtPayments).values(
+          open.map((r) => ({ settlementId: r.id, kind: "paid" as const, markedBy: user.id })),
+        );
+      }
+    }),
+  );
+  return go(`/homes/${homeId}`);
+}
+
 // ---------------------------------------------------------------- games
 
 export async function addToGameAction(form: FormData) {
@@ -169,14 +196,20 @@ export async function closeGameAction(form: FormData) {
   const gameId = uuid.parse(form.get("gameId"));
   const closeKey = uuid.parse(form.get("closeKey"));
   const expectedVersion = z.coerce.number().int().positive().parse(form.get("version"));
+  const force = form.get("force") === "1";
   try {
-    const r = await withUser((tx, user) => closeGame(tx, user.id, { gameId, closeKey, expectedVersion }));
+    // carryDebts: false — this game's settlement is about this game only. Old unpaid debts
+    // stay in the home's ledger instead of being folded into tonight's "who pays whom"
+    // (folding them made the numbers on the game page look wrong to the host).
+    const r = await withUser((tx, user) =>
+      closeGame(tx, user.id, { gameId, closeKey, expectedVersion, force, carryDebts: false }),
+    );
     if (!r.alreadyClosed) {
       after(() => notifyGameClosed(gameId).catch((e: unknown) => console.error("telegram notify failed", e)));
     }
   } catch (e) {
-    if (e instanceof DomainError) return go(`/games/${gameId}?summary=1`, e.code);
-    return go(`/games/${gameId}?summary=1`, errorCode(e));
+    if (e instanceof DomainError) return go(`/games/${gameId}?summary=1${force ? "&force=1" : ""}`, e.code);
+    return go(`/games/${gameId}?summary=1${force ? "&force=1" : ""}`, errorCode(e));
   }
   return go(`/games/${gameId}`);
 }
@@ -194,8 +227,63 @@ export async function removeFromGameAction(form: FormData) {
   return go(`/games/${gameId}`);
 }
 
+/**
+ * Host: delete a game that is not closed yet (a game started by mistake, or one whose numbers
+ * are beyond repair). Everything that points at the game goes with it — entries, events,
+ * invites, rulings, draws — and the final delete still refuses a game that closed meanwhile.
+ * A closed game is frozen history and can never be deleted.
+ */
+export async function deleteGameAction(form: FormData) {
+  const gameId = uuid.parse(form.get("gameId"));
+  const homeId = await attempt(`/games/${gameId}?delete=1`, () =>
+    withUser(async (tx, user) => {
+      const [g] = await tx.select().from(schema.games).where(eq(schema.games.id, gameId));
+      if (!g) throw new DomainError("NOT_FOUND");
+      if (g.status === "closed") throw new DomainError("FROZEN");
+      const [home] = await tx
+        .select({ ownerId: schema.homes.ownerId, readOnly: schema.homes.readOnly })
+        .from(schema.homes)
+        .where(eq(schema.homes.id, g.homeId));
+      if (!home) throw new DomainError("NOT_FOUND");
+      if (home.ownerId !== user.id || home.readOnly) throw new DomainError("FORBIDDEN");
+      await tx.execute(
+        sql`DELETE FROM draw_contributions WHERE draw_id IN (SELECT id FROM game_draws WHERE game_id = ${gameId})`,
+      );
+      await tx.delete(schema.gameDraws).where(eq(schema.gameDraws.gameId, gameId));
+      await tx.delete(schema.gameRulings).where(eq(schema.gameRulings.gameId, gameId));
+      await tx.delete(schema.gameStories).where(eq(schema.gameStories.gameId, gameId));
+      await tx.delete(schema.invites).where(eq(schema.invites.gameId, gameId));
+      await tx.delete(schema.gameEvents).where(eq(schema.gameEvents.gameId, gameId));
+      await tx.delete(schema.gameEntries).where(eq(schema.gameEntries.gameId, gameId));
+      await tx.delete(schema.settlements).where(eq(schema.settlements.gameId, gameId));
+      const gone = await tx
+        .delete(schema.games)
+        .where(and(eq(schema.games.id, gameId), sql`${schema.games.status} <> 'closed'`))
+        .returning({ id: schema.games.id });
+      if (!gone.length) throw new DomainError("FROZEN");
+      return g.homeId;
+    }),
+  );
+  return go(`/homes/${homeId}`);
+}
+
 export async function houseRulesAction(form: FormData) {
   const homeId = uuid.parse(form.get("homeId"));
   await attempt(`/homes/${homeId}`, () => withUser((tx) => setHouseRules(tx, homeId, String(form.get("houseRules") ?? ""))));
   return go(`/homes/${homeId}`);
+}
+
+// ---------------------------------------------------------------- money settings
+
+/** Owner: change the home's currency label and shorthand scale (ریال/تومان + هزار/میلیون). */
+export async function moneySettingsAction(form: FormData) {
+  const homeId = uuid.parse(form.get("homeId"));
+  const unit = z.enum(["toman", "rial", "usd", "eur", "custom"]).parse(String(form.get("unit") ?? "toman"));
+  const scale = z.enum(["1", "1000", "1000000"]).parse(String(form.get("scale") ?? "1"));
+  const custom = z.string().max(24).parse(String(form.get("customSuffix") ?? ""));
+  const locale = await getLocale();
+  if (unit === "custom" && !custom.trim()) return go(`/homes/${homeId}#money`, "INVALID");
+  const settings = moneySettingsOf(unit, Number(scale), custom, locale);
+  await attempt(`/homes/${homeId}#money`, () => withUser((tx) => updateMoneySettings(tx, homeId, settings)));
+  return go(`/homes/${homeId}#money`);
 }

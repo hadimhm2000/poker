@@ -46,7 +46,7 @@ async function rememberNext(form: FormData) {
   if (next) {
     (await cookies()).set(AFTER_SIGN_IN, next, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: (process.env.NODE_ENV === "production" && (process.env.APP_URL ?? "").startsWith("https://")),
       sameSite: "lax",
       path: "/",
       maxAge: 900,
@@ -143,7 +143,7 @@ export async function startTwoFactorAction() {
   const secret = new Secret({ size: 20 }).base32;
   (await cookies()).set(PENDING_TOTP, encryptField(secret).toString("base64url"), {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: (process.env.NODE_ENV === "production" && (process.env.APP_URL ?? "").startsWith("https://")),
     sameSite: "lax",
     path: "/",
     maxAge: 600,
@@ -181,7 +181,7 @@ export async function enableTwoFactorAction(form: FormData) {
 async function flashRecoveryCodes(codes: string[]) {
   (await cookies()).set(RECOVERY_FLASH, encryptField(codes.join(" ")).toString("base64url"), {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: (process.env.NODE_ENV === "production" && (process.env.APP_URL ?? "").startsWith("https://")),
     sameSite: "lax",
     path: "/",
     maxAge: 300,

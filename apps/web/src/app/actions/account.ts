@@ -26,7 +26,7 @@ export async function setThemeAction(form: FormData) {
   const theme = String(form.get("theme") ?? "");
   const jar = await cookies();
   if (isTheme(theme) && theme !== "system") {
-    jar.set(THEME_COOKIE, theme, { path: "/", maxAge: 365 * 864e2, sameSite: "lax", secure: process.env.NODE_ENV === "production" });
+    jar.set(THEME_COOKIE, theme, { path: "/", maxAge: 365 * 864e2, sameSite: "lax", secure: (process.env.NODE_ENV === "production" && (process.env.APP_URL ?? "").startsWith("https://")) });
   } else jar.delete(THEME_COOKIE);
   return back("/settings");
 }

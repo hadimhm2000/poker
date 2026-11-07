@@ -2,7 +2,7 @@ import { AVATARS, activeInvites, homePlan, homeSettings, ledger, listNetting, me
 import { asc, desc, eq, sql } from "@poker/db";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
-import { addPlayerAction, createInviteAction, houseRulesAction, markPaidAction, newGameAction } from "@/app/actions/homes";
+import { addPlayerAction, createInviteAction, houseRulesAction, markAllPaidAction, markPaidAction, moneySettingsAction, newGameAction } from "@/app/actions/homes";
 import { mergePlayersAction, playerProfileAction, removeMemberAction, revokeInviteAction } from "@/app/actions/players";
 import { answerNettingAction, cancelNettingAction, homeOptionsAction, proposeNettingAction } from "@/app/actions/ideas";
 import { connectGroupAction, disconnectGroupAction } from "@/app/actions/telegram";
@@ -12,6 +12,7 @@ import { CopyButton } from "@/components/live";
 import { Link } from "@/i18n/navigation";
 import { sha256 } from "@/lib/crypto";
 import { formatAmount, formatDate } from "@/lib/format";
+import { parseUnitChoice } from "@/lib/money-units";
 import { appOrigin, inviteToken, qrDataUrl } from "@/lib/live";
 import { openPayment } from "@/lib/payment";
 import { withUser } from "@/lib/session";
@@ -74,7 +75,43 @@ export default async function HomePage({
   const money = (n: number) => formatAmount(n, home, locale);
   const num = (n: number) => new Intl.NumberFormat(locale).format(n);
   const canWrite = isOwner && !home.readOnly;
+  // Opens with the home's current unit/scale: recognise "هزار تومان" style suffixes.
+  const moneyNow = parseUnitChoice(home.unitSuffix, home.unitDivisor, locale);
   const canEdit = (p: (typeof players)[number]) => canWrite || p.userId === userId;
+  // One player's edit form (avatar + payment details), reused by the players list and the
+  // payment-cards section so both places stay in step.
+  const playerEdit = (p: (typeof players)[number]) => (
+    <details className="player-edit">
+      <summary>{tp("editPlayer")}</summary>
+      <form action={playerProfileAction} className="stack">
+        <input type="hidden" name="homeId" value={home.id} />
+        <input type="hidden" name="playerId" value={p.id} />
+        <fieldset className="avatar-picker">
+          <legend>{tp("avatar")}</legend>
+          <label>
+            <input type="radio" name="avatar" value="" defaultChecked={!p.avatar} />
+            <span>{tp("noAvatar")}</span>
+          </label>
+          {AVATARS.map((a) => (
+            <label key={a}>
+              <input type="radio" name="avatar" value={a} defaultChecked={p.avatar === a} />
+              <span>{a}</span>
+            </label>
+          ))}
+        </fieldset>
+        <label>
+          {tp("paymentInfo")}
+          <textarea name="paymentInfo" rows={2} maxLength={200} dir="auto" defaultValue={payment.get(p.id) ?? ""} />
+        </label>
+        <p className="small muted">{tp("paymentHint")}</p>
+        <div>
+          <button className="btn small secondary" type="submit">
+            {tp("save")}
+          </button>
+        </div>
+      </form>
+    </details>
+  );
   const origin = await appOrigin();
   // Links made with the HMAC scheme can be shown again; older random-token links cannot.
   const invites = await Promise.all(
@@ -114,6 +151,9 @@ export default async function HomePage({
               <button className="btn" type="submit">
                 {t("newGame")}
               </button>
+              <span className="small muted" style={{ alignSelf: "center" }}>
+                {t("moneyHint", { amount: money(200 * home.unitDivisor) })}
+              </span>
             </form>
           )}
           <ul style={{ paddingInlineStart: 18, margin: 0 }}>
@@ -147,38 +187,7 @@ export default async function HomePage({
             {active.map((p) => (
               <li key={p.id}>
                 <PlayerName name={p.displayName} avatar={p.avatar} /> {p.userId && <span className="badge">✓</span>}
-                {canEdit(p) && (
-                  <details className="player-edit">
-                    <summary>{tp("editPlayer")}</summary>
-                    <form action={playerProfileAction} className="stack">
-                      <input type="hidden" name="homeId" value={home.id} />
-                      <input type="hidden" name="playerId" value={p.id} />
-                      <fieldset className="avatar-picker">
-                        <legend>{tp("avatar")}</legend>
-                        <label>
-                          <input type="radio" name="avatar" value="" defaultChecked={!p.avatar} />
-                          <span>{tp("noAvatar")}</span>
-                        </label>
-                        {AVATARS.map((a) => (
-                          <label key={a}>
-                            <input type="radio" name="avatar" value={a} defaultChecked={p.avatar === a} />
-                            <span>{a}</span>
-                          </label>
-                        ))}
-                      </fieldset>
-                      <label>
-                        {tp("paymentInfo")}
-                        <textarea name="paymentInfo" rows={2} maxLength={200} dir="auto" defaultValue={payment.get(p.id) ?? ""} />
-                      </label>
-                      <p className="small muted">{tp("paymentHint")}</p>
-                      <div>
-                        <button className="btn small secondary" type="submit">
-                          {tp("save")}
-                        </button>
-                      </div>
-                    </form>
-                  </details>
-                )}
+                {canEdit(p) && playerEdit(p)}
               </li>
             ))}
           </ul>
@@ -196,6 +205,36 @@ export default async function HomePage({
           )}
         </section>
       </div>
+
+      <section className="card" id="cards">
+        <h2>{tp("cardsTitle")}</h2>
+        <p className="small muted">{tp("cardsHint")}</p>
+        <ul className="plain stack">
+          {active.map((p) => {
+            const info = payment.get(p.id);
+            return (
+              <li key={p.id} className="row" style={{ justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+                <span>
+                  <PlayerName name={p.displayName} avatar={p.avatar} /> {p.userId && <span className="badge">✓</span>}
+                </span>
+                <span className="row" style={{ flexWrap: "nowrap", alignItems: "center" }}>
+                  {info ? (
+                    <span className="pay-info">
+                      <span className="mono small" dir="ltr">
+                        {info}
+                      </span>
+                      <CopyButton text={info} label={tp("copy")} done={tp("copied")} />
+                    </span>
+                  ) : (
+                    <span className="muted small">{tp("noPaymentInfo")}</span>
+                  )}
+                </span>
+                {canEdit(p) && playerEdit(p)}
+              </li>
+            );
+          })}
+        </ul>
+      </section>
 
       <section className="card">
         <h2>{t("ledger")}</h2>
@@ -249,6 +288,15 @@ export default async function HomePage({
               </tbody>
             </table>
           </div>
+        )}
+        {canWrite && debts.length > 0 && (
+          <form action={markAllPaidAction} className="row" style={{ marginBlockStart: 12, flexWrap: "wrap", gap: 8 }}>
+            <input type="hidden" name="homeId" value={home.id} />
+            <button className="btn small secondary" type="submit">
+              {t("markAllPaid")}
+            </button>
+            <span className="small muted">{t("markAllPaidHint")}</span>
+          </form>
         )}
       </section>
 
@@ -344,6 +392,46 @@ export default async function HomePage({
       </section>
 
       {canWrite && (
+        <section className="card stack" id="money">
+          <h2>{t("moneyTitle")}</h2>
+          <p className="small muted">{t("moneyNote")}</p>
+          <form action={moneySettingsAction} className="stack">
+            <input type="hidden" name="homeId" value={home.id} />
+            <label>
+              {t("moneyUnit")}
+              <select name="unit" defaultValue={moneyNow.unit} style={{ width: "auto" }}>
+                <option value="toman">{t("moneyUnitToman")}</option>
+                <option value="rial">{t("moneyUnitRial")}</option>
+                <option value="usd">{t("moneyUnitUsd")}</option>
+                <option value="eur">{t("moneyUnitEur")}</option>
+                <option value="custom">{t("moneyUnitCustom")}</option>
+              </select>
+            </label>
+            <label>
+              {t("moneyScale")}
+              <select name="scale" defaultValue={String(moneyNow.scale)} style={{ width: "auto" }}>
+                <option value="1">{t("moneyScaleFull")}</option>
+                <option value="1000">{t("moneyScaleThousand")}</option>
+                <option value="1000000">{t("moneyScaleMillion")}</option>
+              </select>
+            </label>
+            <label>
+              {t("moneyCustomLabel")}
+              <input name="customSuffix" maxLength={24} dir="auto" defaultValue={moneyNow.unit === "custom" ? home.unitSuffix : ""} />
+            </label>
+            <p className="small muted" style={{ margin: 0 }}>
+              {t("moneyHint", { amount: money(200 * home.unitDivisor) })}
+            </p>
+            <div>
+              <button className="btn secondary" type="submit">
+                {t("moneySave")}
+              </button>
+            </div>
+          </form>
+        </section>
+      )}
+
+      {canWrite && (
         <section className="card stack" id="options">
           <h2>{ti("optionsTitle")}</h2>
           <form action={homeOptionsAction} className="stack">
@@ -360,6 +448,11 @@ export default async function HomePage({
             <p className="small muted" style={{ margin: 0 }}>
               {ti("optionStoryHint")} {!storyAvailable && ti("optionStoryOff")}
             </p>
+            <label className="row" style={{ alignItems: "center", gap: 8 }}>
+              <input type="checkbox" name="requireConfirmation" defaultChecked={home.requireConfirmation} style={{ width: "auto" }} />
+              {t("requireConfirmationOption")}
+            </label>
+            <p className="small muted" style={{ margin: 0 }}>{t("requireConfirmationHint")}</p>
             <div>
               <button className="btn secondary" type="submit">
                 {ti("saveOptions")}

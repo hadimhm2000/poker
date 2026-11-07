@@ -6,7 +6,7 @@ import {
   computeClose,
   gameHash,
 } from "@poker/domain";
-import { and, asc, desc, eq, inArray, isNull, notExists, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, isNull, notExists, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import type { Tx } from "./client";
@@ -41,7 +41,7 @@ const id = z.string().uuid();
 export const createHomeInput = z.object({
   name: z.string().trim().min(1).max(60),
   currency: z.string().regex(/^[A-Z]{3}$/).nullable().default(null),
-  unitSuffix: z.string().max(8).default(""),
+  unitSuffix: z.string().max(24).default(""),
   unitDivisor: z.number().int().positive().default(1),
   locale: z.enum(["fa", "en", "ar", "fr", "it", "ru", "es"]).default("en"),
   requireConfirmation: z.boolean().default(false),
@@ -51,6 +51,37 @@ export async function createHome(tx: Tx, ownerId: string, input: z.input<typeof 
   const v = createHomeInput.parse(input);
   const [home] = await tx.insert(homes).values({ ...v, ownerId }).returning();
   return home!;
+}
+
+export const moneySettingsInput = z.object({
+  /** ISO 4217 code, or null when the home uses a free-form unit (تومان has no code). */
+  currency: z.string().regex(/^[A-Z]{3}$/).nullable(),
+  unitSuffix: z.string().max(24).default(""),
+  unitDivisor: z.number().int().refine((n) => [1, 1000, 1000000].includes(n), "1, 1000 or 1000000"),
+});
+
+/**
+ * Change how money is shown and typed in this home (تومان/ریال + هزار/میلیون shorthand).
+ * A pure format change: every stored amount stays exactly as it is.
+ */
+export async function updateMoneySettings(tx: Tx, homeId: string, input: z.input<typeof moneySettingsInput>) {
+  const v = moneySettingsInput.parse(input);
+  const done = await tx
+    .update(homes)
+    .set({ currency: v.currency, unitSuffix: v.unitSuffix, unitDivisor: v.unitDivisor })
+    .where(eq(homes.id, id.parse(homeId)))
+    .returning({ id: homes.id });
+  if (!done.length) throw new DomainError("NOT_FOUND");
+}
+
+/** Home setting: must every player with an account confirm before the game closes? */
+export async function setRequireConfirmation(tx: Tx, homeId: string, requireConfirmation: boolean) {
+  const done = await tx
+    .update(homes)
+    .set({ requireConfirmation: z.boolean().parse(requireConfirmation) })
+    .where(eq(homes.id, id.parse(homeId)))
+    .returning({ id: homes.id });
+  if (!done.length) throw new DomainError("NOT_FOUND");
 }
 
 export async function addPlayer(tx: Tx, homeId: string, displayName: string) {
@@ -91,6 +122,31 @@ export async function rebuy(tx: Tx, userId: string, gameId: string, playerId: st
     .returning();
   if (!updated.length) throw new DomainError("NOT_IN_GAME");
   await tx.insert(gameEvents).values({ gameId: g.id, playerId, type: "rebuy", amount: a, actorId: userId, opKey: opKey ?? null });
+}
+
+/**
+ * The opposite of a rebuy: take `amount` off a player's total-in (a too-large rebuy, or
+ * chips taken off the table). Refuses to go below zero so a typo cannot flip a loss into
+ * a win; recorded as its own "deduct" event so stats never count it as a rebuy.
+ */
+export async function deduct(tx: Tx, userId: string, gameId: string, playerId: string, amount: number, opKey?: string) {
+  const g = await openGame(tx, gameId);
+  const a = money.parse(amount);
+  const pid = id.parse(playerId);
+  const updated = await tx
+    .update(gameEntries)
+    .set({ totalIn: sql`${gameEntries.totalIn} - ${a}`, confirmedAt: null })
+    .where(and(eq(gameEntries.gameId, g.id), eq(gameEntries.playerId, pid), gte(gameEntries.totalIn, a)))
+    .returning();
+  if (!updated.length) {
+    const [e] = await tx
+      .select({ id: gameEntries.playerId })
+      .from(gameEntries)
+      .where(and(eq(gameEntries.gameId, g.id), eq(gameEntries.playerId, pid)));
+    if (!e) throw new DomainError("NOT_IN_GAME");
+    throw new DomainError("DEDUCT_TOO_MUCH", "deduct is larger than the player's total-in");
+  }
+  await tx.insert(gameEvents).values({ gameId: g.id, playerId, type: "deduct", amount: a, actorId: userId, opKey: opKey ?? null });
 }
 
 export async function setCashOut(
@@ -164,6 +220,8 @@ export const closeGameInput = z.object({
   expectedVersion: z.number().int().positive(),
   /** Net open debts of players in this game into the new settlement. */
   carryDebts: z.boolean().default(true),
+  /** Host override: close without player confirmations; missing cash-outs become 0. */
+  force: z.boolean().default(false),
 });
 
 /** Internal options used by the importer; never taken from a request. */
@@ -184,6 +242,8 @@ export interface CloseResult {
  * Close and freeze a game. Safe against double clicks and two devices at once:
  * the game row is locked, the close key makes retries return the same result, and
  * the version check rejects a close based on numbers that changed since the summary.
+ * With force=true the host closes anyway: no confirmations are required and players
+ * without a cash-out are recorded as having lost everything (0).
  */
 export async function closeGame(
   tx: Tx,
@@ -206,13 +266,25 @@ export async function closeGame(
       alreadyClosed: true,
     };
   }
-  if (g.version !== v.expectedVersion) {
+  if (!v.force && g.version !== v.expectedVersion) {
     throw new DomainError("STALE", "numbers changed since the summary was shown", { version: g.version });
   }
 
   // One close at a time per home keeps numbering and the hash chain linear.
   const [home] = await tx.select().from(homes).where(eq(homes.id, g.homeId)).for("update");
   if (!home) throw new DomainError("NOT_FOUND");
+
+  // Force close: a player without a cash-out lost everything. Written into the entries so
+  // history, stats and the export agree with the settlement. The version trigger bumps the
+  // game's version for each backfilled row; the fresh version is re-read below.
+  if (v.force) {
+    await tx
+      .update(gameEntries)
+      .set({ cashOut: 0, confirmedAt: null })
+      .where(and(eq(gameEntries.gameId, g.id), isNull(gameEntries.cashOut)));
+  }
+  const [fresh] = await tx.select({ version: games.version }).from(games).where(eq(games.id, g.id));
+  const version = v.force ? fresh!.version : v.expectedVersion;
 
   const entries = await loadEntries(tx, g.id);
   const inGame = new Set(entries.map((e) => e.playerId));
@@ -224,7 +296,11 @@ export async function closeGame(
   try {
     result = computeClose(
       entries.map((e) => ({ ...e, hasAccount: !!e.userId, confirmed: !!e.confirmedAt })),
-      { requireConfirmation: home.requireConfirmation && !opts.imported, allowZeroBuyIn: opts.imported },
+      {
+        requireConfirmation: home.requireConfirmation && !opts.imported,
+        allowZeroBuyIn: opts.imported,
+        force: v.force && !opts.imported,
+      },
       carried,
     );
   } catch (err) {
@@ -264,7 +340,7 @@ export async function closeGame(
   const closed = await tx
     .update(games)
     .set({ status: "closed", number, closedAt, closeKey: v.closeKey, hash, prevHash })
-    .where(and(eq(games.id, g.id), eq(games.version, v.expectedVersion)))
+    .where(and(eq(games.id, g.id), eq(games.version, version)))
     .returning({ id: games.id });
   if (!closed.length) throw new DomainError("STALE");
 

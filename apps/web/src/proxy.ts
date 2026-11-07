@@ -30,7 +30,7 @@ export function proxy(request: NextRequest) {
     `frame-src https://oauth.telegram.org${checkout ? ` ${paddle.frame}` : ""}`,
     // Only Telegram Web may frame us (it shows the Mini App in an iframe).
     "frame-ancestors 'self' https://web.telegram.org",
-    ...(isDev ? [] : ["upgrade-insecure-requests"]),
+    ...(isDev || !(process.env.APP_URL ?? "").startsWith("https://") ? [] : ["upgrade-insecure-requests"]),
   ].join("; ");
 
   request.headers.set("x-nonce", nonce);

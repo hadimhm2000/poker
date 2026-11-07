@@ -8,6 +8,7 @@ import {
   proposeNetting,
   revealDraw,
   setHomeSettings,
+  setRequireConfirmation,
   startDraw,
 } from "@poker/db";
 import { getLocale } from "next-intl/server";
@@ -116,13 +117,15 @@ export async function cancelNettingAction(form: FormData) {
 
 export async function homeOptionsAction(form: FormData) {
   const homeId = uuid.parse(form.get("homeId"));
-  await attempt(`/homes/${homeId}`, () =>
-    withUser((tx) =>
-      setHomeSettings(tx, homeId, {
+  await attempt(`/homes/${homeId}#options`, () =>
+    withUser(async (tx) => {
+      await setHomeSettings(tx, homeId, {
         goodPayerIndex: form.get("goodPayerIndex") === "on",
         nightStory: form.get("nightStory") === "on",
-      }),
-    ),
+      });
+      // A real column, not a jsonb setting: "must every player confirm before closing?"
+      await setRequireConfirmation(tx, homeId, form.get("requireConfirmation") === "on");
+    }),
   );
   return go(`/homes/${homeId}#options`);
 }

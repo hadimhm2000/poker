@@ -8,3 +8,7 @@ coverage
 *.log
 .pgdata
 .claude/worktrees/
+
+*.xlsx
+
+*.xlsx

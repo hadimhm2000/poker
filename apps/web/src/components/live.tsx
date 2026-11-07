@@ -46,6 +46,7 @@ export function LiveRefresh({ gameId }: { gameId: string }) {
 
 export type QueuedOp =
   | { kind: "rebuy"; opKey: string; playerId: string; amount: number }
+  | { kind: "deduct"; opKey: string; playerId: string; amount: number }
   | { kind: "cash_out"; opKey: string; playerId: string; amount: number | null }
   | { kind: "answer"; opKey: string; requestId: string; approve: boolean };
 
@@ -178,9 +179,24 @@ function useQueue(): Queue {
   return q;
 }
 
-const newKey = () => crypto.randomUUID();
+const newKey = () => {
+  // crypto.randomUUID exists only in secure contexts (HTTPS or localhost). Hosts that
+  // open the site over plain HTTP would get "crypto.randomUUID is not a function" on
+  // every Rebuy+/Save tap, so fall back to getRandomValues (available everywhere).
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  const b = new Uint8Array(16);
+  if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
+    crypto.getRandomValues(b);
+  } else {
+    for (let i = 0; i < 16; i++) b[i] = Math.floor(Math.random() * 256);
+  }
+  b[6] = (b[6]! & 0x0f) | 0x40; // UUID version 4
+  b[8] = (b[8]! & 0x3f) | 0x80; // RFC 4122 variant
+  const hex = Array.from(b, (x) => x.toString(16).padStart(2, "0"));
+  return [hex.slice(0, 4).join(""), hex.slice(4, 6).join(""), hex.slice(6, 8).join(""), hex.slice(8, 10).join(""), hex.slice(10).join("")].join("-");
+};
 
-/** Rebuy button and cash-out field for one row of the host's table. */
+/** Rebuy/deduct amount field and cash-out input for one row of the host's table. */
 export function HostEntryControls({
   playerId,
   defaultBuyIn,
@@ -198,8 +214,12 @@ export function HostEntryControls({
   const { pending, enqueue } = useQueue();
   const [value, setValue] = useState(toInputValue(cashOut, home.unitDivisor));
   const [invalid, setInvalid] = useState(false);
+  // Prefilled with the game's default buy-in, so one tap still rebuys the default;
+  // the host can also type any other amount before tapping.
+  const [rebuyValue, setRebuyValue] = useState(defaultBuyIn > 0 ? toInputValue(defaultBuyIn, home.unitDivisor) : "");
+  const [rebuyInvalid, setRebuyInvalid] = useState(false);
   const mine = pending.filter((o) => "playerId" in o && o.playerId === playerId);
-  const waitingIn = mine.reduce((s, o) => (o.kind === "rebuy" ? s + o.amount : s), 0);
+  const waitingIn = mine.reduce((s, o) => (o.kind === "rebuy" || o.kind === "deduct" ? s + o.amount : s), 0);
   const waitingOut = mine.filter((o) => o.kind === "cash_out").at(-1);
 
   // A new value from the server (another device, or our own change arriving) replaces the field.
@@ -208,6 +228,24 @@ export function HostEntryControls({
     setSynced(cashOut);
     setValue(toInputValue(cashOut, home.unitDivisor));
   }
+
+  // The same input feeds both buttons: "+" adds a rebuy, "−" takes the amount off
+  // (correcting a too-large rebuy, or chips taken off the table).
+  const submitRebuy = (e: React.FormEvent) => {
+    e.preventDefault();
+    const amount = parseAmount(rebuyValue.trim(), home.unitDivisor);
+    if (amount === null || amount <= 0) return setRebuyInvalid(true);
+    setRebuyInvalid(false);
+    enqueue({ kind: "rebuy", opKey: newKey(), playerId, amount });
+  };
+
+  const submitDeduct = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const amount = parseAmount(rebuyValue.trim(), home.unitDivisor);
+    if (amount === null || amount <= 0) return setRebuyInvalid(true);
+    setRebuyInvalid(false);
+    enqueue({ kind: "deduct", opKey: newKey(), playerId, amount });
+  };
 
   const submitCashOut = (e: React.FormEvent) => {
     e.preventDefault();
@@ -219,18 +257,34 @@ export function HostEntryControls({
   };
 
   return (
-    <div className="row" style={{ justifyContent: "flex-end", flexWrap: "nowrap" }}>
-      <button
-        className="btn small secondary"
-        type="button"
-        title={formatAmount(defaultBuyIn, home, locale)}
-        onClick={() => enqueue({ kind: "rebuy", opKey: newKey(), playerId, amount: defaultBuyIn })}
-        disabled={defaultBuyIn <= 0}
-      >
-        + {t("rebuy")}
-      </button>
+    <div className="row" style={{ justifyContent: "flex-end", flexWrap: "nowrap", gap: 4 }}>
+      <form onSubmit={submitRebuy} className="row" style={{ flexWrap: "nowrap", gap: 4 }}>
+        <input
+          name="rebuyAmount"
+          inputMode="decimal"
+          value={rebuyValue}
+          onChange={(e) => setRebuyValue(e.target.value)}
+          style={{ maxWidth: 92 }}
+          dir="ltr"
+          placeholder={defaultBuyIn > 0 ? toInputValue(defaultBuyIn, home.unitDivisor) : t("rebuyAmount")}
+          title={defaultBuyIn > 0 ? formatAmount(defaultBuyIn, home, locale) : undefined}
+          aria-label={t("rebuyAmount")}
+          aria-invalid={rebuyInvalid || undefined}
+        />
+        <button className="btn small secondary" type="submit" title={t("rebuyAmount")}>
+          + {t("rebuy")}
+        </button>
+        <button className="btn small secondary" type="button" onClick={submitDeduct} title={t("deductHint")}>
+          − {t("deduct")}
+        </button>
+      </form>
+      {rebuyInvalid && (
+        <span className="badge loss" role="alert">
+          {t("invalidAmount")}
+        </span>
+      )}
       {waitingIn > 0 && <span className="badge">{tl("waitingAmount", { amount: formatAmount(waitingIn, home, locale, true) })}</span>}
-      <form onSubmit={submitCashOut} className="row" style={{ flexWrap: "nowrap" }}>
+      <form onSubmit={submitCashOut} className="row" style={{ flexWrap: "nowrap", gap: 4 }}>
         <input
           name="cashOut"
           inputMode="decimal"
@@ -245,6 +299,11 @@ export function HostEntryControls({
           {t("save")}
         </button>
       </form>
+      {invalid && (
+        <span className="badge loss" role="alert">
+          {t("invalidAmount")}
+        </span>
+      )}
       {waitingOut && <span className="badge">{tl("waiting")}</span>}
     </div>
   );
@@ -276,18 +335,38 @@ export function AnswerRequest({ requestId }: { requestId: string }) {
 /** Copy a link (the join link) to the clipboard. */
 export function CopyButton({ text, label, done }: { text: string; label: string; done: string }) {
   const [copied, setCopied] = useState(false);
+
+  const markCopied = () => {
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  // navigator.clipboard also needs a secure context; on plain HTTP fall back to the
+  // legacy execCommand copy so the join-link button still works.
+  const legacyCopy = () => {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try {
+      ok = document.execCommand("copy");
+    } catch {}
+    ta.remove();
+    if (ok) markCopied();
+  };
+
   return (
     <button
       className="btn small secondary"
       type="button"
       onClick={() =>
-        navigator.clipboard?.writeText(text).then(
-          () => {
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-          },
-          () => {},
-        )
+        navigator.clipboard?.writeText
+          ? navigator.clipboard.writeText(text).then(markCopied, legacyCopy)
+          : legacyCopy()
       }
     >
       {copied ? done : label}

@@ -7,7 +7,7 @@ import { cache } from "react";
 import { getDb } from "./db";
 import { randomToken, sha256 } from "./crypto";
 
-export const SESSION_COOKIE = process.env.NODE_ENV === "production" ? "__Host-session" : "session";
+export const SESSION_COOKIE = (process.env.NODE_ENV === "production" && (process.env.APP_URL ?? "").startsWith("https://")) ? "__Host-session" : "session";
 const SESSION_DAYS = 30;
 
 // OWASP-recommended Argon2id parameters (19 MiB, 2 iterations, 1 lane).
@@ -76,9 +76,9 @@ export async function createSession(userId: string, twoFactorPassed: boolean, op
   );
   (await cookies()).set(SESSION_COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: opts.embedded && process.env.NODE_ENV === "production" ? "none" : "lax",
-    partitioned: opts.embedded && process.env.NODE_ENV === "production" ? true : undefined,
+    secure: (process.env.NODE_ENV === "production" && (process.env.APP_URL ?? "").startsWith("https://")),
+    sameSite: opts.embedded && (process.env.NODE_ENV === "production" && (process.env.APP_URL ?? "").startsWith("https://")) ? "none" : "lax",
+    partitioned: opts.embedded && (process.env.NODE_ENV === "production" && (process.env.APP_URL ?? "").startsWith("https://")) ? true : undefined,
     path: "/",
     expires: expiresAt,
   });

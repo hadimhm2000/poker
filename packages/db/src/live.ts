@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, gt, inArray, isNull, ne, sql } from "drizzle-orm";
 import { z } from "zod";
 import type { Tx } from "./client";
-import { DomainError, rebuy, setCashOut } from "./repo";
+import { DomainError, deduct, rebuy, setCashOut } from "./repo";
 import { gameEntries, gameEvents, gameNights, games, homes, invites, nightRsvps, players, telegramLinkCodes, users } from "./schema";
 
 // Phase 3: live game (join by QR, rebuy requests, queued host changes), game nights and
@@ -141,6 +141,7 @@ export async function answerRequest(tx: Tx, userId: string, requestId: string, a
 
 export const hostOp = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("rebuy"), opKey: id, playerId: id, amount: money }),
+  z.object({ kind: z.literal("deduct"), opKey: id, playerId: id, amount: money }),
   z.object({ kind: z.literal("cash_out"), opKey: id, playerId: id, amount: z.number().int().nonnegative().nullable() }),
   z.object({ kind: z.literal("answer"), opKey: id, requestId: id, approve: z.boolean() }),
 ]);
@@ -157,6 +158,9 @@ export async function applyHostOp(tx: Tx, userId: string, gameId: string, input:
   switch (op.kind) {
     case "rebuy":
       await rebuy(tx, userId, gameId, op.playerId, op.amount, op.opKey);
+      break;
+    case "deduct":
+      await deduct(tx, userId, gameId, op.playerId, op.amount, op.opKey);
       break;
     case "cash_out":
       await setCashOut(tx, userId, gameId, op.playerId, op.amount, op.opKey);
