@@ -90,3 +90,25 @@ describe("parseSheet", () => {
     expect(parseSheet([["foo", "bar"], [1, 2]], 1).error).toBe("noColumns");
   });
 });
+
+describe("Book1-style sheet (Total In + Profit/Loss, amounts in thousand toman)", () => {
+  const table = [
+    ["Date", "Name", "Total In", "Profit/Loss", "Game #"],
+    [new Date("2026-07-06T00:00:00Z"), "hadi", 200, 480, 1],
+    [new Date("2026-07-06T00:00:00Z"), "moj", 460, -280, 1],
+    [new Date("2026-07-06T00:00:00Z"), "owlia", 300, -300, 1],
+    [new Date("2026-07-06T00:00:00Z"), "azin", 200, 100, 1],
+    [new Date("2026-07-06T00:00:00Z"), "yusof", 200, 0, 1],
+  ];
+  it("recognises 'Total In' and keeps the real buy-in", () => {
+    const r = parseSheet(table, 1);
+    expect(r.columns.in).toBe("Total In");
+    expect(r.games[0]!.rows.find((x) => x.name === "hadi")).toEqual({ name: "hadi", totalIn: 200, cashOut: 680 });
+    expect(r.games[0]!.status).toBe("ok");
+  });
+  it("converts file units to stored units with the divisor argument (×10000 → rial)", () => {
+    const r = parseSheet(table, 10_000);
+    expect(r.games[0]!.rows.find((x) => x.name === "moj")).toEqual({ name: "moj", totalIn: 4_600_000, cashOut: 1_800_000 });
+    expect(r.games[0]!.status).toBe("ok");
+  });
+});

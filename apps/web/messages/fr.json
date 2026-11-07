@@ -440,6 +440,8 @@
     "title": "Importer un ancien tableau",
     "intro": "Envoyez un fichier .xlsx ou .csv avec une ligne par joueur et par partie. Colonnes nécessaires : date, joueur, puis soit entrée et sortie, soit entrée et net. Le numéro de partie est facultatif ; sans lui, les lignes d'une même date forment une partie.",
     "file": "Fichier",
+    "multiplier": "Multiplier les montants du fichier par",
+    "multiplierHint": "Mettez 1 si le fichier est déjà dans l'unité stockée. Exemple : « 200 » = 200 000 tomans et le foyer stocke en rials → 10000.",
     "preview": "Aperçu",
     "confirm": "Importer {count} parties",
     "games": "Parties trouvées",

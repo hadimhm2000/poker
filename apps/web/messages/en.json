@@ -440,6 +440,8 @@
     "title": "Import an old spreadsheet",
     "intro": "Upload an .xlsx or .csv file with one row per player per game. Needed columns: date, player, and either buy-in and cash-out, or buy-in and net. A game number column is optional; without it, rows with the same date form one game.",
     "file": "File",
+    "multiplier": "Multiply file amounts by",
+    "multiplierHint": "Use 1 when the file already holds stored units. Example: the file says 200 meaning 200,000 toman and the home stores rial → 10000.",
     "preview": "Preview",
     "confirm": "Import {count} games",
     "games": "Games found",

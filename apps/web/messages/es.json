@@ -440,6 +440,8 @@
     "title": "Importar una hoja antigua",
     "intro": "Sube un archivo .xlsx o .csv con una fila por jugador y partida. Columnas necesarias: fecha, jugador y, o bien entrada y cash-out, o bien entrada y neto. El número de partida es opcional; sin él, las filas de la misma fecha forman una partida.",
     "file": "Archivo",
+    "multiplier": "Multiplicar los importes del archivo por",
+    "multiplierHint": "Usa 1 si el archivo ya está en la unidad almacenada. Ejemplo: «200» = 200.000 tomanes y el hogar guarda en rials → 10000.",
     "preview": "Vista previa",
     "confirm": "Importar {count} partidas",
     "games": "Partidas encontradas",
