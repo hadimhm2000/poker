@@ -86,10 +86,10 @@ export default async function StatsPage({
         <div className="row no-print" style={{ alignItems: "center" }}>
           {data.plan === "pro" ? (
             <>
-              <a className="btn secondary small" href={`/api/homes/${home.id}/export?format=xlsx`}>
+              <a className="btn secondary small" href={`/api/homes/${home.id}/export?format=xlsx&locale=${locale}`}>
                 {t("exportXlsx")}
               </a>
-              <a className="btn secondary small" href={`/api/homes/${home.id}/export?format=csv`}>
+              <a className="btn secondary small" href={`/api/homes/${home.id}/export?format=csv&locale=${locale}`}>
                 {t("exportCsv")}
               </a>
               {pdfEnabled() && (
