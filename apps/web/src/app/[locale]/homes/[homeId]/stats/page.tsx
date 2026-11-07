@@ -1,5 +1,5 @@
 import { goodPayerIndex, homePlan, listSeasons, seasonPeriod } from "@poker/db";
-import { badges, homeStats, rowsInPeriod } from "@poker/domain";
+import { badges, formatMoney, homeStats, rowsInPeriod } from "@poker/domain";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { createSeasonAction, deleteSeasonAction } from "@/app/actions/seasons";
@@ -50,6 +50,12 @@ export default async function StatsPage({
   const earned = badges(rows);
   const day = (d: string) => formatDate(new Date(`${d}T12:00:00Z`), locale);
   const money = (n: number, signed = false) => formatAmount(n, home, locale, signed);
+  // Table cells show bare digits (one unit note per table) as an isolated left-to-right run,
+  // so sign, digits and currency words never reorder inside a right-to-left row.
+  const unit = home.unitSuffix || (home.currency ? (new Intl.DisplayNames(locale, { type: "currency" }).of(home.currency) ?? home.currency) : "");
+  const plain = (n: number, signed = false) =>
+    formatMoney(n, { locale, currency: null, divisor: home.unitDivisor, signed });
+  const mv = (n: number, signed = false) => <span className="n">{plain(n, signed)}</span>;
   const num = (n: number) => new Intl.NumberFormat(locale).format(n);
   const pct = (n: number) => new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 0 }).format(n);
   const slots = playerSlots(rows);
@@ -80,10 +86,10 @@ export default async function StatsPage({
         <div className="row no-print" style={{ alignItems: "center" }}>
           {data.plan === "pro" ? (
             <>
-              <a className="btn secondary small" href={`/api/homes/${home.id}/export?format=xlsx`}>
+              <a className="btn secondary small" href={`/api/homes/${home.id}/export?format=xlsx&locale=${locale}`}>
                 {t("exportXlsx")}
               </a>
-              <a className="btn secondary small" href={`/api/homes/${home.id}/export?format=csv`}>
+              <a className="btn secondary small" href={`/api/homes/${home.id}/export?format=csv&locale=${locale}`}>
                 {t("exportCsv")}
               </a>
               {pdfEnabled() && (
@@ -173,21 +179,23 @@ export default async function StatsPage({
               [
                 ["games", num(s.totals.games)],
                 ["players", num(s.totals.players)],
-                ["moneyIn", money(s.totals.moneyIn)],
-                ["biggestPot", money(s.totals.biggestPot)],
-                ["averagePot", money(s.totals.averagePot)],
+                ["moneyIn", mv(s.totals.moneyIn)],
+                ["biggestPot", mv(s.totals.biggestPot)],
+                ["averagePot", mv(s.totals.averagePot)],
               ] as const
             ).map(([k, v]) => (
               <div className="stat" key={k}>
                 <div className="label">{t(k)}</div>
                 <div className="value num">{v}</div>
+                {unit && (k === "moneyIn" || k === "biggestPot" || k === "averagePot") && <div className="unit">{unit}</div>}
               </div>
             ))}
           </div>
 
           <section className="card table-wrap">
             <h2>{season ? t("seasonLeaderboard", { season: season.name }) : t("leaderboard")}</h2>
-            <table>
+            {unit && <p className="small muted unit-note">{t("unitNote", { unit })}</p>}
+            <table className="data">
               <thead>
                 <tr>
                   <th />
@@ -212,11 +220,11 @@ export default async function StatsPage({
                     <td className="end num">{num(p.wins)}</td>
                     <td className="end num">{pct(p.winRate)}</td>
                     <td className={`end num ${p.net > 0 ? "win" : p.net < 0 ? "loss" : ""}`}>
-                      <strong>{money(p.net, true)}</strong>
+                      <strong>{mv(p.net, true)}</strong>
                     </td>
-                    <td className="end num">{money(p.average, true)}</td>
-                    <td className="end num">{money(p.best, true)}</td>
-                    <td className="end num">{money(p.worst, true)}</td>
+                    <td className="end num">{mv(p.average, true)}</td>
+                    <td className="end num">{mv(p.best, true)}</td>
+                    <td className="end num">{mv(p.worst, true)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -283,31 +291,31 @@ export default async function StatsPage({
           )}
 
           <div>
-            <section className="card">
+            <section className="card keep">
               <h2>{t("cumulative")}</h2>
               <p className="small muted">{t("cumulativeNote", { count: num(series.length) })}</p>
               <LineChart
                 title={t("cumulative")}
                 series={series}
                 xLabels={s.games.map((g) => `#${num(g.number)}`)}
-                format={(v) => money(v, true)}
+                format={(v) => plain(v, true)}
               />
             </section>
-            <section className="card">
+            <section className="card keep">
               <h2>{t("netChart")}</h2>
               <DivergingBars
                 title={t("netChart")}
                 rows={s.leaderboard.map((p) => ({ key: p.playerId, name: p.name, value: p.net }))}
-                format={(v) => money(v, true)}
+                format={(v) => plain(v, true)}
               />
             </section>
           </div>
 
-          <div className="print-break" />
-          <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))" }}>
+                    <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))" }}>
             <section className="card table-wrap">
               <h2>{t("lastGames", { count: num(s.lastGames.length) })}</h2>
-              <table>
+              {unit && <p className="small muted unit-note">{t("unitNote", { unit })}</p>}
+              <table className="data">
                 <thead>
                   <tr>
                     <th>#</th>
@@ -324,18 +332,18 @@ export default async function StatsPage({
                         <Link href={`/games/${g.gameId}`}>{num(g.number)}</Link>
                       </td>
                       <td className="small">{formatDate(g.closedAt, locale)}</td>
-                      <td className="end num">{money(g.pot)}</td>
+                      <td className="end num">{mv(g.pot)}</td>
                       <td className="small">
                         {g.topWinner && (
                           <>
-                            {g.topWinner.name} <span className="win num">{money(g.topWinner.net, true)}</span>
+                            {g.topWinner.name} <span className="win num">{mv(g.topWinner.net, true)}</span>
                           </>
                         )}
                       </td>
                       <td className="small">
                         {g.topLoser && (
                           <>
-                            {g.topLoser.name} <span className="loss num">{money(g.topLoser.net, true)}</span>
+                            {g.topLoser.name} <span className="loss num">{mv(g.topLoser.net, true)}</span>
                           </>
                         )}
                       </td>
@@ -353,7 +361,7 @@ export default async function StatsPage({
                     <tr>
                       <td>{t("biggestWin")}</td>
                       <td>{r.biggestWin.name}</td>
-                      <td className="end num win">{money(r.biggestWin.value, true)}</td>
+                      <td className="end num win">{mv(r.biggestWin.value, true)}</td>
                       <td className="small muted">{t("inGame", { number: num(r.biggestWin.gameNumber!) })}</td>
                     </tr>
                   )}
@@ -361,7 +369,7 @@ export default async function StatsPage({
                     <tr>
                       <td>{t("biggestLoss")}</td>
                       <td>{r.biggestLoss.name}</td>
-                      <td className="end num loss">{money(r.biggestLoss.value, true)}</td>
+                      <td className="end num loss">{mv(r.biggestLoss.value, true)}</td>
                       <td className="small muted">{t("inGame", { number: num(r.biggestLoss.gameNumber!) })}</td>
                     </tr>
                   )}
@@ -397,7 +405,7 @@ export default async function StatsPage({
                       <td>{t("bestAverage")}</td>
                       <td>{r.bestAverage.name}</td>
                       <td className="end num" colSpan={2}>
-                        {money(r.bestAverage.value, true)}
+                        {mv(r.bestAverage.value, true)}
                       </td>
                     </tr>
                   )}

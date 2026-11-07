@@ -95,6 +95,8 @@ main { padding-block: 28px 64px; }
 .muted { color: var(--muted); }
 .small { font-size: 0.875rem; }
 .num { font-variant-numeric: tabular-nums; unicode-bidi: plaintext; }
+/* A number (with its sign) as one isolated left-to-right run: never reordered inside RTL rows. */
+.n { direction: ltr; unicode-bidi: isolate; display: inline-block; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .win { color: var(--win); }
 .loss { color: var(--loss); }
 .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; overflow-wrap: anywhere; direction: ltr; unicode-bidi: isolate; }
@@ -144,6 +146,15 @@ td.end, th.end { text-align: end; }
 .stat { background: var(--surface-2); border-radius: 10px; padding: 12px; }
 .stat .label { font-size: 0.8rem; color: var(--muted); }
 .stat .value { font-size: 1.35rem; font-weight: 700; }
+.stat .unit { font-size: 0.75rem; color: var(--muted); margin-block-start: 2px; }
+.unit-note { margin-block: -4px 8px; }
+table.data { font-size: 0.92rem; }
+table.data thead th { white-space: nowrap; position: sticky; inset-block-start: 0; background: var(--surface); }
+table.data tbody tr:nth-child(even) { background: color-mix(in srgb, var(--surface-2) 55%, transparent); }
+table.data td.num, table.data td.end { white-space: nowrap; }
+/* Numbers line up on their last digit, in both reading directions. */
+table.data td.end, table.data th.end { text-align: right; }
+table.data td .win, table.data td .loss { font-weight: 600; }
 
 .hero { padding-block: 32px 16px; }
 .hero p { font-size: 1.1rem; color: var(--muted); max-width: 40em; }
@@ -187,12 +198,32 @@ td.end, th.end { text-align: end; }
 .medal { font-size: 1.05rem; }
 
 @media print {
-  @page { size: A4 landscape; margin: 12mm; }
-  .topbar, .no-print, form { display: none !important; }
+  @page { size: A4 portrait; margin: 10mm; }
+  /* Always a light, compact sheet, whatever the screen theme is. */
+  :root:root:root {
+    --bg: #fff; --surface: #fff; --surface-2: #f1efe9; --text: #111; --muted: #555; --border: #cfcbc0;
+    --accent: #0f6e4f; --win: #0b6b34; --loss: #b3261e;
+  }
+  html { font-size: 11px; }
+  .topbar, .no-print, form, .nav { display: none !important; }
   body { background: #fff; color: #000; }
-  .card { break-inside: avoid; border-color: #ccc; }
+  main { padding: 0; max-width: none; }
+  h1 { font-size: 1.5rem; margin-block: 0 8px; }
+  h2 { font-size: 1.05rem; margin-block: 0 6px; }
+  .card { break-inside: auto; border-color: #ccc; box-shadow: none; padding: 10px 12px; margin-block-end: 10px; }
+  .card.keep { break-inside: avoid; }
+  .card svg { max-width: 100%; height: auto; }
+  .stats { grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .stat { padding: 6px 8px; border: 1px solid #ddd; }
+  .stat .value { font-size: 1rem; }
+  table { font-size: 0.9rem; }
+  th, td { padding: 4px 5px; }
+  table.data thead { display: table-header-group; }
+  table.data thead th { position: static; background: #f1efe9; }
+  tr { break-inside: avoid; }
+  a { color: inherit; }
   .print-break { break-before: page; }
-  main { padding: 0; }
+}
 }
 
 /* ---- live game ---- */

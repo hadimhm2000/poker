@@ -330,6 +330,7 @@
     "DEDUCT_TOO_MUCH": "The deduction is larger than the player's total-in."
   },
   "stats": {
+    "unitNote": "All amounts in {unit}",
     "status": "Status",
     "settledRow": "✓ Settled",
     "totalRow": "Total",

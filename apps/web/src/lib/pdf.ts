@@ -23,7 +23,7 @@ export async function renderPdf(url: string, cookie: { name: string; value: stri
       const res = await page.goto(url, { waitUntil: "networkidle", timeout: 30_000 });
       if (!res || !res.ok()) throw new Error(`page returned ${res?.status()}`);
       await page.evaluate(() => document.fonts.ready);
-      return Buffer.from(await page.pdf({ format: "A4", landscape: true, printBackground: true, margin: { top: "10mm", bottom: "10mm", left: "10mm", right: "10mm" } }));
+      return Buffer.from(await page.pdf({ preferCSSPageSize: true, printBackground: true, margin: { top: "10mm", bottom: "10mm", left: "10mm", right: "10mm" } }));
     } finally {
       await browser.close();
     }

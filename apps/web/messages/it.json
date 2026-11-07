@@ -330,6 +330,7 @@
     "DEDUCT_TOO_MUCH": "La detrazione supera il totale di ingresso del giocatore."
   },
   "stats": {
+    "unitNote": "Tutti gli importi in {unit}",
     "status": "Stato",
     "settledRow": "✓ Saldato",
     "totalRow": "Totale",

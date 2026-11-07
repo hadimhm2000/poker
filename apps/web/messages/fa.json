@@ -330,6 +330,7 @@
     "DEDUCT_TOO_MUCH": "مبلغ کسر از ورودیِ این بازیکن بیشتر است."
   },
   "stats": {
+    "unitNote": "همه‌ی مبالغ به {unit}",
     "status": "وضعیت",
     "settledRow": "✓ تسویه شد",
     "totalRow": "مجموع",

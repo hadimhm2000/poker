@@ -1,5 +1,6 @@
 import { asUser, homePlan } from "@poker/db";
 import { type NextRequest, NextResponse } from "next/server";
+import { locales } from "@/i18n/routing";
 import { currentUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { buildCsv, buildWorkbook } from "@/lib/export";
@@ -18,13 +19,18 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (!data) return new NextResponse("Not found", { status: 404 });
   if (data.plan !== "pro") return new NextResponse("Exports are a Pro feature", { status: 402 });
 
+  // The language the person is using (sent by the page), not the home's default: the file
+  // reads the same as the screen. Unknown values fall back to the person's own setting.
+  const locale = locales.find((l) => l === request.nextUrl.searchParams.get("locale")) ?? user.locale;
+  const home = { ...data.home, locale };
+
   const safeName = data.home.name.replace(/[^\p{L}\p{N} _-]/gu, "").trim().slice(0, 40) || "poker-home";
   const headers = {
     "Cache-Control": "no-store",
     "X-Content-Type-Options": "nosniff",
   };
   if (format === "csv") {
-    return new NextResponse(await buildCsv(data.home, data.rows), {
+    return new NextResponse(await buildCsv(home, data.rows), {
       headers: {
         ...headers,
         "Content-Type": "text/csv; charset=utf-8",
@@ -32,7 +38,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       },
     });
   }
-  const body = await buildWorkbook(data.home, data.rows);
+  const body = await buildWorkbook(home, data.rows);
   return new NextResponse(new Uint8Array(body), {
     headers: {
       ...headers,
