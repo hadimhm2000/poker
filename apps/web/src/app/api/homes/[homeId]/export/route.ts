@@ -38,7 +38,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       },
     });
   }
-  const body = await buildWorkbook(home, data.rows);
+  const body = await buildWorkbook(home, data.rows, { gamesCount: data.gamesCount });
   return new NextResponse(new Uint8Array(body), {
     headers: {
       ...headers,

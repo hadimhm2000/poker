@@ -158,12 +158,16 @@ function settlementRows(players: { name: string; net: number }[]): Settlement {
  * leaderboard sorted by profit, charts, recent games, records, and the overall
  * settlement ("who pays whom") of the closed games.
  */
-export async function buildWorkbook(home: HomeMoney & { name: string; locale: string }, rows: ResultRow[]) {
+export async function buildWorkbook(
+  home: HomeMoney & { name: string; locale: string },
+  rows: ResultRow[],
+  opts: { gamesCount?: number } = {},
+) {
   const locale = home.locale;
   const t = await getTranslations({ locale, namespace: "stats" });
   const th = await getTranslations({ locale, namespace: "history" });
   const tg = await getTranslations({ locale, namespace: "game" });
-  const s = homeStats(rows);
+  const s = homeStats(rows, { gamesCount: opts.gamesCount });
   const v = (n: number) => n / home.unitDivisor;
   const fmt = numFmt(home);
   const netf = netFmt(home);
@@ -171,7 +175,10 @@ export async function buildWorkbook(home: HomeMoney & { name: string; locale: st
   const rtl = dir(locale) === "rtl";
   const nameAlign = { horizontal: (rtl ? "right" : "left") as "right" | "left", vertical: "middle" as const };
   const center = { horizontal: "center" as const, vertical: "middle" as const };
-  const streakFmt = rtl ? `[Color10]"برد "0;[Red]"باخت "0;"-"` : `[Color10]"W"0;[Red]"L"0;"-"`;
+  // The streak column ("W3"/"L2") in the export's language, whatever it is — never a hard-coded
+  // Persian word in an Arabic or French file.
+  const word = (s: string) => s.replace(/"/g, "").trim();
+  const streakFmt = `[Color10]"${word(t("streakWin"))} "0;[Red]"${word(t("streakLoss"))} "0;"-"`;
   const money = (n: number, signed = false) =>
     formatMoney(n, { locale, currency: home.currency, divisor: home.unitDivisor, suffix: home.unitSuffix || undefined, signed });
 

@@ -22,8 +22,9 @@ import { getLocale } from "next-intl/server";
 import { z } from "zod";
 import { redirect } from "@/i18n/navigation";
 import { sha256 } from "@/lib/crypto";
+import { sendInviteEmail } from "@/lib/email-links";
 import { parseAmount } from "@/lib/format";
-import { inviteTokenHash } from "@/lib/live";
+import { inviteToken, inviteTokenHash } from "@/lib/live";
 import { moneySettingsOf } from "@/lib/money-units";
 import { errorCode, withUser } from "@/lib/session";
 import { notifyGameClosed } from "@/telegram/notify";
@@ -101,12 +102,36 @@ export async function newGameAction(form: FormData) {
 
 export async function createInviteAction(form: FormData) {
   const homeId = uuid.parse(form.get("homeId"));
+  const emailRaw = String(form.get("email") ?? "").trim().toLowerCase();
+  if (emailRaw && !z.string().email().max(254).safeParse(emailRaw).success) return go(`/homes/${homeId}`, "INVALID");
+  const email = emailRaw || null;
   await attempt(`/homes/${homeId}`, () => {
     const playerId = form.get("playerId") ? uuid.parse(form.get("playerId")) : null;
     const maxUses = z.coerce.number().int().parse(form.get("maxUses") || 1);
     // The token is an HMAC of the invite id: only its hash is stored, and the host's page
     // can show the link and its QR code again while it is valid.
-    return withUser((tx, user) => createHomeInvite(tx, user.id, { homeId, playerId, maxUses }, inviteTokenHash));
+    return withUser(async (tx, user) => {
+      const inviteId = await createHomeInvite(tx, user.id, { homeId, playerId, maxUses, email }, inviteTokenHash);
+      // The player's own email address, when the host typed one: send the link there so the
+      // person lands on sign-up and their new name replaces the placeholder (0012).
+      if (email) {
+        const [home] = await tx
+          .select({ name: schema.homes.name, locale: schema.homes.locale })
+          .from(schema.homes)
+          .where(eq(schema.homes.id, homeId));
+        const [player] = playerId
+          ? await tx.select({ n: schema.players.displayName }).from(schema.players).where(eq(schema.players.id, playerId))
+          : [];
+        await sendInviteEmail({
+          to: email,
+          locale: home?.locale ?? user.locale,
+          homeName: home?.name ?? "",
+          playerName: player?.n ?? null,
+          token: inviteToken(inviteId),
+        });
+      }
+      return inviteId;
+    });
   });
   return go(`/homes/${homeId}#invites`);
 }

@@ -422,8 +422,37 @@ export async function ledger(tx: Tx, homeId: string) {
     .orderBy(asc(openDebtsView.gameNumber));
 }
 
+/**
+ * Mark one open debt as paid. Only the debtor themselves (the player who owes, with a linked
+ * account) or the host may confirm a payment — nobody else. RLS (payments_mark) enforces the
+ * same rule as a second layer; this check gives a clean FORBIDDEN error instead.
+ */
 export async function markPaid(tx: Tx, userId: string, settlementId: string) {
+  const [row] = await tx
+    .select({ homeId: games.homeId, ownerId: homes.ownerId, debtorUser: players.userId })
+    .from(settlements)
+    .innerJoin(games, eq(games.id, settlements.gameId))
+    .innerJoin(homes, eq(homes.id, games.homeId))
+    .innerJoin(players, eq(players.id, settlements.fromPlayer))
+    .where(eq(settlements.id, id.parse(settlementId)));
+  if (!row) throw new DomainError("NOT_FOUND");
+  if (row.ownerId !== userId && row.debtorUser !== userId) throw new DomainError("FORBIDDEN");
   await tx.insert(debtPayments).values({ settlementId: id.parse(settlementId), kind: "paid", markedBy: userId });
+}
+
+/**
+ * How many closed games the home has, counted from the games table itself. A game that was
+ * force-closed with nobody at the table still consumed a game number, so counting rows of
+ * game entries undercounts (the stats KPI showed 47 while the history said 48). Numbers are
+ * assigned as "last closed + 1" and closed games cannot be deleted, so this also equals the
+ * number of the newest closed game.
+ */
+export async function closedGamesCount(tx: Tx, homeId: string): Promise<number> {
+  const [row] = await tx
+    .select({ n: sql<number>`count(*)::int` })
+    .from(games)
+    .where(and(eq(games.homeId, id.parse(homeId)), eq(games.status, "closed")));
+  return row?.n ?? 0;
 }
 
 /**

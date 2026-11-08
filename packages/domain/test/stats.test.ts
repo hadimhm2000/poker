@@ -70,6 +70,13 @@ describe("homeStats", () => {
     expect(e.leaderboard).toEqual([]);
     expect(e.records.biggestWin).toBeNull();
   });
+
+  it("gamesCount can raise the total for games that had no result rows", () => {
+    // A game force-closed with nobody at the table has a number but no rows.
+    expect(homeStats(rows, { gamesCount: 5 }).totals.games).toBe(5);
+    // Never lower than what the rows themselves prove.
+    expect(homeStats(rows, { gamesCount: 2 }).totals.games).toBe(4);
+  });
 });
 
 describe("headToHead", () => {

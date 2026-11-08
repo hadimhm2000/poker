@@ -126,8 +126,18 @@ export function summarizeGames(rows: readonly ResultRow[]): GameSummary[] {
     .sort(byGameOrder);
 }
 
+export interface HomeStatsOptions {
+  lastGames?: number;
+  /**
+   * The home's true number of closed games (from the games table), when the caller knows it.
+   * Games that were force-closed with no players have no result rows, so counting rows alone
+   * would show one game too few. Falls back to counting the rows' distinct games.
+   */
+  gamesCount?: number;
+}
+
 /** Everything on the statistics page (sheet 3), from closed-game rows only. */
-export function homeStats(rows: readonly ResultRow[], opts: { lastGames?: number } = {}): HomeStats {
+export function homeStats(rows: readonly ResultRow[], opts: HomeStatsOptions = {}): HomeStats {
   const games = summarizeGames(rows);
   const order = new Map(games.map((g, i) => [g.gameId, i]));
   const byPlayer = groupBy(rows, (r) => r.playerId);
@@ -187,7 +197,7 @@ export function homeStats(rows: readonly ResultRow[], opts: { lastGames?: number
   const pots = games.map((g) => g.pot);
   return {
     totals: {
-      games: games.length,
+      games: Math.max(opts.gamesCount ?? games.length, games.length),
       players: byPlayer.size,
       moneyIn: sum(pots),
       biggestPot: pots.length ? Math.max(...pots) : 0,

@@ -108,7 +108,9 @@ describe("an outsider (Bob) sees nothing of Alice's home", () => {
   it("cannot join with a made-up invite or mark debts paid", async () => {
     expect(await pgError(asUser(t.db, bob, (tx) => tx.execute(sql`SELECT app.accept_invite(${randomBytes(32)})`)))).toMatch(/invite is not valid/);
     const [st] = await t.admin`SELECT id FROM settlements LIMIT 1`;
-    expect(await pgError(asUser(t.db, bob, (tx) => markPaid(tx, bob, st!.id)))).toMatch(/row-level security/);
+    // RLS hides the debt from Bob entirely; even with the id he gets nothing (NOT_FOUND
+    // before the app-level debtor-or-host check could even run).
+    expect(await pgError(asUser(t.db, bob, (tx) => markPaid(tx, bob, st!.id)))).toMatch(/NOT_FOUND|FORBIDDEN/);
   });
 
   it("cannot act without a signed-in user", async () => {
@@ -165,11 +167,11 @@ describe("a member (Mina) can read but not change", () => {
     ).toMatch(/row-level security/);
   });
 
-  it("only the creditor of a debt (or the host) can mark it paid", async () => {
-    // Mina lost 50 to Ali; Ali has no account, so only Alice (host) may mark it.
+  it("only the player who owes (or the host) can confirm a payment", async () => {
+    // Mina lost 50 to Ali. Ali has no account, so under the debt-confirmation rule the
+    // debtor herself (Mina, linked to her player) or the host may mark it paid.
     const [st] = await t.admin`SELECT id FROM settlements WHERE from_player = ${pMina}`;
-    expect(await pgError(asUser(t.db, mina, (tx) => markPaid(tx, mina, st!.id)))).toMatch(/row-level security/);
-    await asUser(t.db, alice, (tx) => markPaid(tx, alice, st!.id));
+    await asUser(t.db, mina, (tx) => markPaid(tx, mina, st!.id));
     await asUser(t.db, alice, async (tx) => expect(await ledger(tx, aliceHome)).toEqual([]));
   });
 

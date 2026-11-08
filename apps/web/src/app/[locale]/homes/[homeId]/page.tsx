@@ -15,6 +15,7 @@ import { formatAmount, formatDate } from "@/lib/format";
 import { parseUnitChoice } from "@/lib/money-units";
 import { appOrigin, inviteToken, qrDataUrl } from "@/lib/live";
 import { openPayment } from "@/lib/payment";
+import { pdfEnabled } from "@/lib/pdf";
 import { withUser } from "@/lib/session";
 import { telegramConfigured } from "@/telegram/instance";
 
@@ -236,58 +237,82 @@ export default async function HomePage({
         </ul>
       </section>
 
-      <section className="card">
-        <h2>{t("ledger")}</h2>
+      <section className="card" id="ledger">
+        <div className="row" style={{ justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+          <h2 style={{ margin: 0 }}>{t("ledger")}</h2>
+          {debts.length > 0 && (
+            <span className="row">
+              <Link className="btn small secondary" href={`/homes/${home.id}/debts`}>
+                {t("debtsSheet")}
+              </Link>
+              {pdfEnabled() && isOwner && (
+                <a className="btn small secondary" href={`/api/homes/${home.id}/pdf?view=debts&locale=${locale}`}>
+                  {t("downloadPdf")}
+                </a>
+              )}
+            </span>
+          )}
+        </div>
         {debts.length === 0 ? (
           <p className="muted">{t("noDebts")}</p>
         ) : (
-          <div className="table-wrap">
-            <table>
-              <tbody>
-                {debts.map((d) => {
-                  const info = payment.get(d.to);
-                  return (
-                    <tr key={d.settlementId}>
-                      <td>
-                        {byId.get(d.from)?.avatar && (
-                          <span className="avatar" aria-hidden="true">
-                            {byId.get(d.from)?.avatar}
-                          </span>
-                        )}
-                        {tg("pays", { from: name.get(d.from) ?? "?", to: name.get(d.to) ?? "?" })}
-                      </td>
-                      <td className="end num">
-                        {money(d.amount)}
-                        {d.amount !== d.original && <span className="small muted"> {ti("ofOriginal", { original: money(d.original) })}</span>}
-                      </td>
-                      <td className="muted small">#{d.gameNumber === null ? "" : new Intl.NumberFormat(locale).format(d.gameNumber)}</td>
-                      <td>
-                        {info ? (
-                          <span className="pay-info">
-                            <span className="mono small" dir="ltr">
-                              {info}
+          <>
+            <p className="small muted">{t("ledgerWhoConfirms")}</p>
+            <div className="table-wrap">
+              <table>
+                <tbody>
+                  {debts.map((d) => {
+                    const info = payment.get(d.to);
+                    // Only the player who owes (with their account linked) or the host may
+                    // confirm a payment — nobody else even sees the button.
+                    const canConfirm = isOwner || byId.get(d.from)?.userId === userId;
+                    return (
+                      <tr key={d.settlementId}>
+                        <td>
+                          {byId.get(d.from)?.avatar && (
+                            <span className="avatar" aria-hidden="true">
+                              {byId.get(d.from)?.avatar}
                             </span>
-                            <CopyButton text={info} label={tp("copy")} done={tp("copied")} />
-                          </span>
-                        ) : (
-                          <span className="muted small">{tp("noPaymentInfo")}</span>
-                        )}
-                      </td>
-                      <td className="end">
-                        <form action={markPaidAction}>
-                          <input type="hidden" name="homeId" value={home.id} />
-                          <input type="hidden" name="settlementId" value={d.settlementId} />
-                          <button className="btn small secondary" type="submit">
-                            {t("markPaid")}
-                          </button>
-                        </form>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                          )}
+                          {tg("pays", { from: name.get(d.from) ?? "?", to: name.get(d.to) ?? "?" })}
+                        </td>
+                        <td className="end num">
+                          {money(d.amount)}
+                          {d.amount !== d.original && <span className="small muted"> {ti("ofOriginal", { original: money(d.original) })}</span>}
+                        </td>
+                        <td className="muted small">#{d.gameNumber === null ? "" : new Intl.NumberFormat(locale).format(d.gameNumber)}</td>
+                        <td>
+                          {info ? (
+                            <span className="pay-info">
+                              <span className="mono small" dir="ltr">
+                                {info}
+                              </span>
+                              <CopyButton text={info} label={tp("copy")} done={tp("copied")} />
+                            </span>
+                          ) : (
+                            <span className="muted small">{tp("noPaymentInfo")}</span>
+                          )}
+                        </td>
+                        <td className="end">
+                          {canConfirm ? (
+                            <form action={markPaidAction}>
+                              <input type="hidden" name="homeId" value={home.id} />
+                              <input type="hidden" name="settlementId" value={d.settlementId} />
+                              <button className="btn small secondary" type="submit">
+                                {t("markPaid")}
+                              </button>
+                            </form>
+                          ) : (
+                            <span className="muted small">{t("waitsForConfirm", { name: name.get(d.from) ?? "?" })}</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
         {canWrite && debts.length > 0 && (
           <form action={markAllPaidAction} className="row" style={{ marginBlockStart: 12, flexWrap: "wrap", gap: 8 }}>
@@ -529,6 +554,7 @@ export default async function HomePage({
                     <span>
                       <strong>{i.playerId ? tp("inviteFor", { name: name.get(i.playerId) ?? "?" }) : tp("inviteAnyone")}</strong>{" "}
                       <span className="muted small">
+                        {i.email && <>{tp("inviteSentTo", { email: i.email })} · </>}
                         {tp("inviteUses", { uses: num(i.uses), max: num(i.maxUses) })} ·{" "}
                         {tp("inviteExpires", { date: formatDate(i.expiresAt, locale, true) })}
                       </span>
@@ -588,9 +614,16 @@ export default async function HomePage({
                   ))}
                 </select>
               </label>
+              <label style={{ flex: "1 1 220px" }}>
+                {tp("inviteEmailLabel")}
+                <input name="email" type="email" maxLength={254} dir="ltr" placeholder="name@example.com" />
+              </label>
               <button className="btn secondary" type="submit">
                 {t("inviteCreate")}
               </button>
+              <p className="small muted" style={{ margin: 0, flexBasis: "100%" }}>
+                {tp("inviteEmailHint")}
+              </p>
             </form>
           )}
         </section>

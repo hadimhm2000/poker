@@ -177,6 +177,8 @@ export const invites = pgTable("invites", {
   gameId: uuid("game_id"),
   createdBy: uuid("created_by").notNull(),
   createdAt: ts("created_at").notNull().defaultNow(),
+  /** Where the host emailed this link; informational only (delivery happened or failed). */
+  email: text("email"),
 });
 
 export const subscriptions = pgTable("subscriptions", {

@@ -1,7 +1,7 @@
 // Message builders shared by bot commands (run as the Telegram user, under RLS) and
 // automatic posts (run as the jobs role). Same queries either way; RLS decides what is seen.
 import { type RuleExample, SITUATIONS, exampleWinners, homeStats, parseCards, rulingAnchor, searchRules } from "@poker/domain";
-import { type RulingRow, type Tx, drawDetails, ledger, nightAnswers, resultRows, schema } from "@poker/db";
+import { type RulingRow, type Tx, closedGamesCount, drawDetails, ledger, nightAnswers, resultRows, schema } from "@poker/db";
 import { and, desc, eq } from "@poker/db";
 import { InlineKeyboard } from "grammy";
 import { type HomeMoney, formatAmount, formatDate } from "@/lib/format";
@@ -65,7 +65,7 @@ export async function lastGameText(tx: Tx, home: Home, t: BotT, appUrl: string) 
 /** /stats and /stats <name>. */
 export async function statsText(tx: Tx, home: Home, t: BotT, who?: string) {
   const m = money(home, home.locale);
-  const stats = homeStats(await resultRows(tx, home.id));
+  const stats = homeStats(await resultRows(tx, home.id), { gamesCount: await closedGamesCount(tx, home.id) });
   if (!stats.totals.games) return esc(t("noGames"));
   if (who) {
     const q = who.trim().toLowerCase();

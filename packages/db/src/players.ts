@@ -2,7 +2,7 @@ import { and, desc, eq, gt, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import type { Tx } from "./client";
 import { DomainError } from "./repo";
-import { homeMembers, invites, players } from "./schema";
+import { homeMembers, homes, invites, players } from "./schema";
 
 // Home and player modules: member list and removal, home invite links, avatars, payment
 // details and merging duplicate players. Same rule as repo.ts: run inside asUser().
@@ -49,11 +49,14 @@ export const homeInviteInput = z.object({
   playerId: id.nullable().default(null),
   maxUses: z.number().int().min(1).max(50).default(1),
   days: z.number().int().min(1).max(30).default(7),
+  /** Where the host wants the link emailed (player already in the history). Informational. */
+  email: z.string().trim().toLowerCase().email().max(254).nullable().default(null),
 });
 
 /**
  * A home invite link. The token is derived from the invite id by the caller (`hashFor` returns
  * sha256 of that token), so only the hash is stored and the host's page can redraw link and QR.
+ * With an email the invite is single-use: it is meant for one specific person.
  */
 export async function createHomeInvite(
   tx: Tx,
@@ -66,15 +69,20 @@ export async function createHomeInvite(
     const [p] = await tx.select().from(players).where(and(eq(players.id, v.playerId), eq(players.homeId, v.homeId)));
     if (!p || p.userId || p.mergedInto) throw new DomainError("INVALID");
   }
+  if (v.email) {
+    const [owner] = await tx.select({ ownerId: homes.ownerId }).from(homes).where(eq(homes.id, v.homeId));
+    if (!owner || owner.ownerId !== userId) throw new DomainError("FORBIDDEN");
+  }
   const inviteId = crypto.randomUUID();
   await tx.insert(invites).values({
     id: inviteId,
     homeId: v.homeId,
     playerId: v.playerId,
     tokenHash: hashFor(inviteId),
-    maxUses: v.maxUses,
+    maxUses: v.email ? 1 : v.maxUses,
     expiresAt: new Date(Date.now() + v.days * 864e5),
     createdBy: userId,
+    email: v.email,
   });
   return inviteId;
 }
@@ -90,6 +98,7 @@ export async function activeInvites(tx: Tx, homeId: string) {
       uses: invites.uses,
       maxUses: invites.maxUses,
       createdAt: invites.createdAt,
+      email: invites.email,
     })
     .from(invites)
     .where(
