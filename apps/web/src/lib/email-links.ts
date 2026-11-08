@@ -30,3 +30,17 @@ export async function sendResetEmail(u: { id: string; email: string; locale: str
   const link = `${await appOrigin()}/${u.locale}/reset?token=${token}`;
   return sendMail({ to: u.email, subject: t("resetSubject"), text: t("resetBody", { link }) });
 }
+
+/**
+ * A host emailed an invite to someone whose name is already in the game history. The link
+ * takes them to sign-up; the name they choose there replaces the placeholder name.
+ */
+export async function sendInviteEmail(i: { to: string; locale: string; homeName: string; playerName: string | null; token: string }) {
+  const t = await getTranslations({ locale: i.locale, namespace: "email" });
+  const origin = await appOrigin();
+  const link = `${origin}/${i.locale}/invite/${i.token}`;
+  const text = i.playerName
+    ? t("inviteBodyFor", { home: i.homeName, name: i.playerName, link })
+    : t("inviteBody", { home: i.homeName, link });
+  return sendMail({ to: i.to, subject: t("inviteSubject", { home: i.homeName }), text });
+}

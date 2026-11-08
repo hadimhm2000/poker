@@ -9,7 +9,7 @@ import { rateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
-/** Two-page statistics PDF (like sheets 2 and 3), rendered on the server. Pro, like the other exports. */
+/** Two-page statistics PDF (like sheets 2 and 3) or the one-page unpaid-debts sheet. Pro, like the other exports. */
 export async function GET(request: NextRequest, { params }: { params: Promise<{ homeId: string }> }) {
   if (!pdfEnabled()) return new NextResponse("Not found", { status: 404 });
   const { homeId } = await params;
@@ -17,6 +17,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (!user || user.needsTwoFactor) return new NextResponse("Unauthorized", { status: 401 });
   if (!/^[0-9a-f-]{36}$/i.test(homeId)) return new NextResponse("Not found", { status: 404 });
   if (!rateLimit(`pdf:${user.id}`, 5, 10 * 60e3)) return new NextResponse("Too many requests", { status: 429 });
+  const view = request.nextUrl.searchParams.get("view") === "debts" ? "debts" : "stats";
   const data = await asUser(getDb(), user.id, async (tx) => {
     const loaded = await loadHomeResults(tx, homeId);
     return loaded && { name: loaded.home.name, plan: await homePlan(tx, homeId) };
@@ -30,16 +31,23 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const token = request.cookies.get(SESSION_COOKIE)?.value ?? "";
   let pdf: Buffer;
   try {
-    pdf = await renderPdf(`${origin}/${locale}/homes/${homeId}/stats`, { name: SESSION_COOKIE, value: token });
+    pdf = await renderPdf(`${origin}/${locale}/homes/${homeId}${view === "debts" ? "/debts" : "/stats"}`, {
+      name: SESSION_COOKIE,
+      value: token,
+    });
   } catch (e) {
     console.error("pdf failed", (e as Error).message);
     return new NextResponse("PDF failed", { status: 500 });
   }
-  const safeName = data.name.replace(/[^\p{L}\p{N} _-]/gu, "").trim().slice(0, 40) || "poker-home";
+  const safeName =
+    (data.name + (view === "debts" ? "-debts" : ""))
+      .replace(/[^\p{L}\p{N} _-]/gu, "")
+      .trim()
+      .slice(0, 40) || "poker-home";
   return new NextResponse(new Uint8Array(pdf), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="poker-home.pdf"; filename*=UTF-8''${encodeURIComponent(safeName)}.pdf`,
+      "Content-Disposition": `attachment; filename="poker-home${view === "debts" ? "-debts" : ""}.pdf"; filename*=UTF-8''${encodeURIComponent(safeName)}.pdf`,
       "Cache-Control": "no-store",
       "X-Content-Type-Options": "nosniff",
     },

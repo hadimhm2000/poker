@@ -149,7 +149,21 @@
     "requireConfirmationOption": "Richiedere le conferme dei giocatori con account prima di chiudere",
     "requireConfirmationHint": "Puoi sempre usare «chiudi comunque» nella pagina della partita.",
     "markAllPaid": "Segna tutto come pagato",
-    "markAllPaidHint": "Se questi debiti sono stati pagati fuori dall'app (in contanti o con bonifico), segnali tutti come saldati con un clic."
+    "markAllPaidHint": "Se questi debiti sono stati pagati fuori dall'app (in contanti o con bonifico), segnali tutti come saldati con un clic.",
+    "ledgerWhoConfirms": "Ogni pagamento viene confermato dal giocatore debitore stesso, oppure dall'host.",
+    "waitsForConfirm": "In attesa di {name}",
+    "debtsSheet": "Chi paga chi",
+    "debtsSheetTitle": "Debiti aperti — chi deve pagare chi",
+    "debtsPayer": "Paga",
+    "debtsPayee": "A",
+    "debtsAmount": "Importo",
+    "debtsFromGame": "Dalla partita",
+    "debtsPayTo": "Dati di pagamento",
+    "debtsTotal": "Totale ancora dovuto",
+    "debtsSummary": "Per giocatore",
+    "debtsCount": "{count} debito/i",
+    "downloadPdf": "PDF",
+    "print": "Stampa / PDF"
   },
   "game": {
     "title": "Partita n. {number}",
@@ -435,7 +449,10 @@
     "gamesOf": "Partite di {name}",
     "proOnly": "Disponibile con Pro.",
     "seasonLeaderboard": "Classifica: {season}",
-    "exportPdf": "PDF"
+    "exportPdf": "PDF",
+    "streakWin": "V",
+    "streakLoss": "P",
+    "rank": "Pos."
   },
   "import": {
     "title": "Importa un vecchio foglio",
@@ -547,7 +564,7 @@
     "noDebts": "Nessun debito aperto.",
     "markPaid": "✓ Pagato: {from} → {to}",
     "paidDone": "Segnato come pagato.",
-    "onlyCreditor": "Solo chi deve ricevere, o l'host, può segnarlo.",
+    "onlyCreditor": "Solo il giocatore debitore, oppure l'host, può confermare un pagamento.",
     "nightTitle": "🃏 Serata di gioco: {date}",
     "nightPlace": "Dove: {place}",
     "nightYes": "✅ Vengono: {names}",
@@ -877,7 +894,10 @@
     "verifySubject": "Conferma la tua email per Poker Home",
     "verifyBody": "Ciao,\n\nconferma il tuo indirizzo email per Poker Home aprendo questo link:\n{link}\n\nIl link vale 48 ore. Se non hai creato un account, ignora questa email.",
     "resetSubject": "Reimposta la password di Poker Home",
-    "resetBody": "Ciao,\n\nqualcuno ha chiesto di reimpostare la password del tuo account Poker Home. Per sceglierne una nuova, apri questo link:\n{link}\n\nIl link vale 30 minuti e una sola volta. Se non sei stato tu, ignora questa email; la password resta la stessa."
+    "resetBody": "Ciao,\n\nqualcuno ha chiesto di reimpostare la password del tuo account Poker Home. Per sceglierne una nuova, apri questo link:\n{link}\n\nIl link vale 30 minuti e una sola volta. Se non sei stato tu, ignora questa email; la password resta la stessa.",
+    "inviteSubject": "Invito a {home}",
+    "inviteBody": "Sei stato invitato al gruppo di poker \"{home}\".\nApri questo link per entrare:\n{link}",
+    "inviteBodyFor": "Sei stato invitato al gruppo di poker \"{home}\" come \"{name}\".\nApri questo link per creare il tuo account: il nome che scegli sostituirà \"{name}\" nello storico:\n{link}"
   },
   "people": {
     "membersTitle": "Membri",
@@ -914,7 +934,10 @@
     "mergeDuplicate": "Unisci questo in esso",
     "mergeButton": "Unisci",
     "cardsTitle": "Carte di pagamento",
-    "cardsHint": "Numero di carta o IBAN per i bonifici. Ognuno inserisce la propria carta con «Modifica»; è visibile a tutti i membri del home."
+    "cardsHint": "Numero di carta o IBAN per i bonifici. Ognuno inserisce la propria carta con «Modifica»; è visibile a tutti i membri del home.",
+    "inviteEmailLabel": "Email del giocatore (facoltativo)",
+    "inviteEmailHint": "Con un'email, il link d'invito viene inviato lì e funziona una sola volta. Quando quella persona crea il suo account, il nome che inserisce sostituisce il vecchio nome nello storico.",
+    "inviteSentTo": "inviato a {email}"
   },
   "legal": {
     "termsTitle": "Termini d’uso",

@@ -292,9 +292,10 @@ describe("cross-home debt netting", () => {
   });
 
   it("the rest is paid as usual; a settled debt cannot be netted or paid again", async () => {
-    await asUser(t.db, B, (tx) => markPaid(tx, B, aOwesB));
+    // A owes B the remainder: the debtor (A, who also hosts X) confirms the payment.
+    await asUser(t.db, A, (tx) => markPaid(tx, A, aOwesB));
     expect(await asUser(t.db, A, (tx) => ledger(tx, homeX))).toEqual([]);
-    expect(await pgError(asUser(t.db, B, (tx) => markPaid(tx, B, aOwesB)))).toMatch(/duplicate key|already settled/);
+    expect(await pgError(asUser(t.db, A, (tx) => markPaid(tx, A, aOwesB)))).toMatch(/duplicate key|already settled/);
     expect(await pgError(asUser(t.db, A, (tx) => proposeNetting(tx, aOwesB, bOwesA)))).toMatch(/not possible/);
     // Payments are records: netted ones cannot be removed.
     expect(
@@ -314,7 +315,8 @@ describe("cross-home debt netting", () => {
     const s1 = await settlementOf(x2);
     const s2 = await settlementOf(y2);
     const p = await asUser(t.db, A, (tx) => proposeNetting(tx, s1, s2));
-    await asUser(t.db, A, (tx) => markPaid(tx, A, s2));
+    // s2 is B's debt in Y (qB owes qA): the debtor B confirms it, staling the proposal.
+    await asUser(t.db, B, (tx) => markPaid(tx, B, s2));
     expect(await pgError(asUser(t.db, B, (tx) => answerNetting(tx, p, true)))).toMatch(/more than the open debt/);
     await asUser(t.db, B, (tx) => answerNetting(tx, p, false));
     const [row] = await t.admin`SELECT status FROM netting_proposals WHERE id = ${p}`;

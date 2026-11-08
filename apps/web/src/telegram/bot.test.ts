@@ -280,13 +280,13 @@ describe("a game night from Telegram", () => {
     expect(texts(last)[0]).toMatch(/شماره‌ی ۱/);
   });
 
-  it("/debts: only the creditor (or host) can mark a debt paid", async () => {
+  it("/debts: the player who owes (or the host) can mark a debt paid", async () => {
     const out = await send(message(FRIEND_TG, GROUP, "/debts"));
     const kb = (out[0]!.payload.reply_markup as { inline_keyboard: { callback_data: string }[][] }).inline_keyboard;
     const paid = kb[0]![0]!.callback_data;
-    const denied = await send(callback(FRIEND_TG, paid));
-    expect(denied.find((c) => c.method === "answerCallbackQuery")?.payload.show_alert).toBe(true);
-    const ok = await send(callback(HOST_TG, paid));
+    // Abol owes this debt: under the debt-confirmation rule he confirms his own payment
+    // (the host may too; nobody else has a button).
+    const ok = await send(callback(FRIEND_TG, paid));
     expect(ok.find((c) => c.method === "answerCallbackQuery")?.payload.show_alert).toBeUndefined();
     expect(texts(await send(message(FRIEND_TG, GROUP, "/debts")))[0]).toMatch(/بدهی بازی نیست/);
   });

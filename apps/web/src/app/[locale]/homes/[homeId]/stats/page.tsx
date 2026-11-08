@@ -46,7 +46,11 @@ export default async function StatsPage({
   const { home, seasons } = data;
   const season = seasons.find((x) => x.id === seasonId) ?? null;
   const rows = season ? rowsInPeriod(data.rows, seasonPeriod(season)) : data.rows;
-  const s = homeStats(rows);
+  // The "games" KPI counts every closed game of the home (a game force-closed with no
+  // players still has a number), so it always agrees with the numbers in the history.
+  // Inside a season the count comes from that season's own games.
+  const seasonGames = season ? new Set(rows.map((r) => r.gameId)).size : undefined;
+  const s = homeStats(rows, { gamesCount: season ? seasonGames : data.gamesCount });
   const earned = badges(rows);
   const day = (d: string) => formatDate(new Date(`${d}T12:00:00Z`), locale);
   const money = (n: number, signed = false) => formatAmount(n, home, locale, signed);
@@ -198,33 +202,37 @@ export default async function StatsPage({
             <table className="data">
               <thead>
                 <tr>
-                  <th />
+                  <th className="end">{t("rank")}</th>
                   <th>{t("player")}</th>
                   <th className="end">{t("played")}</th>
                   <th className="end">{t("wins")}</th>
-                  <th className="end">{t("winRate")}</th>
+                  <th className="end fold-sm">{t("winRate")}</th>
                   <th className="end">{t("net")}</th>
-                  <th className="end">{t("average")}</th>
-                  <th className="end">{t("best")}</th>
-                  <th className="end">{t("worst")}</th>
+                  <th className="end fold-sm">{t("average")}</th>
+                  <th className="end fold-sm">{t("best")}</th>
+                  <th className="end fold-sm">{t("worst")}</th>
                 </tr>
               </thead>
               <tbody>
-                {s.leaderboard.map((p) => (
+                {s.leaderboard.map((p, i) => (
                   <tr key={p.playerId}>
-                    <td className="medal">{p.medal ? MEDAL[p.medal] : ""}</td>
+                    {/* The rank of every player (not just medals), like the Excel sheet's # column. */}
+                    <td className={`end num rank${p.medal ? ` medal-${p.medal}` : ""}`}>
+                      {p.medal ? `${MEDAL[p.medal]} ` : ""}
+                      {num(i + 1)}
+                    </td>
                     <td>
                       <Link href={`/homes/${home.id}/players/${p.playerId}`}>{p.name}</Link>
                     </td>
                     <td className="end num">{num(p.games)}</td>
                     <td className="end num">{num(p.wins)}</td>
-                    <td className="end num">{pct(p.winRate)}</td>
+                    <td className="end num fold-sm">{pct(p.winRate)}</td>
                     <td className={`end num ${p.net > 0 ? "win" : p.net < 0 ? "loss" : ""}`}>
                       <strong>{mv(p.net, true)}</strong>
                     </td>
-                    <td className="end num">{mv(p.average, true)}</td>
-                    <td className="end num">{mv(p.best, true)}</td>
-                    <td className="end num">{mv(p.worst, true)}</td>
+                    <td className="end num fold-sm">{mv(p.average, true)}</td>
+                    <td className="end num fold-sm">{mv(p.best, true)}</td>
+                    <td className="end num fold-sm">{mv(p.worst, true)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -353,7 +361,7 @@ export default async function StatsPage({
               </table>
             </section>
 
-            <section className="card">
+            <section className="card table-wrap">
               <h2>{t("records")}</h2>
               <table>
                 <tbody>

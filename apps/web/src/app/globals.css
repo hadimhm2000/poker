@@ -141,6 +141,8 @@ table { width: 100%; border-collapse: collapse; }
 th, td { text-align: start; padding: 8px 6px; border-block-end: 1px solid var(--border); vertical-align: middle; }
 th { font-size: 0.8rem; color: var(--muted); font-weight: 600; }
 td.end, th.end { text-align: end; }
+/* Long words (names, card numbers) never widen a cell past the table. */
+th, td { overflow-wrap: anywhere; }
 
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
 .stat { background: var(--surface-2); border-radius: 10px; padding: 12px; }
@@ -155,6 +157,14 @@ table.data td.num, table.data td.end { white-space: nowrap; }
 /* Numbers line up on their last digit, in both reading directions. */
 table.data td.end, table.data th.end { text-align: right; }
 table.data td .win, table.data td .loss { font-weight: 600; }
+
+/* A narrow phone cannot fit nine columns of amounts, and a half-visible number is worse
+   than a folded-away one: the detail columns hide on small screens (they stay on the
+   player's own page, in Excel and in the PDF); rank, player, games, wins and net remain.
+   Print keeps every column. */
+@media screen and (max-width: 640px) {
+  .fold-sm { display: none; }
+}
 
 .hero { padding-block: 32px 16px; }
 .hero p { font-size: 1.1rem; color: var(--muted); max-width: 40em; }
@@ -196,6 +206,8 @@ table.data td .win, table.data td .loss { font-weight: 600; }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-block-start: 8px; font-size: 0.85rem; }
 .legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--c); margin-inline-end: 6px; vertical-align: -1px; }
 .medal { font-size: 1.05rem; }
+/* Print-only page header (the debts sheet carries its own title when printed). */
+.print-head { display: none; }
 
 @media print {
   @page { size: A4 portrait; margin: 10mm; }
@@ -216,14 +228,25 @@ table.data td .win, table.data td .loss { font-weight: 600; }
   .stats { grid-template-columns: repeat(5, 1fr); gap: 6px; }
   .stat { padding: 6px 8px; border: 1px solid #ddd; }
   .stat .value { font-size: 1rem; }
-  table { font-size: 0.9rem; }
-  th, td { padding: 4px 5px; }
+  /* The PDF is the responsive one: a scroll box on screen would CUT the table off the
+     page, so let it flow and let the table itself shrink to the paper width. */
+  .table-wrap { overflow: visible !important; }
+  table { font-size: 0.82rem; table-layout: auto; width: 100%; }
+  th, td { padding: 3px 4px; }
   table.data thead { display: table-header-group; }
-  table.data thead th { position: static; background: #f1efe9; }
+  table.data thead th { position: static; background: #0f6e4f; color: #fff; font-size: 0.72rem; }
+  table.data td.end, table.data td.num { white-space: normal; }
+  table.data td .n { white-space: nowrap; }
   tr { break-inside: avoid; }
+  tfoot td { border-block-start: 2px solid #0f6e4f; font-weight: 700; }
   a { color: inherit; }
   .print-break { break-before: page; }
-}
+  /* The debts sheet: a clean standalone page with its own header. */
+  .print-head { display: block; border-block-end: 3px solid #0f6e4f; padding-block: 0 6px; margin-block-end: 12px; }
+  .print-head h1 { margin: 0; }
+  .debts-sheet thead th { background: #0f6e4f; color: #fff; }
+  .rank { font-weight: 700; }
+  .rank.medal-1, .rank.medal-2, .rank.medal-3 { background: #f1efe9; }
 }
 
 /* ---- live game ---- */

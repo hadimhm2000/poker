@@ -1,12 +1,12 @@
 import "server-only";
-import { type Tx, eq, resultRows, schema } from "@poker/db";
+import { type Tx, closedGamesCount, eq, resultRows, schema } from "@poker/db";
 
-/** The home (if visible to this user) and all its closed-game rows. */
+/** The home (if visible to this user), all its closed-game rows and how many games it has. */
 export async function loadHomeResults(tx: Tx, homeId: string) {
   if (!/^[0-9a-f-]{36}$/i.test(homeId)) return null;
   const [home] = await tx.select().from(schema.homes).where(eq(schema.homes.id, homeId));
   if (!home) return null;
-  return { home, rows: await resultRows(tx, homeId) };
+  return { home, rows: await resultRows(tx, homeId), gamesCount: await closedGamesCount(tx, homeId) };
 }
 
 /**

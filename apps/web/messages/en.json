@@ -149,7 +149,21 @@
     "requireConfirmationOption": "Require confirmations from players with an account before closing",
     "requireConfirmationHint": "You can always use “close anyway” on the game page.",
     "markAllPaid": "Mark all as paid",
-    "markAllPaidHint": "If these debts were paid outside the app (cash or card transfer), mark them all settled with one click."
+    "markAllPaidHint": "If these debts were paid outside the app (cash or card transfer), mark them all settled with one click.",
+    "ledgerWhoConfirms": "Each payment is confirmed by the player who owes it, or by the host.",
+    "waitsForConfirm": "Waiting for {name}",
+    "debtsSheet": "Who pays whom",
+    "debtsSheetTitle": "Open debts — who must pay whom",
+    "debtsPayer": "Pays",
+    "debtsPayee": "To",
+    "debtsAmount": "Amount",
+    "debtsFromGame": "From game",
+    "debtsPayTo": "Payment details",
+    "debtsTotal": "Total still owed",
+    "debtsSummary": "Per player",
+    "debtsCount": "{count} debt(s)",
+    "downloadPdf": "PDF",
+    "print": "Print / PDF"
   },
   "game": {
     "title": "Game #{number}",
@@ -435,7 +449,10 @@
     "gamesOf": "Games of {name}",
     "proOnly": "Available on Pro.",
     "seasonLeaderboard": "Leaderboard: {season}",
-    "exportPdf": "PDF"
+    "exportPdf": "PDF",
+    "streakWin": "W",
+    "streakLoss": "L",
+    "rank": "#"
   },
   "import": {
     "title": "Import an old spreadsheet",
@@ -547,7 +564,7 @@
     "noDebts": "No open debts.",
     "markPaid": "✓ Paid: {from} → {to}",
     "paidDone": "Marked as paid.",
-    "onlyCreditor": "Only the person being paid, or the host, can mark this.",
+    "onlyCreditor": "Only the player who owes, or the host, can confirm a payment.",
     "nightTitle": "🃏 Game night: {date}",
     "nightPlace": "Where: {place}",
     "nightYes": "✅ Coming: {names}",
@@ -877,7 +894,10 @@
     "verifySubject": "Confirm your email for Poker Home",
     "verifyBody": "Hi,\n\nPlease confirm your email address for Poker Home by opening this link:\n{link}\n\nThe link works for 48 hours. If you did not create an account, ignore this email.",
     "resetSubject": "Reset your Poker Home password",
-    "resetBody": "Hi,\n\nSomeone asked to reset the password of your Poker Home account. To choose a new one, open this link:\n{link}\n\nThe link works for 30 minutes and only once. If it was not you, ignore this email; your password stays the same."
+    "resetBody": "Hi,\n\nSomeone asked to reset the password of your Poker Home account. To choose a new one, open this link:\n{link}\n\nThe link works for 30 minutes and only once. If it was not you, ignore this email; your password stays the same.",
+    "inviteSubject": "Invitation to {home}",
+    "inviteBody": "You have been invited to the poker home \"{home}\".\nOpen this link to join:\n{link}",
+    "inviteBodyFor": "You have been invited to the poker home \"{home}\" as \"{name}\".\nOpen this link to create your account — the name you choose will replace \"{name}\" in the history:\n{link}"
   },
   "people": {
     "membersTitle": "Members",
@@ -914,7 +934,10 @@
     "mergeDuplicate": "Merge this one into it",
     "mergeButton": "Merge",
     "cardsTitle": "Payment cards",
-    "cardsHint": "Card number or IBAN for transfers. Everyone enters their own card via \"Edit\"; it is visible to all members of this home."
+    "cardsHint": "Card number or IBAN for transfers. Everyone enters their own card via \"Edit\"; it is visible to all members of this home.",
+    "inviteEmailLabel": "Player's email (optional)",
+    "inviteEmailHint": "With an email, the invite link is sent there and works once. When that person creates their account, the name they enter replaces the old name in the history.",
+    "inviteSentTo": "sent to {email}"
   },
   "legal": {
     "termsTitle": "Terms of use",

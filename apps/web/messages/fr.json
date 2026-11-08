@@ -149,7 +149,21 @@
     "requireConfirmationOption": "Exiger les confirmations des joueurs avec compte avant de fermer",
     "requireConfirmationHint": "Vous pouvez toujours utiliser « fermer quand même » sur la page de la partie.",
     "markAllPaid": "Tout marquer comme payé",
-    "markAllPaidHint": "Si ces dettes ont été payées hors de l'appli (en espèces ou par virement), marquez-les toutes comme réglées en un clic."
+    "markAllPaidHint": "Si ces dettes ont été payées hors de l'appli (en espèces ou par virement), marquez-les toutes comme réglées en un clic.",
+    "ledgerWhoConfirms": "Chaque paiement est confirmé par le joueur redevable lui-même, ou par l'hôte.",
+    "waitsForConfirm": "En attente de {name}",
+    "debtsSheet": "Qui doit payer qui",
+    "debtsSheetTitle": "Dettes ouvertes — qui doit payer qui",
+    "debtsPayer": "Paie",
+    "debtsPayee": "À",
+    "debtsAmount": "Montant",
+    "debtsFromGame": "Depuis la partie",
+    "debtsPayTo": "Coordonnées de paiement",
+    "debtsTotal": "Total encore dû",
+    "debtsSummary": "Par joueur",
+    "debtsCount": "{count} dette(s)",
+    "downloadPdf": "PDF",
+    "print": "Imprimer / PDF"
   },
   "game": {
     "title": "Partie n° {number}",
@@ -435,7 +449,10 @@
     "gamesOf": "Parties de {name}",
     "proOnly": "Disponible avec Pro.",
     "seasonLeaderboard": "Classement : {season}",
-    "exportPdf": "PDF"
+    "exportPdf": "PDF",
+    "streakWin": "V",
+    "streakLoss": "D",
+    "rank": "N°"
   },
   "import": {
     "title": "Importer un ancien tableau",
@@ -547,7 +564,7 @@
     "noDebts": "Aucune dette ouverte.",
     "markPaid": "✓ Payé : {from} → {to}",
     "paidDone": "Marqué comme payé.",
-    "onlyCreditor": "Seul le créancier ou l'hôte peut marquer ceci.",
+    "onlyCreditor": "Seul le joueur redevable, ou l'hôte, peut confirmer un paiement.",
     "nightTitle": "🃏 Soirée poker : {date}",
     "nightPlace": "Où : {place}",
     "nightYes": "✅ Viennent : {names}",
@@ -877,7 +894,10 @@
     "verifySubject": "Confirmez votre e-mail pour Poker Home",
     "verifyBody": "Bonjour,\n\nConfirmez votre adresse e-mail pour Poker Home en ouvrant ce lien :\n{link}\n\nLe lien est valable 48 heures. Si vous n’avez pas créé de compte, ignorez cet e-mail.",
     "resetSubject": "Réinitialisez votre mot de passe Poker Home",
-    "resetBody": "Bonjour,\n\nQuelqu’un a demandé à réinitialiser le mot de passe de votre compte Poker Home. Pour en choisir un nouveau, ouvrez ce lien :\n{link}\n\nLe lien est valable 30 minutes et une seule fois. Si ce n’était pas vous, ignorez cet e-mail ; votre mot de passe reste inchangé."
+    "resetBody": "Bonjour,\n\nQuelqu’un a demandé à réinitialiser le mot de passe de votre compte Poker Home. Pour en choisir un nouveau, ouvrez ce lien :\n{link}\n\nLe lien est valable 30 minutes et une seule fois. Si ce n’était pas vous, ignorez cet e-mail ; votre mot de passe reste inchangé.",
+    "inviteSubject": "Invitation à {home}",
+    "inviteBody": "Vous êtes invité au cercle de poker « {home} ».\nOuvrez ce lien pour rejoindre :\n{link}",
+    "inviteBodyFor": "Vous êtes invité au cercle de poker « {home} » en tant que « {name} ».\nOuvrez ce lien pour créer votre compte — le nom que vous choisissez remplacera « {name} » dans l'historique :\n{link}"
   },
   "people": {
     "membersTitle": "Membres",
@@ -914,7 +934,10 @@
     "mergeDuplicate": "Fusionner celui-ci dedans",
     "mergeButton": "Fusionner",
     "cardsTitle": "Cartes de paiement",
-    "cardsHint": "Numéro de carte ou IBAN pour les virements. Chacun saisit sa carte via « Modifier » ; elle est visible par tous les membres du home."
+    "cardsHint": "Numéro de carte ou IBAN pour les virements. Chacun saisit sa carte via « Modifier » ; elle est visible par tous les membres du home.",
+    "inviteEmailLabel": "E-mail du joueur (facultatif)",
+    "inviteEmailHint": "Avec un e-mail, le lien d'invitation y est envoyé et ne sert qu'une fois. Quand cette personne crée son compte, le nom qu'elle saisit remplace l'ancien nom de l'historique.",
+    "inviteSentTo": "envoyé à {email}"
   },
   "legal": {
     "termsTitle": "Conditions d’utilisation",

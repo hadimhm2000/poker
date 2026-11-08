@@ -149,7 +149,21 @@
     "requireConfirmationOption": "Exigir confirmaciones de los jugadores con cuenta antes de cerrar",
     "requireConfirmationHint": "Siempre puedes usar «cerrar de todos modos» en la página de la partida.",
     "markAllPaid": "Marcar todo como pagado",
-    "markAllPaidHint": "Si estas deudas se pagaron fuera de la app (en efectivo o por transferencia), márcalas todas como saldadas con un clic."
+    "markAllPaidHint": "Si estas deudas se pagaron fuera de la app (en efectivo o por transferencia), márcalas todas como saldadas con un clic.",
+    "ledgerWhoConfirms": "Cada pago lo confirma el propio jugador que debe, o el anfitrión.",
+    "waitsForConfirm": "Esperando a {name}",
+    "debtsSheet": "Quién paga a quién",
+    "debtsSheetTitle": "Deudas pendientes — quién debe pagar a quién",
+    "debtsPayer": "Paga",
+    "debtsPayee": "A",
+    "debtsAmount": "Importe",
+    "debtsFromGame": "De la partida",
+    "debtsPayTo": "Datos de pago",
+    "debtsTotal": "Total pendiente",
+    "debtsSummary": "Por jugador",
+    "debtsCount": "{count} deuda(s)",
+    "downloadPdf": "PDF",
+    "print": "Imprimir / PDF"
   },
   "game": {
     "title": "Partida n.º {number}",
@@ -435,7 +449,10 @@
     "gamesOf": "Partidas de {name}",
     "proOnly": "Disponible en Pro.",
     "seasonLeaderboard": "Clasificación: {season}",
-    "exportPdf": "PDF"
+    "exportPdf": "PDF",
+    "streakWin": "V",
+    "streakLoss": "D",
+    "rank": "Puesto"
   },
   "import": {
     "title": "Importar una hoja antigua",
@@ -547,7 +564,7 @@
     "noDebts": "No hay deudas abiertas.",
     "markPaid": "✓ Pagado: {from} → {to}",
     "paidDone": "Marcado como pagado.",
-    "onlyCreditor": "Solo quien cobra, o el anfitrión, puede marcarlo.",
+    "onlyCreditor": "Solo el jugador que debe, o el anfitrión, puede confirmar el pago.",
     "nightTitle": "🃏 Noche de juego: {date}",
     "nightPlace": "Dónde: {place}",
     "nightYes": "✅ Vienen: {names}",
@@ -877,7 +894,10 @@
     "verifySubject": "Confirma tu correo en Poker Home",
     "verifyBody": "Hola:\n\nConfirma tu dirección de correo en Poker Home abriendo este enlace:\n{link}\n\nEl enlace funciona durante 48 horas. Si no creaste una cuenta, ignora este correo.",
     "resetSubject": "Restablece tu contraseña de Poker Home",
-    "resetBody": "Hola:\n\nAlguien pidió restablecer la contraseña de tu cuenta de Poker Home. Para elegir una nueva, abre este enlace:\n{link}\n\nEl enlace funciona durante 30 minutos y una sola vez. Si no fuiste tú, ignora este correo; tu contraseña no cambia."
+    "resetBody": "Hola:\n\nAlguien pidió restablecer la contraseña de tu cuenta de Poker Home. Para elegir una nueva, abre este enlace:\n{link}\n\nEl enlace funciona durante 30 minutos y una sola vez. Si no fuiste tú, ignora este correo; tu contraseña no cambia.",
+    "inviteSubject": "Invitación a {home}",
+    "inviteBody": "Le han invitado al hogar de póker «{home}».\nAbra este enlace para unirse:\n{link}",
+    "inviteBodyFor": "Le han invitado al hogar de póker «{home}» como «{name}».\nAbra este enlace para crear su cuenta: el nombre que elija sustituirá a «{name}» en el historial:\n{link}"
   },
   "people": {
     "membersTitle": "Miembros",
@@ -914,7 +934,10 @@
     "mergeDuplicate": "Fusionar este en él",
     "mergeButton": "Fusionar",
     "cardsTitle": "Tarjetas de pago",
-    "cardsHint": "Número de tarjeta o IBAN para transferencias. Cada uno introduce su tarjeta con «Editar»; es visible para todos los miembros del home."
+    "cardsHint": "Número de tarjeta o IBAN para transferencias. Cada uno introduce su tarjeta con «Editar»; es visible para todos los miembros del home.",
+    "inviteEmailLabel": "Correo del jugador (opcional)",
+    "inviteEmailHint": "Con un correo, el enlace de invitación se envía allí y sirve una sola vez. Cuando esa persona cree su cuenta, el nombre que escriba sustituirá al nombre antiguo del historial.",
+    "inviteSentTo": "enviado a {email}"
   },
   "legal": {
     "termsTitle": "Términos de uso",
