@@ -1,5 +1,8 @@
-/** A player's name with their emoji avatar in front (the avatar is decoration only). */
-export function PlayerName({ name, avatar }: { name: string; avatar?: string | null }) {
+/**
+ * A player's name with their emoji avatar in front (the avatar is decoration only). With a
+ * `rank` the player's place on the home's leaderboard follows the name as a small "#3" chip.
+ */
+export function PlayerName({ name, avatar, rank }: { name: string; avatar?: string | null; rank?: string | null }) {
   return (
     <span className="player-name">
       {avatar && (
@@ -8,6 +11,7 @@ export function PlayerName({ name, avatar }: { name: string; avatar?: string | n
         </span>
       )}
       <bdi>{name}</bdi>
+      {rank && <span className="rank-chip num">{rank}</span>}
     </span>
   );
 }

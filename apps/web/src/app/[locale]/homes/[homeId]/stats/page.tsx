@@ -181,16 +181,19 @@ export default async function StatsPage({
           <div className="stats" style={{ marginBlock: 16 }}>
             {(
               [
-                ["games", num(s.totals.games)],
-                ["players", num(s.totals.players)],
-                ["moneyIn", mv(s.totals.moneyIn)],
-                ["biggestPot", mv(s.totals.biggestPot)],
-                ["averagePot", mv(s.totals.averagePot)],
+                ["games", num(s.totals.games), num(s.totals.games).length],
+                ["players", num(s.totals.players), num(s.totals.players).length],
+                ["moneyIn", mv(s.totals.moneyIn), plain(s.totals.moneyIn).length],
+                ["biggestPot", mv(s.totals.biggestPot), plain(s.totals.biggestPot).length],
+                ["averagePot", mv(s.totals.averagePot), plain(s.totals.averagePot).length],
               ] as const
-            ).map(([k, v]) => (
+            ).map(([k, v, len]) => (
               <div className="stat" key={k}>
                 <div className="label">{t(k)}</div>
-                <div className="value num">{v}</div>
+                {/* Long amounts step the font down so they stay inside their own box. */}
+                <div className="value num" style={len > 12 ? { fontSize: "0.95rem" } : len > 9 ? { fontSize: "1.1rem" } : undefined}>
+                  {v}
+                </div>
                 {unit && (k === "moneyIn" || k === "biggestPot" || k === "averagePot") && <div className="unit">{unit}</div>}
               </div>
             ))}

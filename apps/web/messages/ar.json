@@ -818,6 +818,8 @@
     "brand": "Poker Home",
     "title": "اللعبة رقم {number}",
     "pot": "إجمالي البوت",
+    "players": "اللاعبون",
+    "winner": "فائز الليلة",
     "more": "{count, plural, one {ولاعب آخر} two {ولاعبان آخران} few {و# لاعبين آخرين} many {و# لاعبًا آخر} other {و# لاعب آخر}}",
     "scanToVerify": "امسح للتحقق من هذه النتيجة",
     "heading": "بطاقة النتيجة",
