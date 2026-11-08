@@ -818,6 +818,8 @@
     "brand": "Poker Home",
     "title": "Partita n. {number}",
     "pot": "Piatto totale",
+    "players": "Giocatori",
+    "winner": "Vincitore della serata",
     "more": "e {count, plural, one {# altro giocatore} other {# altri giocatori}}",
     "scanToVerify": "Scansiona per verificare questo risultato",
     "heading": "Scheda del risultato",

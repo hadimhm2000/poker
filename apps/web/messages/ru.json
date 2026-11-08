@@ -818,6 +818,8 @@
     "brand": "Poker Home",
     "title": "Игра №{number}",
     "pot": "Общий банк",
+    "players": "Игроки",
+    "winner": "Победитель вечера",
     "more": "и ещё {count, plural, one {# игрок} few {# игрока} many {# игроков} other {# игрока}}",
     "scanToVerify": "Отсканируйте, чтобы проверить результат",
     "heading": "Карточка результата",

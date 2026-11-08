@@ -527,13 +527,13 @@ export default async function GamePage({
           <h2>{tc("heading")}</h2>
           <p className="small muted">{tc("intro")}</p>
           {/* eslint-disable-next-line @next/next/no-img-element -- a private PNG from our own route */}
-          <img className="result-card-img" src={`/api/games/${game.id}/card`} alt={tc("heading")} width={1080} height={1350} />
+          <img className="result-card-img" src={`/api/games/${game.id}/card?locale=${locale}`} alt={tc("heading")} width={1080} height={1350} />
           <div className="row">
-            <ShareCard src={`/api/games/${game.id}/card?f=story`} label={tc("share")} filename={`poker-home-${game.number}.png`} />
-            <a className="btn small secondary" href={`/api/games/${game.id}/card?download`}>
+            <ShareCard src={`/api/games/${game.id}/card?f=story&locale=${locale}`} label={tc("share")} filename={`poker-home-${game.number}.png`} />
+            <a className="btn small secondary" href={`/api/games/${game.id}/card?download&locale=${locale}`}>
               {tc("post")}
             </a>
-            <a className="btn small secondary" href={`/api/games/${game.id}/card?f=story&download`}>
+            <a className="btn small secondary" href={`/api/games/${game.id}/card?f=story&download&locale=${locale}`}>
               {tc("story")}
             </a>
             <Link className="btn small secondary" href={`/verify/${game.hash}`}>

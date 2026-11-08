@@ -1,5 +1,6 @@
-import { ledger, schema } from "@poker/db";
+import { ledger, resultRows, schema } from "@poker/db";
 import { eq } from "@poker/db";
+import { homeStats } from "@poker/domain";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { ErrorNotice } from "@/components/ErrorNotice";
@@ -35,14 +36,16 @@ export default async function DebtsPage({
     const [home] = await tx.select().from(schema.homes).where(eq(schema.homes.id, homeId));
     if (!home) return null;
     const players = await tx.select().from(schema.players).where(eq(schema.players.homeId, homeId));
-    return { home, players, debts: await ledger(tx, homeId) };
+    return { home, players, debts: await ledger(tx, homeId), results: await resultRows(tx, homeId) };
   });
   if (!data) notFound();
   const { home, players, debts } = data;
+  // Everyone's place on the home's leaderboard (by total profit), shown next to their name.
+  const num = new Intl.NumberFormat(locale);
+  const rankOf = new Map(homeStats(data.results).leaderboard.map((p, i) => [p.playerId, `#${num.format(i + 1)}`]));
   const byId = new Map(players.map((p) => [p.id, p]));
   const payment = new Map(players.map((p) => [p.id, openPayment(p.paymentInfoEnc)]));
   const money = (n: number) => formatAmount(n, { currency: home.currency, unitSuffix: home.unitSuffix, unitDivisor: home.unitDivisor }, locale);
-  const num = new Intl.NumberFormat(locale);
   // One row per payer: their debts grouped and summed, so the summary says what each person
   // still owes in total instead of repeating them once per debt.
   const byPayer = new Map<string, { total: number; count: number }>();
@@ -104,10 +107,10 @@ export default async function DebtsPage({
                   return (
                     <tr key={d.settlementId}>
                       <td>
-                        <PlayerName name={byId.get(d.from)?.displayName ?? "?"} avatar={byId.get(d.from)?.avatar} />
+                        <PlayerName name={byId.get(d.from)?.displayName ?? "?"} avatar={byId.get(d.from)?.avatar} rank={rankOf.get(d.from)} />
                       </td>
                       <td>
-                        <PlayerName name={byId.get(d.to)?.displayName ?? "?"} avatar={byId.get(d.to)?.avatar} />
+                        <PlayerName name={byId.get(d.to)?.displayName ?? "?"} avatar={byId.get(d.to)?.avatar} rank={rankOf.get(d.to)} />
                       </td>
                       <td className="end num">
                         <strong>{money(d.amount)}</strong>
@@ -150,7 +153,7 @@ export default async function DebtsPage({
                   .map(([payerId, g]) => (
                     <li key={payerId} className="row" style={{ justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
                       <span>
-                        <PlayerName name={byId.get(payerId)?.displayName ?? "?"} avatar={byId.get(payerId)?.avatar} />{" "}
+                        <PlayerName name={byId.get(payerId)?.displayName ?? "?"} avatar={byId.get(payerId)?.avatar} rank={rankOf.get(payerId)} />{" "}
                         <span className="muted small">{t("debtsCount", { count: num.format(g.count) })}</span>
                       </span>
                       <span className="loss num">

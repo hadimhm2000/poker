@@ -145,9 +145,12 @@ td.end, th.end { text-align: end; }
 th, td { overflow-wrap: anywhere; }
 
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
-.stat { background: var(--surface-2); border-radius: 10px; padding: 12px; }
-.stat .label { font-size: 0.8rem; color: var(--muted); }
-.stat .value { font-size: 1.35rem; font-weight: 700; }
+/* A long amount (1,234,567,000) must stay INSIDE its box: the page steps the font down by the
+   number's length (see the stats page), and the box never grows past its grid cell. */
+.stat { background: var(--surface-2); border-radius: 10px; padding: 12px; min-width: 0; }
+.stat .label { font-size: 0.8rem; color: var(--muted); overflow-wrap: anywhere; }
+.stat .value { font-size: 1.35rem; font-weight: 700; max-width: 100%; }
+.stat .value .n { max-width: 100%; }
 .stat .unit { font-size: 0.75rem; color: var(--muted); margin-block-start: 2px; }
 .unit-note { margin-block: -4px 8px; }
 table.data { font-size: 0.92rem; }
@@ -283,6 +286,7 @@ dl.small dd { margin-inline-start: 0; }
 
 /* Home members, invites and player profiles */
 .player-name { display: inline-flex; align-items: center; gap: 6px; }
+.rank-chip { font-size: 0.72rem; font-weight: 700; padding: 1px 7px; border-radius: 99px; background: var(--surface-2); color: var(--muted); white-space: nowrap; unicode-bidi: isolate; }
 .avatar { font-size: 1.15em; line-height: 1; margin-inline-end: 4px; }
 .player-name .avatar { margin-inline-end: 0; }
 .player-list > li { padding-block: 4px; }

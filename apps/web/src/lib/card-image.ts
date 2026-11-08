@@ -23,7 +23,12 @@ export interface CardInput {
   date: string;
   potLabel: string;
   pot: string;
-  rows: { name: string; amount: string; sign: -1 | 0 | 1 }[];
+  /** `value` (signed, in smallest units) sizes the thin result bar under each row. */
+  rows: { name: string; amount: string; sign: -1 | 0 | 1; value?: number }[];
+  /** Optional stat chips under the title: how many played, and the night's winner tag. */
+  playersLabel?: string;
+  players?: string;
+  winnerLabel?: string;
   moreLabel: (n: number) => string;
   verifyLabel: string;
   verifyUrl: string;
@@ -32,8 +37,8 @@ export interface CardInput {
 }
 
 const SIZES: Record<CardFormat, { w: number; h: number; maxRows: number }> = {
-  post: { w: 1080, h: 1350, maxRows: 9 },
-  story: { w: 1080, h: 1920, maxRows: 14 },
+  post: { w: 1080, h: 1350, maxRows: 8 },
+  story: { w: 1080, h: 1920, maxRows: 10 },
 };
 
 let fontFiles: string[] | null = null;
@@ -132,16 +137,42 @@ export function cardSvg(input: CardInput, format: CardFormat = "post"): string {
 
   // ---- header ------------------------------------------------------------
   let y = pad + 56;
-  parts.push(text(start, y, 30, input.brand, { anchor: anchorStart, fill: GOLD, weight: 700, spacing: 4 }));
-  y += 96;
-  parts.push(text(start, y, 72, clip(input.homeName, 22), { anchor: anchorStart, weight: 700 }));
+  // Brand pill with two suits, so the card reads as "Poker Home" even when cropped.
+  const brandText = `♠ ${input.brand} ♥`;
+  const pillW = Math.min(w - 2 * pad, 120 + input.brand.length * 22);
+  const pillX = input.rtl ? w - pad - pillW : pad;
+  parts.push(`<rect x="${pillX}" y="${y - 44}" width="${pillW}" height="64" rx="32" fill="rgba(232,193,96,0.12)" stroke="${GOLD_SOFT}" stroke-width="2"/>`);
+  parts.push(text(pillX + pillW / 2, y - 2, 30, brandText, { anchor: "middle", fill: GOLD, weight: 700, spacing: 3, ltr: true }));
+  y += 100;
+  parts.push(text(start, y, 76, clip(input.homeName, 22), { anchor: anchorStart, weight: 700 }));
   y += 66;
   parts.push(text(start, y, 40, `${input.title} · ${input.date}`, { anchor: anchorStart, fill: MIST }));
-  y += 46;
+  y += 40;
   parts.push(
     `<rect x="${pad}" y="${y}" width="${w - 2 * pad}" height="4" rx="2" fill="url(#goldbar)"/>`,
   );
   y += 34;
+
+  // Stat chips: number of players and the pot, side by side (the pot chip also lives in the footer).
+  const hasChips = format === "story" && !!input.playersLabel && !!input.players;
+  if (hasChips && input.playersLabel && input.players) {
+    const chipW2 = (w - 2 * pad - 24) / 2;
+    const chipY = y;
+    const chipH2 = 112;
+    const xs = input.rtl ? [w - pad - chipW2, pad] : [pad, pad + chipW2 + 24];
+    const items: [string, string][] = [
+      [input.playersLabel, input.players],
+      [input.potLabel, input.pot],
+    ];
+    items.forEach(([label, value], k) => {
+      const x0 = xs[k]!;
+      parts.push(`<rect x="${x0}" y="${chipY}" width="${chipW2}" height="${chipH2}" rx="26" fill="url(#chip)" stroke="rgba(232,193,96,0.22)" stroke-width="1.5"/>`);
+      const tx0 = input.rtl ? x0 + chipW2 - 28 : x0 + 28;
+      parts.push(text(tx0, chipY + 42, 27, label, { anchor: anchorStart, fill: MIST }));
+      parts.push(text(tx0, chipY + 92, 46, clip(value, 14), { anchor: anchorStart, weight: 700 }));
+    });
+    y += chipH2 + 30;
+  }
 
   // ---- ranked rows -------------------------------------------------------
   const listed = input.rows.slice(0, input.rows.length > maxRows ? maxRows - 1 : maxRows);
@@ -156,6 +187,7 @@ export function cardSvg(input: CardInput, format: CardFormat = "post"): string {
   const rowH = format === "story" ? Math.max(96, Math.min(170, Math.floor((rowsBottom - rowsTop) / Math.max(n, 1)))) : 84;
   const gap = n ? Math.max(0, (rowsBottom - rowsTop - n * rowH) / (n + 1)) : 0;
   const shown = listed;
+  const maxAbs = Math.max(0, ...input.rows.map((r) => Math.abs(r.value ?? 0)));
   shown.forEach((r, i) => {
     const cy = rowsTop + gap + i * (rowH + gap) + rowH / 2;
     // row chip
@@ -178,15 +210,32 @@ export function cardSvg(input: CardInput, format: CardFormat = "post"): string {
     } else {
       parts.push(text(mx, cy + 12, 34, String(i + 1), { anchor: "middle", fill: "rgba(207,227,216,0.75)", weight: 700, ltr: true }));
     }
-    // name and amount
+    // name, amount and a thin result bar (length = share of the biggest result of the night)
     const nx = input.rtl ? w - pad - 60 : pad + 60;
     const big = i === 0 && champion;
-    parts.push(text(nx, cy + (big ? 17 : 15), big ? 52 : 46, clip(r.name, 20), { anchor: anchorStart, weight: 700 }));
     const color = r.sign > 0 ? WIN : r.sign < 0 ? LOSS : FLAT;
-    parts.push(text(end, cy + (big ? 17 : 15), big ? 52 : 46, r.amount, { anchor: anchorEnd, fill: color, weight: 700, ltr: true }));
+    const base = cy + (big ? 13 : 11);
+    if (big && input.winnerLabel && format === "story") {
+      // A small gold tag sitting on the champion row's top edge.
+      const tagW = Math.min(cardW - 56, 80 + input.winnerLabel.length * 17);
+      const tagX = input.rtl ? cardX + 28 : cardX + cardW - 28 - tagW;
+      const tagY = cy - rowH / 2 + 6 - 30;
+      parts.push(`<rect x="${tagX}" y="${tagY}" width="${tagW}" height="38" rx="19" fill="#0b3a29" stroke="${GOLD}" stroke-width="2"/>`);
+      parts.push(text(tagX + tagW / 2, tagY + 27, 22, input.winnerLabel, { anchor: "middle", fill: GOLD, weight: 700 }));
+    }
+    parts.push(text(nx, base, big ? 52 : 46, clip(r.name, 20), { anchor: anchorStart, weight: 700 }));
+    parts.push(text(end, base, big ? 52 : 46, r.amount, { anchor: anchorEnd, fill: color, weight: 700, ltr: true }));
+    if (format === "story" && r.value !== undefined && maxAbs > 0 && r.sign !== 0) {
+      const trackX = cardX + 28;
+      const trackW = cardW - 56;
+      const barW = Math.max(10, (trackW * Math.abs(r.value)) / maxAbs);
+      const by = cy + rowH / 2 - 24;
+      parts.push(`<rect x="${trackX}" y="${by}" width="${trackW}" height="6" rx="3" fill="rgba(255,255,255,0.06)"/>`);
+      parts.push(`<rect x="${input.rtl ? trackX + trackW - barW : trackX}" y="${by}" width="${barW}" height="6" rx="3" fill="${color}" fill-opacity="0.75"/>`);
+    }
   });
   if (shown.length < input.rows.length) {
-    parts.push(text(start, rowsTop + gap + shown.length * (rowH + gap) + 22, 33, input.moreLabel(input.rows.length - shown.length), { anchor: anchorStart, fill: MIST }));
+    parts.push(text(start, rowsTop + gap + shown.length * (rowH + gap) + 34, 33, input.moreLabel(input.rows.length - shown.length), { anchor: anchorStart, fill: MIST }));
   }
 
   // ---- footer: pot stat + verification stamp ------------------------------
@@ -200,10 +249,16 @@ export function cardSvg(input: CardInput, format: CardFormat = "post"): string {
   const chipH = qr + 16;
   parts.push(`<rect x="${chipX}" y="${qy - 2}" width="${chipW}" height="${chipH}" rx="24" fill="rgba(255,255,255,0.055)"/>`);
   const tx = input.rtl ? chipX + chipW - 30 : chipX + 30;
-  parts.push(text(tx, qy + 54, 31, input.potLabel, { anchor: anchorStart, fill: MIST }));
-  parts.push(text(tx, qy + 124, format === "story" ? 64 : 58, input.pot, { anchor: anchorStart, weight: 700 }));
-  parts.push(text(tx, qy + chipH - 52, 29, input.verifyLabel, { anchor: anchorStart, fill: GOLD }));
-  parts.push(text(tx, qy + chipH - 16, 24, input.hashShort, { anchor: anchorStart, fill: "rgba(159,184,172,0.9)", ltr: true }));
+  if (hasChips) {
+    // The pot already sits in the chips above: the stamp keeps just the verification note.
+    parts.push(text(tx, qy + chipH / 2 - 6, 34, input.verifyLabel, { anchor: anchorStart, fill: GOLD, weight: 700 }));
+    parts.push(text(tx, qy + chipH / 2 + 46, 26, input.hashShort, { anchor: anchorStart, fill: "rgba(159,184,172,0.9)", ltr: true }));
+  } else {
+    parts.push(text(tx, qy + 54, 31, input.potLabel, { anchor: anchorStart, fill: MIST }));
+    parts.push(text(tx, qy + 124, format === "story" ? 64 : 58, input.pot, { anchor: anchorStart, weight: 700 }));
+    parts.push(text(tx, qy + chipH - 52, 29, input.verifyLabel, { anchor: anchorStart, fill: GOLD }));
+    parts.push(text(tx, qy + chipH - 16, 24, input.hashShort, { anchor: anchorStart, fill: "rgba(159,184,172,0.9)", ltr: true }));
+  }
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${parts.join("")}</svg>`;
 }

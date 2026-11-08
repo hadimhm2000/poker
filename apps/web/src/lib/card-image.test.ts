@@ -30,8 +30,8 @@ describe("result card", () => {
     const svg = cardSvg(input, "post");
     expect(svg).not.toContain("<b>");
     expect(svg).toContain("&lt;b&gt;Hadi&lt;/b&gt; &amp; co");
-    // 9 rows fit a post: 8 names and "and 4 more".
-    expect(svg).toContain("و 4 نفر دیگر");
+    // 8 rows fit a post: 7 names and "and 5 more" (12 rows in all).
+    expect(svg).toContain("و 5 نفر دیگر");
     expect(svg).toContain('direction="rtl"');
   });
 });

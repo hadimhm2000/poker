@@ -818,6 +818,8 @@
     "brand": "Poker Home",
     "title": "بازی {number}",
     "pot": "جمع پات",
+    "players": "بازیکنان",
+    "winner": "برنده شب",
     "more": "و {count} نفر دیگر",
     "scanToVerify": "برای تأیید اصالت اسکن کنید",
     "heading": "کارت نتیجه",
