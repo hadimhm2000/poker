@@ -1143,5 +1143,28 @@
     "payerDebts": "Deudas pagadas",
     "payerOpen": "Abiertas",
     "payerDaysValue": "{days} días"
+  },
+  "besthand": {
+    "title": "Mejor mano",
+    "gameHint": "Escalera real, escalera de color y póker de esta partida. Solo los registra el anfitrión.",
+    "homeHint": "Totales de la casa: cuántas veces cada jugador logró una escalera real, escalera de color o póker.",
+    "sheetSubtitle": "Mejores manos registradas y totales de la casa",
+    "recordsTitle": "Registros",
+    "totalsTitle": "Totales de la casa",
+    "game": "Partida",
+    "player": "Jugador",
+    "hand": "Mano",
+    "times": "Veces",
+    "timesValue": "{count}×",
+    "record": "Registrar",
+    "remove": "Quitar",
+    "empty": "Aún no hay ninguna mejor mano registrada.",
+    "royal_flush": "Escalera real",
+    "straight_flush": "Escalera de color",
+    "four_of_a_kind": "Póker",
+    "total": "Total",
+    "totalRow": "Total",
+    "openGame": "Partida abierta",
+    "hostHint": "Solo el anfitrión puede registrar o quitar, incluso con la partida cerrada."
   }
 }

@@ -1,8 +1,9 @@
-import { AVATARS, activeInvites, homePlan, homeSettings, ledger, listNetting, memberList, nettingCandidates, schema } from "@poker/db";
+import { AVATARS, activeInvites, bestHandTotals, homeBestHands, homePlan, homeSettings, ledger, listNetting, memberList, nettingCandidates, schema } from "@poker/db";
 import { asc, desc, eq, sql } from "@poker/db";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { addPlayerAction, createInviteAction, houseRulesAction, markAllPaidAction, markPaidAction, moneySettingsAction, newGameAction } from "@/app/actions/homes";
+import { recordBestHandAction, deleteBestHandAction } from "@/app/actions/besthands";
 import { mergePlayersAction, playerProfileAction, removeMemberAction, revokeInviteAction } from "@/app/actions/players";
 import { answerNettingAction, cancelNettingAction, homeOptionsAction, proposeNettingAction } from "@/app/actions/ideas";
 import { connectGroupAction, disconnectGroupAction } from "@/app/actions/telegram";
@@ -39,6 +40,7 @@ export default async function HomePage({
   const tp = await getTranslations("people");
   const tb = await getTranslations("billing");
   const ti = await getTranslations("ideas");
+  const th = await getTranslations("besthand");
 
   const data = await withUser(async (tx, user) => {
     const [home] = await tx.select().from(schema.homes).where(eq(schema.homes.id, homeId));
@@ -63,10 +65,11 @@ export default async function HomePage({
     // Cross-home netting: only the two people involved ever see these.
     const candidates = (await nettingCandidates(tx, user.id)).filter((c) => c.mine.homeId === homeId || c.theirs.homeId === homeId);
     const proposals = await listNetting(tx, { homeId, status: "pending" });
-    return { home, players, games, debts, members, invites, candidates, proposals, isOwner, userId: user.id, atGameLimit };
+    const bestHands = await homeBestHands(tx, homeId);
+    return { home, players, games, debts, members, invites, candidates, proposals, bestHands, isOwner, userId: user.id, atGameLimit };
   });
   if (!data) notFound();
-  const { home, players, games, debts, members, candidates, proposals, isOwner, userId, atGameLimit } = data;
+  const { home, players, games, debts, members, candidates, proposals, bestHands, isOwner, userId, atGameLimit } = data;
   const settings = homeSettings(home.settings);
   const name = new Map(players.map((p) => [p.id, p.displayName]));
   const byId = new Map(players.map((p) => [p.id, p]));
@@ -123,6 +126,9 @@ export default async function HomePage({
     }),
   );
   const storyAvailable = !!process.env.ANTHROPIC_API_KEY;
+  // Best hands: the home's own totals (who hit what, how often), newest record first.
+  const handTotals = bestHandTotals(bestHands);
+  const handNum = (n: number) => new Intl.NumberFormat(locale).format(n);
 
   return (
     <>
@@ -324,6 +330,134 @@ export default async function HomePage({
           </form>
         )}
       </section>
+
+      {(bestHands.length > 0 || canWrite) && (
+        <section className="card table-wrap" id="besthand">
+          <h2>{th("title")}</h2>
+          <p className="small muted">{th("homeHint")}</p>
+          {bestHands.length > 0 ? (
+            <>
+              <table>
+                <thead>
+                  <tr>
+                    <th>{th("game")}</th>
+                    <th>{tg("player")}</th>
+                    <th>{th("hand")}</th>
+                    <th className="end">{th("times")}</th>
+                    {canWrite && <th />}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...bestHands].reverse().map((b) => (
+                    <tr key={b.id}>
+                      <td>
+                        <Link href={`/games/${b.gameId}`}>{b.number ? tg("title", { number: handNum(b.number) }) : th("openGame")}</Link>{" "}
+                        <span className="muted small">{formatDate(b.at, locale)}</span>
+                      </td>
+                      <td>
+                        <PlayerName name={b.name} avatar={byId.get(b.playerId)?.avatar} />
+                      </td>
+                      <td>{th(b.hand)}</td>
+                      <td className="end num">{th("timesValue", { count: handNum(b.times) })}</td>
+                      {canWrite && (
+                        <td className="end">
+                          <form action={deleteBestHandAction}>
+                            <input type="hidden" name="id" value={b.id} />
+                            <input type="hidden" name="gameId" value={b.gameId} />
+                            <input type="hidden" name="homeId" value={home.id} />
+                            <input type="hidden" name="from" value="home" />
+                            <button className="linklike" type="submit" aria-label={th("remove")}>
+                              ✕
+                            </button>
+                          </form>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <table style={{ marginBlockStart: 16 }}>
+                <thead>
+                  <tr>
+                    <th>{tg("player")}</th>
+                    <th className="end">{th("royal_flush")}</th>
+                    <th className="end">{th("straight_flush")}</th>
+                    <th className="end">{th("four_of_a_kind")}</th>
+                    <th className="end">{th("total")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {handTotals.players.map((p) => (
+                    <tr key={p.playerId}>
+                      <td>
+                        <PlayerName name={p.name} avatar={byId.get(p.playerId)?.avatar} />
+                      </td>
+                      <td className="end num">{p.counts.royal_flush ? handNum(p.counts.royal_flush) : "—"}</td>
+                      <td className="end num">{p.counts.straight_flush ? handNum(p.counts.straight_flush) : "—"}</td>
+                      <td className="end num">{p.counts.four_of_a_kind ? handNum(p.counts.four_of_a_kind) : "—"}</td>
+                      <td className="end num">
+                        <strong>{handNum(p.total)}</strong>
+                      </td>
+                    </tr>
+                  ))}
+                  <tr>
+                    <td>
+                      <strong>{th("totalRow")}</strong>
+                    </td>
+                    <td className="end num">
+                      <strong>{handNum(handTotals.byHand.royal_flush)}</strong>
+                    </td>
+                    <td className="end num">
+                      <strong>{handNum(handTotals.byHand.straight_flush)}</strong>
+                    </td>
+                    <td className="end num">
+                      <strong>{handNum(handTotals.byHand.four_of_a_kind)}</strong>
+                    </td>
+                    <td className="end num">
+                      <strong>{handNum(handTotals.total)}</strong>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </>
+          ) : (
+            <p className="muted">{th("empty")}</p>
+          )}
+          {canWrite && games.length > 0 && (
+            <form action={recordBestHandAction} className="row" style={{ marginBlockStart: 12, flexWrap: "wrap", gap: 8 }}>
+              <input type="hidden" name="homeId" value={home.id} />
+              <input type="hidden" name="from" value="home" />
+              <select name="gameId" required aria-label={th("game")}>
+                {games.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.number ? tg("title", { number: handNum(g.number) }) : tg("untitled")} · {formatDate(g.closedAt ?? g.createdAt, locale)}
+                  </option>
+                ))}
+              </select>
+              <select name="playerId" required aria-label={tg("player")}>
+                {active.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.displayName}
+                  </option>
+                ))}
+              </select>
+              <select name="hand" required aria-label={th("hand")}>
+                <option value="royal_flush">{th("royal_flush")}</option>
+                <option value="straight_flush">{th("straight_flush")}</option>
+                <option value="four_of_a_kind">{th("four_of_a_kind")}</option>
+              </select>
+              <label className="row" style={{ alignItems: "center", gap: 6 }}>
+                {th("times")}
+                <input name="times" type="number" min={1} max={99} step={1} defaultValue={1} required style={{ width: 84 }} dir="ltr" />
+              </label>
+              <button className="btn secondary" type="submit">
+                {th("record")}
+              </button>
+              <span className="small muted">{th("hostHint")}</span>
+            </form>
+          )}
+        </section>
+      )}
 
       {(candidates.length > 0 || proposals.length > 0) && (
         <section className="card stack" id="netting">

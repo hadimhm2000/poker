@@ -14,6 +14,7 @@ import {
   primaryKey,
   text,
   timestamp,
+  unique,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -376,3 +377,22 @@ export const gameStories = pgTable("game_stories", {
   model: text("model").notNull(),
   createdAt: ts("created_at").notNull().defaultNow(),
 });
+
+// ---------------------------------------------------------------- best hands (0014)
+
+/** The host's record of who hit a royal flush, straight flush or four of a kind in a game. */
+export const bestHands = pgTable(
+  "best_hands",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    gameId: uuid("game_id").notNull(),
+    homeId: uuid("home_id").notNull(),
+    playerId: uuid("player_id").notNull(),
+    hand: text("hand", { enum: ["royal_flush", "straight_flush", "four_of_a_kind"] }).notNull(),
+    /** How many times that player hit this hand in this game. */
+    times: integer("times").notNull().default(1),
+    recordedBy: uuid("recorded_by").notNull(),
+    createdAt: ts("created_at").notNull().defaultNow(),
+  },
+  (t) => [unique("best_hands_game_player_hand").on(t.gameId, t.playerId, t.hand)],
+);

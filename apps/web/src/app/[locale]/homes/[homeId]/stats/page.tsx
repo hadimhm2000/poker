@@ -1,4 +1,4 @@
-import { goodPayerIndex, homePlan, listSeasons, seasonPeriod } from "@poker/db";
+import { bestHandTotals, goodPayerIndex, homeBestHands, homePlan, listSeasons, seasonPeriod } from "@poker/db";
 import { badges, formatMoney, homeStats, rowsInPeriod } from "@poker/domain";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -30,6 +30,7 @@ export default async function StatsPage({
   const tse = await getTranslations("seasons");
   const tb = await getTranslations("badges");
   const ti = await getTranslations("ideas");
+  const th = await getTranslations("besthand");
   const data = await withUser(async (tx, user) => {
     const loaded = await loadHomeResults(tx, homeId);
     return (
@@ -38,6 +39,7 @@ export default async function StatsPage({
         plan: await homePlan(tx, homeId),
         seasons: await listSeasons(tx, homeId),
         payers: await goodPayerIndex(tx, homeId),
+        bestHands: await homeBestHands(tx, homeId),
         canWrite: loaded.home.ownerId === user.id && !loaded.home.readOnly,
       }
     );
@@ -63,6 +65,9 @@ export default async function StatsPage({
   const num = (n: number) => new Intl.NumberFormat(locale).format(n);
   const pct = (n: number) => new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 0 }).format(n);
   const slots = playerSlots(rows);
+  // Best hands are the home's own totals: not filtered by season (they are the home's
+  // all-time record, like the Excel sheet's best-hand page).
+  const handTotals = bestHandTotals(data.bestHands);
 
   // Lines for the most regular players (fixed colour per player); everyone is in the table.
   const regulars = [...s.leaderboard].sort((a, b) => b.games - a.games).slice(0, MAX_LINES).map((p) => p.playerId);
@@ -426,6 +431,57 @@ export default async function StatsPage({
           </div>
         </>
       )}
+
+          {data.bestHands.length > 0 && (
+            <section className="card table-wrap" id="besthand">
+              <h2>{th("title")}</h2>
+              <p className="small muted">{th("homeHint")}</p>
+              <table className="data">
+                <thead>
+                  <tr>
+                    <th>{t("player")}</th>
+                    <th className="end">{th("royal_flush")}</th>
+                    <th className="end">{th("straight_flush")}</th>
+                    <th className="end">{th("four_of_a_kind")}</th>
+                    <th className="end">{th("total")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {handTotals.players.map((p) => (
+                    <tr key={p.playerId}>
+                      <td>
+                        <Link href={`/homes/${home.id}/players/${p.playerId}`}>{p.name}</Link>
+                      </td>
+                      <td className="end num">{p.counts.royal_flush ? num(p.counts.royal_flush) : "—"}</td>
+                      <td className="end num">{p.counts.straight_flush ? num(p.counts.straight_flush) : "—"}</td>
+                      <td className="end num">{p.counts.four_of_a_kind ? num(p.counts.four_of_a_kind) : "—"}</td>
+                      <td className="end num">
+                        <strong>{num(p.total)}</strong>
+                      </td>
+                    </tr>
+                  ))}
+                  <tr>
+                    <td>
+                      <strong>{th("totalRow")}</strong>
+                    </td>
+                    <td className="end num">
+                      <strong>{num(handTotals.byHand.royal_flush)}</strong>
+                    </td>
+                    <td className="end num">
+                      <strong>{num(handTotals.byHand.straight_flush)}</strong>
+                    </td>
+                    <td className="end num">
+                      <strong>{num(handTotals.byHand.four_of_a_kind)}</strong>
+                    </td>
+                    <td className="end num">
+                      <strong>{num(handTotals.total)}</strong>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </section>
+          )}
+
     </>
   );
 }

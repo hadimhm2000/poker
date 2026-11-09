@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import postgres from "postgres";
 
 const dir = join(dirname(fileURLToPath(import.meta.url)), "..", "migrations");
@@ -26,7 +26,10 @@ export async function migrate(url: string): Promise<string[]> {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// pathToFileURL: on Windows, process.argv[1] is "C:\...\migrate.ts" while import.meta.url is
+// "file:///C:/.../migrate.ts" — a plain `file://${argv}` never matches there, so the script
+// silently did nothing. pathToFileURL builds the same shape on every platform.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const url = process.env.DATABASE_URL_ADMIN ?? process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL_ADMIN is not set");
   migrate(url).then((a) => console.log(a.length ? `applied: ${a.join(", ")}` : "up to date"));

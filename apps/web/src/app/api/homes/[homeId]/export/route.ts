@@ -1,4 +1,4 @@
-import { asUser, homePlan } from "@poker/db";
+import { asUser, homeBestHands, homePlan } from "@poker/db";
 import { type NextRequest, NextResponse } from "next/server";
 import { locales } from "@/i18n/routing";
 import { currentUser } from "@/lib/auth";
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const data = await asUser(getDb(), user.id, async (tx) => {
     const loaded = await loadHomeResults(tx, homeId);
-    return loaded && { ...loaded, plan: await homePlan(tx, homeId) };
+    return loaded && { ...loaded, plan: await homePlan(tx, homeId), bestHands: await homeBestHands(tx, homeId) };
   });
   if (!data) return new NextResponse("Not found", { status: 404 });
   if (data.plan !== "pro") return new NextResponse("Exports are a Pro feature", { status: 402 });
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       },
     });
   }
-  const body = await buildWorkbook(home, data.rows, { gamesCount: data.gamesCount });
+  const body = await buildWorkbook(home, data.rows, { gamesCount: data.gamesCount, bestHands: data.bestHands });
   return new NextResponse(new Uint8Array(body), {
     headers: {
       ...headers,

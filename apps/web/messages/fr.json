@@ -1143,5 +1143,28 @@
     "payerDebts": "Dettes payées",
     "payerOpen": "Ouvertes",
     "payerDaysValue": "{days} jours"
+  },
+  "besthand": {
+    "title": "Meilleure main",
+    "gameHint": "Quinte flush royale, quinte flush et carré de cette partie. Seul l'hôte enregistre.",
+    "homeHint": "Le total du home : combien de fois chaque joueur a fait quinte flush royale, quinte flush ou carré.",
+    "sheetSubtitle": "Meilleures mains enregistrées et totaux du home",
+    "recordsTitle": "Enregistrements",
+    "totalsTitle": "Totaux du home",
+    "game": "Partie",
+    "player": "Joueur",
+    "hand": "Main",
+    "times": "Nombre",
+    "timesValue": "{count}×",
+    "record": "Enregistrer",
+    "remove": "Supprimer",
+    "empty": "Aucune meilleure main enregistrée pour l'instant.",
+    "royal_flush": "Quinte flush royale",
+    "straight_flush": "Quinte flush",
+    "four_of_a_kind": "Carré",
+    "total": "Total",
+    "totalRow": "Total",
+    "openGame": "Partie ouverte",
+    "hostHint": "Seul l'hôte peut enregistrer ou supprimer, même après la clôture de la partie."
   }
 }

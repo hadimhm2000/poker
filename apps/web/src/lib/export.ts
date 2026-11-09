@@ -1,4 +1,5 @@
 import "server-only";
+import { HANDS, type HomeBestHandRow } from "@poker/db";
 import type { ResultRow } from "@poker/domain";
 import { formatMoney, homeStats } from "@poker/domain";
 import ExcelJS from "exceljs";
@@ -154,19 +155,19 @@ function settlementRows(players: { name: string; net: number }[]): Settlement {
 
 /**
  * Two sheets shaped like the original workbook: history (sheet 2) and statistics
- * (sheet 3). The statistics sheet mirrors the reference workbook: KPI cards, a
- * leaderboard sorted by profit, charts, recent games, records, and the overall
- * settlement ("who pays whom") of the closed games.
+ * (sheet 3), plus the best-hand sheet (بهترین دست, 0014) with the host's records and
+ * the home's totals.
  */
 export async function buildWorkbook(
   home: HomeMoney & { name: string; locale: string },
   rows: ResultRow[],
-  opts: { gamesCount?: number } = {},
+  opts: { gamesCount?: number; bestHands?: HomeBestHandRow[] } = {},
 ) {
   const locale = home.locale;
   const t = await getTranslations({ locale, namespace: "stats" });
   const th = await getTranslations({ locale, namespace: "history" });
   const tg = await getTranslations({ locale, namespace: "game" });
+  const tbh = await getTranslations({ locale, namespace: "besthand" });
   const s = homeStats(rows, { gamesCount: opts.gamesCount });
   const v = (n: number) => n / home.unitDivisor;
   const fmt = numFmt(home);
@@ -205,6 +206,107 @@ export async function buildWorkbook(
     } catch {
       return wb.addWorksheet(`${name} log`, options);
     }
+  };
+
+  /** The best-hand sheet (بهترین دست): every record, then the home's totals. Always added,
+   * even when the home has no closed game yet, so the export always carries the title. */
+  const addBestHandSheet = () => {
+    const bh = opts.bestHands ?? [];
+    const bhs = addSheet(tbh("title"), {
+      views: [{ rightToLeft: rtl, showGridLines: false }],
+      properties: { tabColor: { argb: GREEN } },
+      pageSetup: { orientation: "portrait", paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0 },
+    });
+    const bhWidths: Record<number, number> = { 1: 2, 2: 10, 3: 16, 4: 20, 5: 18, 6: 9 };
+    for (const [c, w] of Object.entries(bhWidths)) bhs.getColumn(Number(c)).width = w;
+    put(bhs, 1, 2, { value: `${tbh("title")} · ${safeText(home.name)}`, font: { size: 20, bold: true, color: { argb: INK } } });
+    bhs.getRow(1).height = 30;
+    put(bhs, 2, 2, { value: tbh("sheetSubtitle"), font: { size: 10, color: { argb: GRAY } } });
+
+    if (bh.length === 0) {
+      put(bhs, 4, 2, { value: tbh("empty"), font: { size: 10, italic: true, color: { argb: GRAY } } });
+      applyFont(bhs);
+      return;
+    }
+
+    // Records: one row per recorded hand, oldest game first (like the history sheet).
+    put(bhs, 4, 2, { value: tbh("recordsTitle"), font: { size: 13, bold: true, color: { argb: GREEN } } });
+    const BH_HEAD = 5;
+    const bhHeaders = ["#", th("date"), tg("player"), tbh("hand"), tbh("times")];
+    bhHeaders.forEach((h, i) =>
+      put(bhs, BH_HEAD, 2 + i, {
+        value: h,
+        font: { size: 10, bold: true, color: { argb: "FFFFFFFF" } },
+        fill: { argb: GREEN },
+        alignment: center,
+      }),
+    );
+    bhs.getRow(BH_HEAD).height = 20;
+    bh.forEach((r, i) => {
+      const row = BH_HEAD + 1 + i;
+      const zebra = { argb: i % 2 === 1 ? ZEBRA : "FFFFFFFF" };
+      const border = { bottom: { style: "thin" as const, color: { argb: LINE } } };
+      const cells: CellStyle[] = [
+        { value: r.number ? `#${r.number}` : tbh("openGame"), alignment: center, fill: zebra, border },
+        { value: formatDate(r.at, locale), alignment: center, fill: zebra, border },
+        { value: safeText(r.name), font: { bold: true, color: { argb: INK } }, alignment: nameAlign, fill: zebra, border },
+        { value: tbh(r.hand), alignment: nameAlign, fill: zebra, border },
+        { value: r.times, numFmt: "0", alignment: center, font: { bold: true, color: { argb: GREEN } }, fill: zebra, border },
+      ];
+      cells.forEach((style, c) => put(bhs, row, 2 + c, style));
+      bhs.getRow(row).height = 16;
+    });
+
+    // Totals: per player and per hand kind, like the statistics page's best-hand table.
+    const byPlayer = new Map<string, { name: string; counts: Record<string, number> }>();
+    const byHand: Record<string, number> = {};
+    for (const h of HANDS) byHand[h] = 0;
+    for (const r of bh) {
+      const agg = byPlayer.get(r.playerId) ?? { name: r.name, counts: {} };
+      agg.counts[r.hand] = (agg.counts[r.hand] ?? 0) + r.times;
+      byHand[r.hand] = (byHand[r.hand] ?? 0) + r.times;
+      byPlayer.set(r.playerId, agg);
+    }
+    const TOTALS_TITLE_R = BH_HEAD + 1 + bh.length + 1;
+    put(bhs, TOTALS_TITLE_R, 2, { value: tbh("totalsTitle"), font: { size: 13, bold: true, color: { argb: GREEN } } });
+    const totalsHead = TOTALS_TITLE_R + 1;
+    const totalsHeaders = [tg("player"), ...HANDS.map((h) => tbh(h)), tbh("total")];
+    totalsHeaders.forEach((h, i) =>
+      put(bhs, totalsHead, 2 + i, {
+        value: h,
+        font: { size: 10, bold: true, color: { argb: "FFFFFFFF" } },
+        fill: { argb: GREEN },
+        alignment: center,
+      }),
+    );
+    bhs.getRow(totalsHead).height = 20;
+    const playersTotals = [...byPlayer.entries()]
+      .map(([playerId, p]) => ({ playerId, ...p, total: HANDS.reduce((a, h) => a + (p.counts[h] ?? 0), 0) }))
+      .sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
+    playersTotals.forEach((p, i) => {
+      const row = totalsHead + 1 + i;
+      const fill = { argb: i % 2 === 0 ? CARD : "FFFFFFFF" };
+      put(bhs, row, 2, { value: safeText(p.name), font: { bold: true, color: { argb: INK } }, alignment: nameAlign, fill });
+      HANDS.forEach((h, j) => put(bhs, row, 3 + j, { value: p.counts[h] ?? 0, numFmt: "0", alignment: center, fill }));
+      put(bhs, row, 3 + HANDS.length, { value: p.total, numFmt: "0", alignment: center, font: { bold: true, color: { argb: INK } }, fill });
+      bhs.getRow(row).height = 16;
+    });
+    const grandRow = totalsHead + 1 + playersTotals.length;
+    const grandBorder = { top: { style: "thin" as const, color: { argb: GREEN } } };
+    put(bhs, grandRow, 2, { value: tbh("totalRow"), font: { size: 10, bold: true, color: { argb: INK } }, alignment: nameAlign, fill: { argb: CARD }, border: grandBorder });
+    HANDS.forEach((h, j) =>
+      put(bhs, grandRow, 3 + j, { value: byHand[h] ?? 0, numFmt: "0", alignment: center, font: { size: 10, bold: true, color: { argb: INK } }, fill: { argb: CARD }, border: grandBorder }),
+    );
+    put(bhs, grandRow, 3 + HANDS.length, {
+      value: HANDS.reduce((a, h) => a + (byHand[h] ?? 0), 0),
+      numFmt: "0",
+      alignment: center,
+      font: { size: 10, bold: true, color: { argb: GREEN } },
+      fill: { argb: CARD },
+      border: grandBorder,
+    });
+    bhs.getRow(grandRow).height = 20;
+    applyFont(bhs);
   };
 
   const hist = addSheet(th("title"), { views: [{ rightToLeft: rtl, state: "frozen", ySplit: 1 }] });
@@ -373,6 +475,7 @@ export async function buildWorkbook(
   if (s.games.length === 0) {
     put(st, HEAD + 2, 2, { value: t("empty"), font: { size: 10, italic: true, color: { argb: GRAY } } });
     applyFont(st);
+    addBestHandSheet();
     return Buffer.from(await wb.xlsx.writeBuffer());
   }
 
@@ -604,6 +707,8 @@ export async function buildWorkbook(
   const rangeRef = (col: string) => `'${sheetName}'!$${col}$${HEAD + 1}:$${col}$${lastBoardRow}`;
   const names = s.leaderboard.map((p) => p.name);
   applyFont(st);
+  addBestHandSheet();
+
   const buffer = appendCharts(Buffer.from(await wb.xlsx.writeBuffer()), sheetName, locale, [
     {
       spec: {

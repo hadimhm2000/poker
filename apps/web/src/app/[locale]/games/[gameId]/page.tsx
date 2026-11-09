@@ -1,10 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { type CloseBlocker, closeBlockers, deriveStatus, liveTotals, netResults, settle } from "@poker/domain";
-import { gameStory, latestDraw, listRulings, pendingRequests, schema } from "@poker/db";
+import { gameStory, gameBestHands, latestDraw, listRulings, pendingRequests, schema } from "@poker/db";
 import { and, eq, gt, isNull, sql } from "@poker/db";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { addToGameAction, closeGameAction, confirmResultAction, deleteGameAction, removeFromGameAction } from "@/app/actions/homes";
+import { recordBestHandAction, deleteBestHandAction } from "@/app/actions/besthands";
 import { startDrawAction } from "@/app/actions/ideas";
 import { claimPlayerAction, makeJoinLinkAction, requestRebuyAction } from "@/app/actions/live";
 import { ErrorNotice } from "@/components/ErrorNotice";
@@ -36,6 +37,7 @@ export default async function GamePage({
   const tc = await getTranslations("card");
   const ti = await getTranslations("ideas");
   const tp = await getTranslations("people");
+  const tb = await getTranslations("besthand");
 
   const data = await withUser(async (tx, user) => {
     const [game] = await tx.select().from(schema.games).where(eq(schema.games.id, gameId));
@@ -64,10 +66,11 @@ export default async function GamePage({
     const rulings = await listRulings(tx, game.id);
     const draw = await latestDraw(tx, game.id);
     const story = game.status === "closed" ? await gameStory(tx, game.id) : null;
-    return { game, home: home!, players, entries, settlements, requests, invite, rulings, draw, story, userId: user.id };
+    const bestHands = await gameBestHands(tx, game.id);
+    return { game, home: home!, players, entries, settlements, requests, invite, rulings, draw, story, bestHands, userId: user.id };
   });
   if (!data) notFound();
-  const { game, home, players, entries, settlements, requests, invite, rulings, draw, story, userId } = data;
+  const { game, home, players, entries, settlements, requests, invite, rulings, draw, story, bestHands, userId } = data;
   const name = new Map(players.map((p) => [p.id, p.displayName]));
   const byId = new Map(players.map((p) => [p.id, p]));
   // Payment details of the payees, decrypted on the server for members of this home only.
@@ -75,6 +78,9 @@ export default async function GamePage({
   const moneyHome = { currency: home.currency, unitSuffix: home.unitSuffix, unitDivisor: home.unitDivisor };
   const money = (n: number, signed = false) => formatAmount(n, moneyHome, locale, signed);
   const canWrite = home.ownerId === userId && !home.readOnly && game.status !== "closed";
+  // Best hands are the host's to record even after the game is closed (they are not part
+  // of the frozen result), so unlike canWrite this does not depend on the game's status.
+  const canRecordHand = home.ownerId === userId && !home.readOnly;
   const rules = { requireConfirmation: home.requireConfirmation };
   const domainEntries = entries.map((e) => ({
     playerId: e.playerId,
@@ -406,6 +412,80 @@ export default async function GamePage({
                 })}
               </tbody>
             </table>
+          )}
+        </section>
+      )}
+
+      {(bestHands.length > 0 || canRecordHand) && (
+        <section className="card table-wrap" id="besthand">
+          <h2>{tb("title")}</h2>
+          <p className="small muted">{tb("gameHint")}</p>
+          {bestHands.length > 0 && (
+            <table>
+              <thead>
+                <tr>
+                  <th>{t("player")}</th>
+                  <th>{tb("hand")}</th>
+                  <th className="end">{tb("times")}</th>
+                  {canRecordHand && <th />}
+                </tr>
+              </thead>
+              <tbody>
+                {bestHands.map((b) => (
+                  <tr key={b.id}>
+                    <td>
+                      <PlayerName name={b.name} avatar={byId.get(b.playerId)?.avatar} />
+                    </td>
+                    <td>{tb(b.hand)}</td>
+                    <td className="end num">{tb("timesValue", { count: new Intl.NumberFormat(locale).format(b.times) })}</td>
+                    {canRecordHand && (
+                      <td className="end">
+                        <form action={deleteBestHandAction}>
+                          <input type="hidden" name="id" value={b.id} />
+                          <input type="hidden" name="gameId" value={game.id} />
+                          <input type="hidden" name="homeId" value={home.id} />
+                          <input type="hidden" name="from" value="game" />
+                          <button className="linklike" type="submit" aria-label={tb("remove")}>
+                            ✕
+                          </button>
+                        </form>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          {bestHands.length === 0 && <p className="muted">{tb("empty")}</p>}
+          {canRecordHand && (
+            <form action={recordBestHandAction} className="row" style={{ marginBlockStart: 12, flexWrap: "wrap", gap: 8 }}>
+              <input type="hidden" name="gameId" value={game.id} />
+              <input type="hidden" name="homeId" value={home.id} />
+              <input type="hidden" name="from" value="game" />
+              <select name="playerId" required aria-label={t("player")}>
+                {[...players]
+                  .filter((p) => !p.mergedInto)
+                  .sort((a, b) => a.displayName.localeCompare(b.displayName))
+                  .map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.displayName}
+                    </option>
+                  ))}
+              </select>
+              <select name="hand" required aria-label={tb("hand")}>
+                <option value="royal_flush">{tb("royal_flush")}</option>
+                <option value="straight_flush">{tb("straight_flush")}</option>
+                <option value="four_of_a_kind">{tb("four_of_a_kind")}</option>
+              </select>
+              <label className="row" style={{ alignItems: "center", gap: 6 }}>
+                {tb("times")}
+                <input name="times" type="number" min={1} max={99} step={1} defaultValue={1} required style={{ width: 84 }} dir="ltr" />
+              </label>
+              <button className="btn secondary" type="submit">
+                {tb("record")}
+              </button>
+              <span className="small muted">{tb("hostHint")}</span>
+            </form>
           )}
         </section>
       )}

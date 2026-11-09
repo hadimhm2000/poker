@@ -1143,5 +1143,28 @@
     "payerDebts": "Paid debts",
     "payerOpen": "Open",
     "payerDaysValue": "{days} days"
+  },
+  "besthand": {
+    "title": "Best hand",
+    "gameHint": "Royal flush, straight flush and four of a kind of this game. Recorded by the host only.",
+    "homeHint": "The home's totals: how often each player hit a royal flush, straight flush or four of a kind.",
+    "sheetSubtitle": "Recorded best hands and the home's totals",
+    "recordsTitle": "Records",
+    "totalsTitle": "Home totals",
+    "game": "Game",
+    "player": "Player",
+    "hand": "Hand",
+    "times": "Times",
+    "timesValue": "{count}×",
+    "record": "Record",
+    "remove": "Remove",
+    "empty": "No best hand recorded yet.",
+    "royal_flush": "Royal flush",
+    "straight_flush": "Straight flush",
+    "four_of_a_kind": "Four of a kind",
+    "total": "Total",
+    "totalRow": "Total",
+    "openGame": "Open game",
+    "hostHint": "Only the host can record or remove these, even after the game is closed."
   }
 }
