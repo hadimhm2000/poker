@@ -8,6 +8,7 @@ import {
   createGame,
   createHome,
   createHomeInvite,
+  deleteGame,
   markPaid,
   rebuy,
   schema,
@@ -253,42 +254,17 @@ export async function removeFromGameAction(form: FormData) {
 }
 
 /**
- * Host: delete a game that is not closed yet (a game started by mistake, or one whose numbers
- * are beyond repair). Everything that points at the game goes with it — entries, events,
- * invites, rulings, draws — and the final delete still refuses a game that closed meanwhile.
- * A closed game is frozen history and can never be deleted.
+ * Host: delete a game that is not closed yet (a game started by mistake, or one whose
+ * numbers are beyond repair). Everything that points at the game goes with it — entries,
+ * events, invites, rulings, draws, best-hand records — and a game that closed meanwhile
+ * is still refused (closed games are frozen history). The heavy lifting happens in
+ * app.delete_game (SECURITY DEFINER): the app roles hold no DELETE grants on those
+ * tables, so no client-side cascade could ever do this.
  */
 export async function deleteGameAction(form: FormData) {
   const gameId = uuid.parse(form.get("gameId"));
   const homeId = await attempt(`/games/${gameId}?delete=1`, () =>
-    withUser(async (tx, user) => {
-      const [g] = await tx.select().from(schema.games).where(eq(schema.games.id, gameId));
-      if (!g) throw new DomainError("NOT_FOUND");
-      if (g.status === "closed") throw new DomainError("FROZEN");
-      const [home] = await tx
-        .select({ ownerId: schema.homes.ownerId, readOnly: schema.homes.readOnly })
-        .from(schema.homes)
-        .where(eq(schema.homes.id, g.homeId));
-      if (!home) throw new DomainError("NOT_FOUND");
-      if (home.ownerId !== user.id || home.readOnly) throw new DomainError("FORBIDDEN");
-      await tx.execute(
-        sql`DELETE FROM draw_contributions WHERE draw_id IN (SELECT id FROM game_draws WHERE game_id = ${gameId})`,
-      );
-      await tx.delete(schema.gameDraws).where(eq(schema.gameDraws.gameId, gameId));
-      await tx.delete(schema.gameRulings).where(eq(schema.gameRulings.gameId, gameId));
-      await tx.delete(schema.gameStories).where(eq(schema.gameStories.gameId, gameId));
-      await tx.delete(schema.invites).where(eq(schema.invites.gameId, gameId));
-      await tx.delete(schema.gameEvents).where(eq(schema.gameEvents.gameId, gameId));
-      await tx.delete(schema.gameEntries).where(eq(schema.gameEntries.gameId, gameId));
-      await tx.delete(schema.settlements).where(eq(schema.settlements.gameId, gameId));
-      const gone = await tx
-        .delete(schema.games)
-        .where(and(eq(schema.games.id, gameId), sql`${schema.games.status} <> 'closed'`))
-        .returning({ id: schema.games.id });
-      if (!gone.length) throw new DomainError("FROZEN");
-      return g.homeId;
-    }),
-  );
+    withUser((tx, user) => deleteGame(tx, user.id, gameId)));
   return go(`/homes/${homeId}`);
 }
 

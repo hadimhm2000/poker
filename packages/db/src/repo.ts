@@ -347,6 +347,28 @@ export async function closeGame(
   return { gameId: g.id, number, hash, transfers: result.transfers, alreadyClosed: false };
 }
 
+/**
+ * Host: delete a game that is not closed yet (a game started by mistake, or one whose
+ * numbers are beyond repair). Everything that points at the game goes with it — entries,
+ * events, invites, rulings, draws, stories, best-hand records — and a game that closed
+ * meanwhile is refused by the database as well (frozen history). The actual deletes run
+ * in app.delete_game (SECURITY DEFINER): app roles hold no DELETE grants on most of
+ * those tables, so no client-side cascade could ever do this.
+ */
+export async function deleteGame(tx: Tx, userId: string, gameId: string): Promise<string> {
+  const [g] = await tx.select().from(games).where(eq(games.id, id.parse(gameId)));
+  if (!g) throw new DomainError("NOT_FOUND");
+  if (g.status === "closed") throw new DomainError("FROZEN");
+  const [home] = await tx
+    .select({ ownerId: homes.ownerId, readOnly: homes.readOnly })
+    .from(homes)
+    .where(eq(homes.id, g.homeId));
+  if (!home) throw new DomainError("NOT_FOUND");
+  if (home.ownerId !== userId || home.readOnly) throw new DomainError("FORBIDDEN");
+  await tx.execute(sql`SELECT app.delete_game(${g.id})`);
+  return g.homeId;
+}
+
 export const historyQuery = z.object({
   homeIds: z.array(id).optional(),
   player: z.string().trim().max(40).optional(),
