@@ -8,7 +8,7 @@ export async function ErrorNotice({ code }: { code?: string }) {
   // Any code with a translation in "errors" (they come from errorCode()); anything else is generic.
   const key = /^[A-Z_]+$/.test(code) && t.has(code) ? code : "ERROR";
   return (
-    <div className="alert" role="alert">
+    <div className="alert error" role="alert">
       {t(key)}
       {(key === "LIMIT" || key === "READ_ONLY") && (
         <>

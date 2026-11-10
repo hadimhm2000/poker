@@ -1,6 +1,7 @@
 import { type Card, RANKS } from "@poker/domain";
 
-const SUIT_SYMBOL = { s: "♠", h: "♥", d: "♦", c: "♣" } as const;
+// The four suit glyphs are the content of a playing card, not decoration.
+const SUIT_SYMBOL = { s: "♠", h: "♥", d: "♦", c: "♣" } as const; // taste-skill-ignore
 
 /** A playing card drawn with markup (no images), readable in both themes. */
 export function PlayingCard({ card }: { card: Card }) {

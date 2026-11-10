@@ -27,7 +27,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const locale = locales.find((l) => l === request.nextUrl.searchParams.get("locale")) ?? user.locale;
   // Render from this server itself, never from a host named in the request.
-  const origin = `http://127.0.0.1:${process.env.PORT ?? 3000}`;
+  const origin = `http://127.0.0.1:${process.env.PORT ?? 3100}`;
   const token = request.cookies.get(SESSION_COOKIE)?.value ?? "";
   let pdf: Buffer;
   try {

@@ -1166,5 +1166,15 @@
     "totalRow": "Total",
     "openGame": "Open game",
     "hostHint": "Only the host can record or remove these, even after the game is closed."
+  },
+  "states": {
+    "notFoundTitle": "Page not found",
+    "notFoundBody": "This page doesn't exist or was moved.",
+    "backHome": "Back to home",
+    "errorTitle": "Something went wrong",
+    "errorBody": "We couldn't load this page. Try again in a moment.",
+    "retry": "Try again",
+    "loading": "Loading…",
+    "skipToContent": "Skip to content"
   }
 }

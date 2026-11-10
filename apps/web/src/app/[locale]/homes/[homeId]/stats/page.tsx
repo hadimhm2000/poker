@@ -12,9 +12,7 @@ import { loadHomeResults, playerSlots } from "@/lib/home";
 import { pdfEnabled } from "@/lib/pdf";
 import { withUser } from "@/lib/session";
 
-const MEDAL = { 1: "🥇", 2: "🥈", 3: "🥉" } as const;
 const MAX_LINES = 8;
-const BADGE_ICON = { streak: "🔥", bigWin: "💰", regular: "📅", comeback: "🔄" } as const;
 
 export default async function StatsPage({
   params,
@@ -226,7 +224,6 @@ export default async function StatsPage({
                   <tr key={p.playerId}>
                     {/* The rank of every player (not just medals), like the Excel sheet's # column. */}
                     <td className={`end num rank${p.medal ? ` medal-${p.medal}` : ""}`}>
-                      {p.medal ? `${MEDAL[p.medal]} ` : ""}
                       {num(i + 1)}
                     </td>
                     <td>
@@ -255,9 +252,6 @@ export default async function StatsPage({
               <div className="badges">
                 {earned.map((b) => (
                   <div className="badge-card" key={`${b.kind}-${b.playerId}`}>
-                    <span className="icon" aria-hidden="true">
-                      {BADGE_ICON[b.kind]}
-                    </span>
                     <strong>{tb(b.kind)}</strong>
                     <span>
                       <Link href={`/homes/${home.id}/players/${b.playerId}`}>{b.name}</Link>

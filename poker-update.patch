@@ -1,0 +1,2569 @@
+diff --git a/apps/web/.env.example b/apps/web/.env.example
+index 48c914f..99ecaeb 100644
+--- a/apps/web/.env.example
++++ b/apps/web/.env.example
+@@ -5,7 +5,7 @@ FIELD_KEY=
+ # Salt for hashing client IPs in sessions and logs.
+ IP_HASH_SALT=
+ # Public origin (https in production): invite links, QR codes, Telegram buttons.
+-APP_URL=http://localhost:3000
++APP_URL=http://localhost:3100
+ 
+ # Telegram (optional; the site works without it).
+ # From @BotFather: the token and the bot's username without @.
+diff --git a/apps/web/.taste-skill/app/direction.json b/apps/web/.taste-skill/app/direction.json
+new file mode 100644
+index 0000000..b01956c
+--- /dev/null
++++ b/apps/web/.taste-skill/app/direction.json
+@@ -0,0 +1,199 @@
++{
++ "version": 1,
++ "kind": "app",
++ "at": "2026-11-10T07:08:09.610Z",
++ "seed": 1070578489,
++ "input": {
++  "kind": "finance",
++  "brief": "Poker Home: a private poker night ledger that records buy-ins and cash-outs and settles who pays whom with the fewest transfers, in 7 languages incl. RTL",
++  "theme": null,
++  "screens": [
++   "overview",
++   "list",
++   "detail",
++   "settings"
++  ],
++  "keep": [
++   "type"
++  ],
++  "style": "achromatic-ledger"
++ },
++ "style": {
++  "id": "achromatic-ledger",
++  "name": "Achromatic ledger",
++  "theme": "light",
++  "basis": "4 screens: a seller home, a per-agent insights page, a generated report, a settings page with usage numbers",
++  "suits": [
++   "finance",
++   "commerce",
++   "devtools",
++   "support",
++   "report",
++   "workspace",
++   "builder"
++  ],
++  "idea": "The chrome holds no colour at all; money and counts are set in ink, the one chart hue marks the screen's main data element, and the only other hue is a small signal where a figure changed.",
++  "colourBudget": "under 1% coloured pixels; the chrome is ink, the one chart hue goes on the main data element, and the only other hue is a small change signal",
++  "tokens": {
++   "ground": "#f8f8f8",
++   "surface": "#ffffff",
++   "raised": "#eeeeee",
++   "border": "#e6e6e6",
++   "rule": "#f0f0f0",
++   "control": "#d4d4d4",
++   "text": "#0a0a0a",
++   "muted": "#6b6b6b",
++   "accent": "#141414",
++   "positive": "#2e7d32",
++   "negative": "#c4242a",
++   "warning": "#92400e",
++   "chart": [
++    "#141414",
++    "#8a8a8a",
++    "#1d5fbf"
++   ],
++   "pills": {
++    "positive": [
++     "#dcfae5",
++     "#04250e"
++    ],
++    "negative": [
++     "#ffedea",
++     "#831c1e"
++    ],
++    "warning": [
++     "#fffbeb",
++     "#92400e"
++    ],
++    "neutral": [
++     "#eeeeee",
++     "#3d3d3d"
++    ]
++   },
++   "radius": {
++    "card": 8,
++    "control": 6
++   },
++   "font": {
++    "family": "Geist",
++    "second": "Geist Mono, for IDs and keys only",
++    "fallback": "Inter, system-ui, sans-serif",
++    "sizes": {
++     "title": 24,
++     "section": 16,
++     "kpi": 30,
++     "body": 14,
++     "small": 12
++    },
++    "weights": [
++     400,
++     500,
++     700
++    ],
++    "note": "700 is for money figures only; every other number is 400-500."
++   },
++   "density": "sparse",
++   "rowHeight": 44,
++   "sidebarWidth": 256,
++   "gap": 12,
++   "pad": 24,
++   "controlHeight": 36
++  },
++  "shell": "open-plane",
++  "shellAlternatives": [
++   "icon-rail",
++   "no-sidebar"
++  ],
++  "signature": "No brand colour anywhere in the chrome: the one primary action is near-black (a grey pill, #e5e5e5, is the secondary), the main data element (today's series, the booked bars, the current period) takes the one chart hue, #1d5fbf, and everything else is drawn in ink with the comparison or the part after the cursor in grey, zero balances are set in grey, and the only hue on the screen is a small triangle or a short coloured number where a figure changed.",
++  "identity": [
++   "A ground from the product's world in place of #f8f8f8, one level off white and low in chroma: a stone (#f4f3f1) for a bakery or a shop, a sage (#f2f5f2) for a garden or a greenhouse, a blue-grey (#f2f4f7) for a ledger or a meter. Cards stay white; a warm tint stays under the cream check (saturation under about 15%).",
++   "The one chart hue (#1d5fbf, or the brand's own hue at 3:1 or more on white) on the screen's main data element: today's line, the booked bars, the current period's column, the margin that breaks. The chrome stays ink and the hue stays under 1% of the screen.",
++   "Every figure in Geist Mono, as the style's decision, so money and counts read as a ledger's columns while the text stays Geist. Lint and the inspector flag mono; give the reason in the report."
++  ],
++  "avoid": [
++   "a brand-coloured primary button",
++   "tinted cards or tinted KPI tiles",
++   "a coloured chart where one series in ink says it",
++   "bold on anything but money",
++   "a chart with no y-scale (the study's one example of this look hid magnitude behind hover and was flagged)",
++   "a grey pill as the only button for the screen's main job: in testing an Approve repeated in grey on every row left the screen without a primary"
++  ],
++  "notes": "The studied screens of this kind used 11-12px card radii, which §9.4 counts among the rare middle values; the library sets the tight pair (8 and 6) so the style lands on the bimodal rule. After testing, the chart hue moved from an unused third series colour onto the main data element: a screen whose only hue was a delta read as a kit."
++ },
++ "shell": {
++  "id": "open-plane",
++  "name": "Open plane",
++  "basis": "5 of 23 screens",
++  "suits": [
++   "finance",
++   "wallet",
++   "workspace",
++   "creator",
++   "analytics"
++  ],
++  "numbers": {
++   "sidebarWidth": "230-256 (230, 240, 256 in the study; 280 and 292 with a built-in icon rail)",
++   "separation": "none, or one 1px hairline; the sidebar sits on the page ground or within 1-2% of it",
++   "navPitch": 34,
++   "navRowHeight": 32,
++   "navIcon": "16px outline, about 1.5px stroke",
++   "navLabel": "14px, 400, grey or ink",
++   "activeItem": "neutral grey pill, radius 6-12, inset 8-12px from the sidebar edges (#e9e9e9-#ededed)",
++   "topBar": "none",
++   "canvas": "fluid with a 24-64px gutter, or a centred 1100px column"
++  },
++  "blueprint": "The labelled sidebar sits on the page ground with nothing or one hairline between it and the canvas; there is no top bar, and the page header and cards sit straight on the ground about 32-36px from the top. Workspace or account switcher at the top of the sidebar, primary nav on a 34px pitch, groups under 12-13px sentence-case grey labels with 22-56px of air above, utilities and the user row pushed to the bottom. Cards are white on the off-white ground (or the sidebar is white with a 1px border on a #f9fafb canvas). The canvas is fluid with one gutter value, or a centred column for personal homes.",
++  "phone": "The sidebar folds into a 48px top bar holding the screen's name, a menu button that opens a full-screen sheet with the nav and the switcher, and at most one action. Content takes the full width with 16px margins."
++ },
++ "screens": [
++  {
++   "name": "overview",
++   "pattern": {
++    "id": "finance-home-pinned-rail",
++    "name": "Finance home with a pinned accounts column",
++    "screen": "overview",
++    "kinds": [
++     "finance",
++     "wallet"
++    ],
++    "basis": "a personal finance home",
++    "blueprint": "No page header and no KPI strip: cards start 36px from the top and each headline sum sits in the card that explains it. On the left, a 306px accounts card pinned at the viewport height minus the 36px margins opens with net worth (16/600 label left, value right) and holds the account tree with no dividers: groups 16px ink, categories 14px ink, leaves 14px grey indented 8px, values right-aligned, a 30px pitch and about 45px between groups; an empty group is a bordered box with an '+ Add account' link instead of $0.00. On the right, a 2-column grid with 24px gaps of cards that answer this month's questions, each with its own period caption: the plan (spanning both columns; a ring with an empty hole, a dot legend, the available figure beside it with a per-day line), recent spending as 61px two-line rows (payee over category, amount over date, right-aligned) and upcoming bills. Income is green with a plus sign; spending stays in ink.",
++    "phone": "Net worth becomes the first card; the account tree collapses to its groups with totals; the month cards stack."
++   }
++  },
++  {
++   "name": "list",
++   "pattern": null
++  },
++  {
++   "name": "detail",
++   "pattern": null
++  },
++  {
++   "name": "settings",
++   "pattern": {
++    "id": "settings-two-column",
++    "name": "Settings in two columns",
++    "screen": "settings",
++    "kinds": [
++     "devtools",
++     "smb-admin",
++     "support",
++     "workspace",
++     "commerce",
++     "analytics",
++     "finance",
++     "wallet",
++     "creator",
++     "community",
++     "builder",
++     "markets",
++     "report"
++    ],
++    "basis": "one settings page; stacking from a narrow rail card. The basis is thin.",
++    "blueprint": "A centred column of about 1152px. Each section is one row: a label column of about 450px (16/500 title, 14px grey description; the title's cap top 6-8px below the panel top, level with the panel's first line) beside a panel of about 700px with a #fafafa fill, 16px radius, 16px padding, no border and no shadow. Sections are split by a full-width 1px rule with 32px above and below. Inside a panel: field labels 14/500 above 40px white inputs (1px #e8e8e8, radius 10), 8px from label to field, 16px between fields, 24px from the description to the first label, 16px to the Save button; switch rows with a 14/500 title, a 20px status badge 8px after it, a 14px grey description and a 28x16 toggle 16px from the right edge, centred on the title line. A plan-gated feature shows a 48px tinted strip with a 32px button directly above its panel, and the panel stays readable. When a panel runs much taller than its label, put the section's help or a summary of the current values in the label column rather than 250px of nothing.",
++    "phone": "Each section stacks: title and description, then the panel at full width. Inside, label, 8-10px, field, 16-26px to the next pair; toggles stay on the right of their title."
++   }
++  }
++ ]
++}
+\ No newline at end of file
+diff --git a/apps/web/.taste-skill/page/direction.json b/apps/web/.taste-skill/page/direction.json
+new file mode 100644
+index 0000000..5dc7042
+--- /dev/null
++++ b/apps/web/.taste-skill/page/direction.json
+@@ -0,0 +1,401 @@
++{
++ "version": 1,
++ "at": "2026-11-10T07:08:36.331Z",
++ "seed": 668910757,
++ "redraws": 0,
++ "input": {
++  "brief": "Poker Home: the scorebook for a private poker night; records buy-ins and cash-outs, settles who pays whom in the fewest transfers, results frozen when the host closes the game, seven languages incl. right-to-left",
++  "sector": "consumer-app",
++  "tone": null,
++  "have": [
++   "product-ui"
++  ],
++  "keep": [
++   "palette",
++   "type"
++  ],
++  "avoid": [],
++  "sections": [
++   "features",
++   "how-it-works",
++   "cta",
++   "footer"
++  ],
++  "direction": "product-performs"
++ },
++ "imagery": "interface",
++ "allow": [],
++ "direction": {
++  "id": "product-performs",
++  "name": "The product performs",
++  "sectors": [
++   "saas",
++   "dev-tool",
++   "ai-product",
++   "consumer-app",
++   "finance"
++  ],
++  "tones": [
++   "technical",
++   "quiet"
++  ],
++  "needs": [],
++  "idea": "Software is most convincing when it is doing its job in front of you. Instead of describing features, put small, true, working fragments of the product on the page: the actual control, with real content, responding to the pointer. A colour picker's loupe reads the page's own background and prints its value. A list tool lets you tick an item right there. A type-scale plugin sets the page's own headings. Find the one interaction that is the product and make the hero that interaction; then show each further capability as another fragment at real size. No dashboard collage, no browser frame, no screenshots shrunk until unreadable.",
++  "composition": "Hero: a short plain headline (4–6vw, left-aligned, upper-left third) and one sentence; the rest of the first screen is the main fragment at actual interface size, sitting directly on the page or on one flat stage colour, large enough to read every label. The fragment is built in HTML and works. Below, capabilities are a single-column sequence, each a row of two parts on a 5/7 split: a two-line statement on one side and the relevant fragment on the other, with the fragments varying in size and shape so the column never becomes a zigzag of equal blocks. Fragments are cropped pieces of interface (a menu, a row, a control, a panel edge), not whole windows. One section pins a fragment while three short statements change it.",
++  "typography": "The marketing type matches the product's interface type so the fragments and the page feel like one thing. Headline modest; interface text at its true size (13–15px) inside fragments.",
++  "typeClasses": [
++   "grotesk-tight",
++   "grotesk-light",
++   "geometric"
++  ],
++  "colour": "Neutral ground. The product's own interface colours provide the colour. At most one flat stage colour behind fragments.",
++  "paletteTags": [
++   "light-neutral",
++   "dark-neutral",
++   "mono-accent"
++  ],
++  "imagery": "The interface fragments are the main imagery: build them carefully with real labels, real numbers and sensible states (one hovered, one selected). Around them, two or three real pictures of the customer's world (found with scripts/assets.mjs), never stock of people at laptops.",
++  "sectionTags": [
++   "ui-led",
++   "quiet"
++  ],
++  "motion": "pinned-story",
++  "richness": "Fidelity. A fragment with believable content and a real hover state is more interesting than any illustration. Spend the effort there.",
++  "pitfalls": "A fake interface made of grey bars and circles is the worst outcome; if you cannot build a believable fragment, change direction. Mark each fragment's root element with the attribute data-ui: inside it the product's own conventions apply (1px control borders, small radii, a shadow on its open menu) and the inspector leaves them alone; outside it the house rules hold as usual. data-ui is for cropped fragments only, never for a page wrapper. Do not put the fragment in a browser or laptop frame.",
++  "seenIn": [
++   "opl-dabbit",
++   "opl-rows",
++   "opl-typewave",
++   "opl-shelf",
++   "opl-uni",
++   "opl-kontu"
++  ],
++  "allow": []
++ },
++ "hero": {
++  "id": "fragment-on-shaped-stage",
++  "name": "Fragment on a shaped stage",
++  "archetype": "split",
++  "directions": [
++   "product-performs",
++   "one-motif",
++   "colour-chapters"
++  ],
++  "needs": [],
++  "blueprint": "A neutral ground. The headline occupies the upper-left third: two lines at clamp(52px, 5.2vw, 80px), medium weight, flush left on columns 1–6 at a 40px margin, starting 150px down. One supporting sentence at 18px, max 40ch, follows, then the single action as a small rectangular button. The rest of the screen belongs to one flat stage in a saturated colour: it spans columns 5–12, begins 42% down, and bleeds off the right and bottom edges. Its top-left corner is cut with the product's own shape using `clip-path` (a notch, a chamfer or a tab two columns wide), the only decoration on the page. On the stage, 56px in from its left and top edges, sits the main fragment of the interface at true size with labels at 13–15px, built in HTML and working: one panel or control about 620px wide, cropped by the bottom edge, never a whole window and never inside a browser or laptop frame. Mark its root with data-ui. Navigation is a plain row at 28px from the top: wordmark left and four text links right at 15px. Nothing overlaps the headline.",
++  "mobile": "The headline sits under the wordmark at 10vw on two lines, followed by the sentence at 16px and the button. The stage comes next at full width, bleeding off both sides and the bottom, its corner cut kept at 72px wide. The fragment sits 16px inside it at true size; if it is wider than the screen the right edge crops it rather than scaling it down.",
++  "headline": "A plain statement of what the product does in three to six words, two lines of up to about 16 characters each at 5.2vw.",
++  "motion": "shutter-image",
++  "seenIn": [
++   "opl-typewave",
++   "opl-vessa",
++   "opl-uni"
++  ]
++ },
++ "type": null,
++ "palette": null,
++ "photos": {
++  "set": "sky-and-space",
++  "title": "Sky and space",
++  "note": "skies, clouds, stars and night skies",
++  "treatment": null,
++  "others": [
++   "architecture",
++   "water",
++   "fog-and-quiet",
++   "texture"
++  ],
++  "photos": [
++   {
++    "id": 869,
++    "alt": "Starry night sky above a mountain glowing warm at its peak",
++    "tone": "dark",
++    "colours": [
++     "navy",
++     "deep blue",
++     "amber"
++    ],
++    "mono": false,
++    "calm": "top",
++    "quality": 4,
++    "ratio": 1.5,
++    "by": "Caleb Ralston",
++    "page": "https://unsplash.com/photos/6hxvm0NzYP8"
++   },
++   {
++    "id": 901,
++    "alt": "Green aurora sweeping across the night sky above snowy ground",
++    "tone": "dark",
++    "colours": [
++     "emerald green",
++     "dark teal",
++     "slate"
++    ],
++    "mono": false,
++    "calm": "none",
++    "quality": 4,
++    "ratio": 1,
++    "by": "Marcelo Quinan",
++    "page": "https://unsplash.com/photos/R3pUGn5YiTg"
++   },
++   {
++    "id": 765,
++    "alt": "Night sky fading to an orange glow along a dark horizon",
++    "tone": "dark",
++    "colours": [
++     "midnight blue",
++     "burnt orange",
++     "black"
++    ],
++    "mono": false,
++    "calm": "top",
++    "quality": 4,
++    "ratio": 1.33,
++    "by": "Grant McIver",
++    "page": "https://unsplash.com/photos/pmUEwPKL5IE"
++   },
++   {
++    "id": 505,
++    "alt": "Tiny silhouetted figure on a dark ridge under a blue and orange twilight sky",
++    "tone": "dark",
++    "colours": [
++     "deep blue",
++     "orange",
++     "black"
++    ],
++    "mono": false,
++    "calm": "top",
++    "quality": 5,
++    "ratio": 1.5,
++    "by": "lee Scott",
++    "page": "https://unsplash.com/photos/_VTgctRg0tA"
++   }
++  ]
++ },
++ "motion": {
++  "id": "shutter-image",
++  "name": "Shutter image",
++  "description": "The one hero or showcase image opens from an edge with a clip-path over about 1.1 seconds while the picture inside settles from 1.12 scale to rest. Use it once, on the image that matters most; later images simply are there. Recipe: 'Image shutter' in references/motion.md."
++ },
++ "sections": [
++  {
++   "id": "features-fixed-output-controls-in-text",
++   "role": "features",
++   "name": "Fixed output, live controls",
++   "shape": "pinned",
++   "tags": [
++    "ui-led",
++    "quiet"
++   ],
++   "directions": [
++    "split-stage",
++    "product-performs",
++    "quiet-instrument",
++    "editorial-report",
++    "colour-chapters",
++    "dark-room"
++   ],
++   "needs": [],
++   "blueprint": "A split the reader operates. Left, columns 1–6: a flat colour field that is position: sticky; top: 0; height: 100svh, edge to edge, holding one thing the product makes (a card, an email, a chart, a rendered page) centred at true size, about 420px wide, root marked data-ui. Right, columns 8–12: a reading column no wider than 44ch, with four or five capability blocks 50vh apart. Each block is a sentence at 28–32px, a paragraph at 17px, and directly beneath it one real control at interface size: a slider, a segmented choice, a toggle, a short text field. Operating a control changes the fixed output on the left at once, and changes persist, so by the last block the reader has configured their own. The section heading, two to four words at 40–44px, opens the right column, 72px from the top.",
++   "mobile": "The output sits in a sticky field at the top, 42svh tall, cropped to its most telling region, not shrunk. Blocks scroll beneath on the page ground: sentence at 22px, paragraph at 16px, control at full width with 44px targets. The field releases after the last block.",
++   "seenIn": [
++    "opl-dialkit",
++    "aww-cerebrium"
++   ]
++  },
++  {
++   "id": "how-it-works-call-and-response-column",
++   "role": "how-it-works",
++   "name": "Call and response column",
++   "shape": "list",
++   "tags": [
++    "ui-led",
++    "quiet"
++   ],
++   "directions": [
++    "quiet-instrument",
++    "product-performs",
++    "type-only-statement",
++    "editorial-report",
++    "dark-room"
++   ],
++   "needs": [],
++   "blueprint": "The sequence is shown as what you give and what comes back, in one narrow column 560px wide starting at column 4, or on the page's text axis. Three exchanges, 88px apart. Each opens with a sentence at 20px medium that begins with its order word ('First, install it.' 'Then ask for a chart.'). 16px under it, the call: the literal thing the user enters, in a filled panel one tone off the ground, radius 8px, padding 20px. For a developer tool that is real code in `<pre><code>` at 14px with a working copy button; otherwise it is the product's own input holding real typed text. Under the call, indented 56px, the response: a true-size fragment marked data-ui showing what the product returns. The third response is the finished result and breaks out of the column, 760px wide, running to column 12. The heading, two to four words at 28px, sits 56px above the first sentence.",
++   "mobile": "The column fills the width with 20px margins. Calls and responses stack without the indent; a 24px gap and a lighter panel tone set the response apart. Code panels scroll sideways inside themselves. The final result runs edge to edge at true size, cropped on the right if wider.",
++   "seenIn": [
++    "opl-dialkit",
++    "opl-ohhmydesign"
++   ]
++  },
++  {
++   "id": "cta-blank-in-the-sentence",
++   "role": "cta",
++   "name": "A sentence with a blank",
++   "shape": "statement",
++   "tags": [
++    "type-led",
++    "ui-led"
++   ],
++   "directions": [
++    "sentence-as-layout",
++    "product-performs",
++    "type-only-statement",
++    "one-motif",
++    "colour-chapters"
++   ],
++   "needs": [],
++   "blueprint": "The closing sentence has a gap in it, and the gap is the form. A sentence of five to eight words is set at about 6vw on two lines, flush left across columns 1–11; there is no separate heading. Where the reader's email (or name, or city) belongs, an `<input>` sits inline on the baseline: a filled block of the one-step tone, exactly one line-height tall and about 7em wide, with the placeholder in the same face and size in the softer ink, no border, and the page's radius or motif corner. The sentence's last word is the submit `<button>`, set in the same type on a block of the accent colour of the same height. Field and button use `em` units so they scale with the sentence. One line at 16px under the sentence, in the softer ink, says what happens after sending. Nothing else is in the section.",
++   "mobile": "The sentence is set at 10vw on two lines; the input drops to a line of its own between them at full width and one line-height tall, and the final word, as the button, ends the second line. The explaining line follows at 15px.",
++   "seenIn": [
++    "opl-shelf"
++   ]
++  },
++  {
++   "id": "footer-row-of-tiles",
++   "role": "footer",
++   "name": "A footer of tiles",
++   "shape": "grid",
++   "tags": [
++    "dense",
++    "colour-field"
++   ],
++   "directions": [
++    "dense-tiles",
++    "colour-chapters",
++    "product-performs",
++    "contact-sheet",
++    "specimen-catalogue"
++   ],
++   "needs": [],
++   "blueprint": "The footer is the last two rows of a board: filled tiles with 8px gaps and 8–12px outer margins, every cell used. Upper row, each tile 220px tall: a statement tile in columns 1–4 with one sentence at 24px top-left and the legal text at 12px bottom-left; a navigation tile in columns 5–7 with a plain list at 16px; a tile in columns 8–9 giving the city and local time as text; an email tile in columns 10–12 with the address at 20px as a link, bottom-left. Lower row, 320px tall: a tile in the ink colour spanning columns 1–8 with the wordmark set large (about 9vw) and centred, and a tile in the accent colour in columns 9–12 with a two-to-four-word invitation top-left at 28px and an arrow, drawn as inline SVG with 4px strokes, in its bottom-right corner; the whole accent tile is a link.",
++   "mobile": "Two columns of tiles with 6px gaps: the wordmark tile full width first at 160px tall, the accent tile full width next, then navigation and email side by side, then time and statement. Every tile keeps 20px padding and top-left text.",
++   "seenIn": [
++    "aww-aspen-search",
++    "aww-oimachi"
++   ]
++  }
++ ],
++ "references": [
++  {
++   "id": "opl-shelf",
++   "name": "Shelf",
++   "url": "https://www.savetoshelf.com",
++   "source": "One Page Love",
++   "kind": "consumer-app",
++   "score": 7.1,
++   "idea": "Saves scattered across a dozen places are funnelled into one searchable shelf, shown literally by tumbling source chips and a panel edge that narrows to a point.",
++   "mood": [
++    "friendly",
++    "clean",
++    "soft",
++    "optimistic"
++   ],
++   "archetype": "centred-statement-media-below",
++   "hero": "An off-white panel sits inside a 12px warm-grey page frame. A compact floating nav about 880px wide: logo left, three links and a lime waitlist button right. Centred stack: a small grey pill badge with a sparkle icon, then a two-line headline in General Sans Semibold at about 5.8vw with tight tracking, one word of which sits on a lime rounded-rectangle highlight; a two-line grey subhead; an email field with its button nested inside one rounded outline, 460px wide. From 75% down, the top of a bordered app window rises, and a larger search bar holding a half-typed query overlaps it with a soft shadow.",
++   "type": "General Sans Semibold for headings (84px hero, 40 to 50px section heads, -0.03em); Switzer for everything else at 14 to 20px, mostly mid-grey. About four sizes. The one flourish is a headline word set on a coloured block.",
++   "colour": "#fbfbf9 #f2f1ed #1b1b19 #9ee86f #e9e9e6 — Warm off-whites and soft charcoal with one lime green: the nav button, the highlighted word, small tags and a full-colour closing block.",
++   "imagery": "Vector mock-ups of the app: a bordered window with sidebar and save cards, an enlarged search field, tiny wireframe thumbnails in step cards. No photography. Angled pill chips with small source icons act as illustration.",
++   "layout": "Centred column inside large rounded off-white panels separated by the grey page frame. Mostly stacked heading-plus-subtext blocks, one left and right split, one narrow accordion column. Panel edges are shaped: one ends in a shallow downward chevron.",
++   "sections": [
++    {
++     "role": "features",
++     "description": "A centred heading and two-line subtext are partly covered by about nine grey pill chips, each naming a save source with a small icon, rotated at random angles as if dropped. The panel's bottom edge is a shallow V pointing down at centre; from its tip a thin vertical line descends about 80px to a second centred heading, subtext and an empty search field, so the layout itself draws a funnel."
++    },
++    {
++     "role": "how-it-works",
++     "description": "A rounded white panel split in two. Left, from a 10% inset: a small lime tag with icon, a two-line heading at about 50px and two short grey paragraphs, vertically centred. Right, from 53% to 90%: three stacked rounded grey cards about 130px tall, each with a white thumbnail tile at left (a tiny wireframe or the logo) and at right a black numbered dot, a bold one-line title and a line or two of grey text."
++    },
++    {
++     "role": "cta",
++     "description": "A lime rounded block about two-thirds of the width, flanked by narrower lime blocks at left and right separated by 14px gaps, as if cropped from a row. Inside, left-aligned and vertically centred: a 40px heading, two lines of small text and a white email field with the button nested in it. A one-line footer sits on a white strip below."
++    }
++   ],
++   "steal": [
++    "Shape a section's bottom edge into a chevron and run a hairline from its tip to the next heading, turning 'many into one' into layout.",
++    "Overlap an enlarged, half-typed search field onto the product window so the hero shows the key interaction rather than a whole screenshot.",
++    "Frame the page as rounded panels inside a slightly darker margin so sections read as stacked sheets."
++   ]
++  },
++  {
++   "id": "opl-typewave",
++   "name": "Typewave",
++   "url": "https://typewave.blendmodes.com",
++   "source": "One Page Love",
++   "kind": "dev-tool",
++   "score": 7.2,
++   "idea": "A plugin about type scales sold on a near-black page where flat saturated fields (orange, lime, blue) act as stages for the plugin's own dark interface.",
++   "mood": [
++    "dark",
++    "tidy",
++    "friendly",
++    "product-focused"
++   ],
++   "archetype": "centred-statement-media-below",
++   "hero": "Near-black field. Nav row at the top: pixel-block logo and wordmark left, four plain links centred (one carrying a tiny lime tag), a cream rectangular button with a Figma glyph right. The headline sits centred around mid-height: three lines at about 6.7vw, medium weight, off-white, with the third line recoloured pale lime. Below it a three-line 18px paragraph held to about 45% of the width, then a small cream button repeating the nav action. About 150px lower, the top edge of a flat orange slab, 70% of the viewport wide with barely rounded corners, peeks over the fold; it holds the plugin window.",
++   "type": "Roobert throughout: weight 500 for the 96px headline with slight negative tracking, 16-18px body, 28px card headings, about four sizes in all. Sentence case everywhere; the only emphasis device is recolouring one headline line.",
++   "colour": "#0f0f0e #191918 #e6e3da #f88616 #e4f283 #1463ff — Warm near-black ground with cream text. Orange, lime and electric blue never colour paragraphs; they only fill the rectangles behind product screenshots and the matching step-number chips.",
++   "imagery": "Dark plugin windows with a soft drop shadow, floated centred on flat saturated rectangles (orange, lime, blue, one pink); the rectangles are near square-cornered and inset inside a slightly lighter dark card.",
++   "layout": "Centred hero, then a 1000px container of full-width dark cards, each split one-third text and two-thirds colour stage. Export features alternate text and tile left to right. A small two-button bar stays pinned bottom-centre.",
++   "sections": [
++    {
++     "role": "how-it-works",
++     "description": "Three stacked cards in a slightly lighter black, each about 1000 by 350px. Left third: a 16px square number chip in the card's accent colour at the top, a three-line 28px heading under it, and a grey 12px paragraph pushed to the card's bottom edge, leaving a tall gap between. Right two-thirds: a flat colour rectangle inset 16px with the dark plugin window centred and shadowed on it. Cards differ only by hue: lime, orange, blue."
++    },
++    {
++     "role": "intro",
++     "description": "Between demo blocks a single left-aligned sentence at about 36px sits alone on black with some 300px of space above and below. Its words light up from dark grey to cream one after another as you scroll, so mid-capture the sentence trails off into the background. The pinned two-button bar is the only other element on screen."
++    },
++    {
++     "role": "features",
++     "description": "Export options as alternating rows. One side: a square colour tile (lime, then orange) holding a code-panel screenshot. Other side: a 24px heading, a five-line grey paragraph and a row of three or four small monochrome tool logos. Tile and text swap sides on each row, and the tiles are staggered vertically so one row's tile overlaps the next row's text band."
++    }
++   ],
++   "steal": [
++    "Stage dark UI screenshots on flat saturated rectangles instead of on the page background, so the colour does the branding and the UI stays legible.",
++    "Pin the paragraph to the bottom of a tall card and the heading to the top so the gap between them becomes the card's composition.",
++    "Colour-key each step: the number chip and the stage behind the screenshot share one hue and nothing else on the card uses it."
++   ]
++  },
++  {
++   "id": "opl-mat",
++   "name": "Mat",
++   "url": "https://www.matwidget.com",
++   "source": "One Page Love",
++   "kind": "consumer-app",
++   "score": 7.2,
++   "idea": "The app's scrapbook cut-outs invade the page itself: stickers interrupt the headline and a green cutting mat is both brand and container.",
++   "mood": [
++    "crafty",
++    "warm",
++    "playful",
++    "personal"
++   ],
++   "archetype": "type-poster",
++   "hero": "Cream field, no navigation or logo; everything is centred. At 14% of the height a small tan caption with a cut-out camera to its left. Then a three-line lowercase headline in extra-bold rounded sans at 86px (6vw) in dark green, spanning 68% of the width, with four image cut-outs set inline at letter height: ransom-note letters spelling the name, a green cutting mat, a glass of matcha and a phone. Below, a green rectangular button with 4px radius, a faint grid texture and a soft drop shadow, carrying an apple sticker; then a two-line user count flanked by two fern leaves as a laurel. The bottom quarter is empty.",
++   "type": "Nunito ExtraBold, lowercase, -0.05em tracking at 86px for the headline, and regular or italic at 16 to 24px for copy, centred. A cursive script signs the founder's note; a monospaced face (Writer) appears only in underlined footer links.",
++   "colour": "#f4f1e8 #03372a #018c70 #0e3b2c #b9ab82 — Cream paper and a family of greens: near-black green type, mid-green button, deep green mat panels. All other colour comes from the photographic stickers scattered on the mats.",
++   "imagery": "Photographic cut-outs with white die-cut borders (duck, apple, camera, lips) scattered on dark green cutting-mat panels with grid lines and ruler ticks; a phone mock-up cropped by the panel's bottom edge.",
++   "layout": "A short centred page in a 1150px column: headline, one wide mat panel, three text columns, a narrow centred letter, then two full-bleed marquee rows of collage tiles and a three-line footer. Generous cream gaps separate every block.",
++   "sections": [
++    {
++     "role": "showcase",
++     "description": "A wide panel with rounded corners, dark green with a fine lighter grid and numbered ruler ticks around its edge like a cutting mat. A phone stands at centre, cut off by the panel's bottom edge. A dozen photographic stickers with white die-cut outlines are scattered around it at different rotations and sizes, none overlapping the phone. Beneath the panel, three text columns each start with a small cut-out object where an icon would be."
++    },
++    {
++     "role": "intro",
++     "description": "A founder's letter in a centred column about 520px wide: a small circular avatar, then four short paragraphs of italic rounded sans in dark green at about 16px, each two or three lines and separated by a full blank line, with a cursive signature in green as sign-off. There is no heading and no box, only the letter floating in cream space."
++    },
++    {
++     "role": "gallery",
++     "description": "Two full-bleed rows of landscape collage tiles, each about 320 by 150px with small rounded corners on the dark green mat ground, separated by 10px gaps. The rows are offset from one another and run off both page edges, moving in opposite directions. Each tile is a different user arrangement of stickers, so the strip works as proof without captions."
++    }
++   ],
++   "steal": [
++    "Interrupt the headline with photographic cut-outs sized to the letter height, including the product name spelled in ransom-note letters.",
++    "Give a container the texture of a real object from the product's world, here a cutting mat with grid and ruler ticks, instead of a flat card.",
++    "Use small photo cut-outs with die-cut white borders where feature icons would go."
++   ]
++  }
++ ],
++ "scenes": []
++}
+\ No newline at end of file
+diff --git a/apps/web/messages/ar.json b/apps/web/messages/ar.json
+index 9f5bad2..5bfe673 100644
+--- a/apps/web/messages/ar.json
++++ b/apps/web/messages/ar.json
+@@ -1166,5 +1166,15 @@
+     "totalRow": "المجموع الكلي",
+     "openGame": "جولة مفتوحة",
+     "hostHint": "المضيف وحده يستطيع التسجيل أو الحذف، حتى بعد إغلاق الجولة."
++  },
++  "states": {
++    "notFoundTitle": "الصفحة غير موجودة",
++    "notFoundBody": "هذه الصفحة غير موجودة أو تم نقلها.",
++    "backHome": "العودة إلى الرئيسية",
++    "errorTitle": "حدث خطأ ما",
++    "errorBody": "تعذّر تحميل هذه الصفحة. حاول مرة أخرى بعد قليل.",
++    "retry": "حاول مرة أخرى",
++    "loading": "جارٍ التحميل…",
++    "skipToContent": "انتقل إلى المحتوى"
+   }
+ }
+diff --git a/apps/web/messages/en.json b/apps/web/messages/en.json
+index d8d5882..35b3a98 100644
+--- a/apps/web/messages/en.json
++++ b/apps/web/messages/en.json
+@@ -1166,5 +1166,15 @@
+     "totalRow": "Total",
+     "openGame": "Open game",
+     "hostHint": "Only the host can record or remove these, even after the game is closed."
++  },
++  "states": {
++    "notFoundTitle": "Page not found",
++    "notFoundBody": "This page doesn't exist or was moved.",
++    "backHome": "Back to home",
++    "errorTitle": "Something went wrong",
++    "errorBody": "We couldn't load this page. Try again in a moment.",
++    "retry": "Try again",
++    "loading": "Loading…",
++    "skipToContent": "Skip to content"
+   }
+ }
+diff --git a/apps/web/messages/es.json b/apps/web/messages/es.json
+index f0d7a33..3048a59 100644
+--- a/apps/web/messages/es.json
++++ b/apps/web/messages/es.json
+@@ -1166,5 +1166,15 @@
+     "totalRow": "Total",
+     "openGame": "Partida abierta",
+     "hostHint": "Solo el anfitrión puede registrar o quitar, incluso con la partida cerrada."
++  },
++  "states": {
++    "notFoundTitle": "Página no encontrada",
++    "notFoundBody": "Esta página no existe o se ha movido.",
++    "backHome": "Volver al inicio",
++    "errorTitle": "Algo salió mal",
++    "errorBody": "No pudimos cargar esta página. Inténtalo de nuevo en un momento.",
++    "retry": "Reintentar",
++    "loading": "Cargando…",
++    "skipToContent": "Ir al contenido"
+   }
+ }
+diff --git a/apps/web/messages/fa.json b/apps/web/messages/fa.json
+index e89d90e..bc84c87 100644
+--- a/apps/web/messages/fa.json
++++ b/apps/web/messages/fa.json
+@@ -1166,5 +1166,15 @@
+     "totalRow": "جمع کل",
+     "openGame": "بازی باز",
+     "hostHint": "فقط میزبان می‌تواند ثبت یا پاک کند؛ حتی بعد از بستن بازی."
++  },
++  "states": {
++    "notFoundTitle": "صفحه پیدا نشد",
++    "notFoundBody": "این صفحه وجود ندارد یا جابه‌جا شده است.",
++    "backHome": "بازگشت به خانه",
++    "errorTitle": "مشکلی پیش آمد",
++    "errorBody": "نتوانستیم این صفحه را بارگذاری کنیم. چند لحظه بعد دوباره تلاش کنید.",
++    "retry": "تلاش دوباره",
++    "loading": "در حال بارگذاری…",
++    "skipToContent": "پرش به محتوا"
+   }
+ }
+diff --git a/apps/web/messages/fr.json b/apps/web/messages/fr.json
+index e53693e..ed88fec 100644
+--- a/apps/web/messages/fr.json
++++ b/apps/web/messages/fr.json
+@@ -1166,5 +1166,15 @@
+     "totalRow": "Total",
+     "openGame": "Partie ouverte",
+     "hostHint": "Seul l'hôte peut enregistrer ou supprimer, même après la clôture de la partie."
++  },
++  "states": {
++    "notFoundTitle": "Page introuvable",
++    "notFoundBody": "Cette page n'existe pas ou a été déplacée.",
++    "backHome": "Retour à l'accueil",
++    "errorTitle": "Une erreur s'est produite",
++    "errorBody": "Impossible de charger cette page. Réessayez dans un instant.",
++    "retry": "Réessayer",
++    "loading": "Chargement…",
++    "skipToContent": "Aller au contenu"
+   }
+ }
+diff --git a/apps/web/messages/it.json b/apps/web/messages/it.json
+index 4fe5503..ec5c1f7 100644
+--- a/apps/web/messages/it.json
++++ b/apps/web/messages/it.json
+@@ -1166,5 +1166,15 @@
+     "totalRow": "Totale",
+     "openGame": "Partita aperta",
+     "hostHint": "Solo l'host può registrare o rimuovere, anche a partita chiusa."
++  },
++  "states": {
++    "notFoundTitle": "Pagina non trovata",
++    "notFoundBody": "Questa pagina non esiste o è stata spostata.",
++    "backHome": "Torna alla home",
++    "errorTitle": "Qualcosa è andato storto",
++    "errorBody": "Impossibile caricare questa pagina. Riprova tra un momento.",
++    "retry": "Riprova",
++    "loading": "Caricamento…",
++    "skipToContent": "Vai al contenuto"
+   }
+ }
+diff --git a/apps/web/messages/ru.json b/apps/web/messages/ru.json
+index f2e0ac6..9fc6fc8 100644
+--- a/apps/web/messages/ru.json
++++ b/apps/web/messages/ru.json
+@@ -1166,5 +1166,15 @@
+     "totalRow": "Всего",
+     "openGame": "Открытая игра",
+     "hostHint": "Записывать и удалять может только хозяин, даже после закрытия игры."
++  },
++  "states": {
++    "notFoundTitle": "Страница не найдена",
++    "notFoundBody": "Эта страница не существует или была перемещена.",
++    "backHome": "На главную",
++    "errorTitle": "Что-то пошло не так",
++    "errorBody": "Не удалось загрузить страницу. Попробуйте ещё раз через минуту.",
++    "retry": "Повторить",
++    "loading": "Загрузка…",
++    "skipToContent": "Перейти к содержимому"
+   }
+ }
+diff --git a/apps/web/next.config.ts b/apps/web/next.config.ts
+index 30b6949..eb87e28 100644
+--- a/apps/web/next.config.ts
++++ b/apps/web/next.config.ts
+@@ -15,7 +15,13 @@ const securityHeaders = [
+   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+ ];
+ 
++// Next 16 blocks dev resources (HMR, client chunks) for any host other than localhost, so a page
++// opened at http://127.0.0.1:3100 or a LAN address renders but never becomes interactive (side pot
++// calculator, language switcher...). Extra dev hosts can be added with DEV_ORIGINS=192.168.1.20,mypc.local
++const devOrigins = ["127.0.0.1", "[::1]", ...(process.env.DEV_ORIGINS ?? "").split(",").map((h) => h.trim()).filter(Boolean)];
++
+ const nextConfig: NextConfig = {
++  allowedDevOrigins: devOrigins,
+   poweredByHeader: false,
+   experimental: { serverActions: { bodySizeLimit: "2mb" } },
+   transpilePackages: ["@poker/domain", "@poker/db"],
+diff --git a/apps/web/package.json b/apps/web/package.json
+index 5c03dc2..d25fce3 100644
+--- a/apps/web/package.json
++++ b/apps/web/package.json
+@@ -3,9 +3,9 @@
+   "version": "0.1.0",
+   "private": true,
+   "scripts": {
+-    "dev": "next dev",
++    "dev": "next dev -p 3100",
+     "build": "next build",
+-    "start": "next start",
++    "start": "next start -p 3100",
+     "lint": "eslint src",
+     "typecheck": "tsc --noEmit",
+     "test": "vitest run --passWithNoTests"
+diff --git a/apps/web/public/apple-touch-icon.png b/apps/web/public/apple-touch-icon.png
+new file mode 100644
+index 0000000000000000000000000000000000000000..607c1d070551547437ca7e72005517930da61f2c
+GIT binary patch
+literal 3350
+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
+
+literal 0
+HcmV?d00001
+
+diff --git a/apps/web/public/icon-192.png b/apps/web/public/icon-192.png
+new file mode 100644
+index 0000000000000000000000000000000000000000..1b1d6b56f01222406d44e37fd97f8abe49fe0da7
+GIT binary patch
+literal 3576
+zcmX|Ec|4SB8-8ZYFvc2_B{{|tLt&_cvdm(MlOnQB)(DAE(Tr`zE@W##lBG=%O31Fp
+zlG9<dS<8A#vW+l?!F=QU{l4#y_j#WCey;nv-uL%D?|t9zb=y<NMUeZD000pyOEWv(
+z+`fAu_<5t<*FXWDzs<^waE5$u;Tta9^@}W=xfJvaKdESW<T{gtl%IHXT`tS-DV`Rt
+zcl*4wdm2K}Y+z0)TeHMdN#(57<TnwhAe`bhboqASUUV7Lx!>SqSDse3k%d+KEv%OH
+zGxFuWd6UR+BkEXl!%}ZSB*SJOBf4wIK5AxcsTEg~z1MlRV~W5j>b+a*tNHS1b8b3G
+zZ&Y`u6=m)-(5@|VG41Za%VT45Eai(w7(wox!BTb!PKvi2H4Ze%$-gRdsB<h&hZfO;
+z)6{JJ!_rFc)-vy2a0{w*EMPBOr_bEIS6J$SZE7lw6FY&DeT%J$#Ri_#6_ymlU!a6S
+z4o5%w5}=t6(@rfFsSy71WAlfU=#|?Sfi3&E&S=r4{NB5kxhWh(!O<IN*Xny_<nyNz
+zwI8Hh7A7V*`SwreE?k=1kEDtwD=8B~2ZB_O#TpZPb>paXV^mBJDg2ai>+Ak8WwS2y
+zk<g#FRzNZPVBQ+Tdq8{AwnGpVAX)xKC!sji)Q`E|Xn)LovZ5`n#8S0-UxnV_Gd1kh
+zw^jf<$2d1I-cf-|HqEv!@t<=Rk$SQ3NT4;lsVjb}$aL9*u$&u$$q_<bl2pt)j`(F@
+zEkd=4!0hOz79FMvCMz`%mvv#Tf&q6Vb~3KoZk^B!4A(*Bm-$CtY4%coh@_=@q^brX
+zEJQ(STl&<ldI=h~f*|x-VC{hI)(G=2uadk5HP2mQ7}rJ@v*Uu|j-T1G^TGHhO~@t`
+zdkIc3)a*&_p34j`jGaH`SHzX*Ia%T4w?*=muUuV%T;>dtl<XB>`af@QcY703Tmr$*
+z*}r*wP0}>`Y23+WB~pn-QnZLLPd=fQt4b=85H){{OfBHVMk5H4$;Ok6)#L#`zUPe7
+z!sd@9NF_r4iFYb8TOsZ9RV&+5@K?kYXL!JXDHr^#$RtC}$JQ&vcShr}9BnTaF0&*>
+zx*EBku2Jpf79rqCiIp37kz6+89Vm@zF}j;lbNGjO?bctlNFy20yEFB)tXo5TGEB^u
+z>b5FT<+XPxEHv;MxH{%xG#KqR;SR8zTr7vmBOR<p8pSyjU!SZ5{woIwc(53hv?PF+
+zZdDQA3Sj*h88Av3-MvB9@i-pr8-FLH3=IloQehB?vl)0c3hC$5mXNt85`e?jNP;!4
+zgcK@<!+*57V8O*5znzxwowezRD&cBB;I_qi_Y6;Z7-f3&YHhCxZD~;GCZ6{p&P32R
+z?R<Ilv(5T&Zkus(_V5*|ftUVHn51%#B(z$_i!W-Q+(doop`*hq)5#0($M4m2D?|$)
+z_Z{Ei7)CB;s?D>gOB0sA<8Ckwh4FhK&h0P${r9H+c&%R%S>gewb(5pd`W+eUr9vTq
+zIvLtNXoz@sPW-x<_UI(vXbZLe#9(W+zSeVZ6$&0yYJj81Hl`E}H{L3yZyIto&Kq)u
+z&!?+gG~_)dmNFq*w4Qm$`^Z;0>A^5xj6k-F^2a}E^DV2NAx-RZdzk~*{$=>hf07%-
+z<{VN7veUDtE=8;xtzt8BnzreMtjEqzj@LW_KA528ZdBYn4<TF6_C^xwP&DD!8asK!
+zEO~glj{EoR&1(wB4({YtO8J>WLQ*;z`P`>P3-s(r{T)h8iv$L?hyfWsZd*Eu?V9lR
+z*ydE+WAWDyK)U+URHi!Y5(aqZo!M1bRtM@Q8+i(E$S4{r)s7c{Himnene(`bSs74l
+zT&Wb*T2ZDDnq~VTjYpDh0kQNX?b4|{0V?gmA$fPEGG`SzJ}8<Zzj25A)rfa725?W>
+z1uY%{HV@jLEY_)DkJz*a5#*Mw)Iyi2y~@;kBU|rG%A(V=uiAme^xta-K3RCw|3<@$
+z=`}d&N0W`UCYg;B9vw{u&}#bHm1grtGilfC0ZqE`B{`$MY&B{*8VRhY6Dvb!iNkdh
+zd=sB$`%XuPta%%*<z`}$PW=$(M!Jn%Ns%m44}4wi!j)otN`h14g@JyH(X=FKeB9>U
+zwM>3l+TpgSFYY)t(n3Ng3@7diK1MlFF~qHW7y(XuZeuyaIo`S5{;7?sS>}i-1I%<W
+z#+D_uq?Y&whECu_xl%T4f`^^BY<^`fT#_bU#d_RXLu__Xf)QY}AhA&eE3I2XKD@Qu
+z`0i;`wo29iC)9M_aEY&Y7}p~12>Jh_iszw5wN^ph1!(IWBTmOn87opNPJbc@{K4(<
+zX044XoKu;O*eo2JALT|RXH%O++IytMhI^z%y;P=uZya=J7NP02EwY<sS-K#A`gJt&
+zcS^2)4@DMy`#pcZs{XG?SzyeZx?gqedW0+(TkC1Ub;^&)|J`I3J$)YBz38x|QF%MV
+ziCOM}0#??LJP9OT4@FZiUgGp*WR4$Na09P5zN<QaomR~&@G8Q9oIFRGdWkV!@0Gy+
+zuy0Oc_32ZhXBF!3t;@QgSuACp@4DfCr;V=nfX((krPe#>2W=JxqY8C|Dbd|=7kPDV
+zzLS+Z`8S(wprVkrnq3d+*Zi=^jyQOPA_r;-i|mn|ta=FAeb0~EURIg)CQK=W2Spx8
+z;Y`u9FW9osUE|}Qv8z$W>*GBfz?4&ZE!{6$@_{LbCjUrYGFdSJ50?<~@_sRupjAi-
+zbO0<u_a5VkaT8n;XxJgxH{LJ%&F;6^hZAbsa}33M^&D_1l@jis(-#xduzlq<+a<-1
+z#MT_Rxua!YXA~GslsE&<-E<Xn-txmWHP5||jNEn~BNl9U6ZmPWq1_mv^hAro&OZcb
+zGS>V@w2j`=spH*-#y1gqpkwp^nPEGixhGiF`{D<RA!M|Oy$LgY6VkzMV2@Lf`X`#(
+zJ9{t9%pgzpLsCKqzNgPOP8c-(PDlDVWf+F-d_A`)&`8zNUO(vih-|9Rt)-LY8Y<J=
+zuMXs866gZ=6(Y?&U(_(Q-8iLgfh|{Y^<S4LXOnV@dd$TQrdJL>WiIhPL(dN_tE;i$
+z;_Scd$brhvo?H1OqXJz7w{J1>R?gSZo;%n5(%5|r1L63g9cyy*=2~s5mvBBbOFT`l
+zYalU5=*7FFy_fXs^uEc3EJ7>_^BbH}=))WNDdyUAbs*U;qUE=I%Jt9Jr|(4Z%#gW%
+z%tu%HS^voM(wqEf<S&Fpjv5^87x<`=!<DH*l!x`?LbDFL|2sAO*q!_%W#;<<91`Cb
+zQH#^5C2ZJ(%N_Ye2iwsX`uMFPkoXJ}%E~tuWs5+TpZvbQ6^&@|N73#Hk8Fj1@-^Va
+zoyz%VN9Q?o<21O8{d->FlSY;p94%0IEk^Z`16l!z?~3@ge)Cq9hn2eu5}!owR`uh?
+z%xou5hCxi!ikl2-9snQzTQ`Dn0f{epIXEGc^jlF%`f8e4I4}FEG)x(4xGDA}K__Gs
+z?7Ze~)-5e1b0BrZ2PRR<@#;YIyu)s`HHNomSL`Or*N=d~ThPIn@zw0T^6ul=Go;ER
+zq=AvN7nZh4X_s`spRfsZhIw2ZaCHDG&Y|ELq8<8QJ5UEa*+b(MGYJ%IqOk0holC&C
+zpu%omTxq_4HUy&#oI-Z@JWbv<&5~#dKY7*jvnXIe!shu{-WUnkDtEA8?n{FKC`Yu1
+z3Y*8#K!qYWI0|uodZt=zsKZtT@slfEQ2r%gKTQJ4G)_|DRrEgy;O+ttA1OXIQoJpb
+zN)}mQNR1S+7!Mm2fSXtr-jjt(8m7{V4}*Ys6$Ap`wEcz|0}w&|{3FE=czD4D2K*K7
+zM4dOUfzY!wN*<=}siE$r*SSH^6;P21XrvBm8R^SCo44)voE{J9_jNW(9OjPw&}ZR+
+zWjT%gcyQjPg|FBFZ}jOR>&gAys79=+d;2_9zJ|L$N$jTrFjhm~Z=c6y4!8LluZjR(
+zztXM|g5q^m3Bz2dFZaNlcL)dx8zK$(*ODSbFuD$<n8q8(qR#p84lf%%K0G2;E2HNO
+zajs^r)JfZv5AUDo_yH;3ZR?{^yyjv$R}(jhzYfJC2=a<UnY^yBgkAN3J%in^K>>~$
+zHA7;bYZbDTMrS!Q{hLP)#dbi@37(>gW$G|HGs8{~i{-)4ymyv7Cw@@iVOI6*LS$=O
+zQ8rKXjRY~|57TTSep$hEId~|=4o*Ws)l*+}+C1g$5@aLep0QxMf`-Oac&A6rtu7=`
+zgpJ6YSPW04J`@So_7<Rt$GJ46-Np|Jst6b{f)6j`w|RMAmY~UK-FdDA>()W_z*4Cq
+z(hZKh?)d^hloQ~ZACgE)p%<QfcX?ak(OGi1Z&yfAbB|N}0|S(-kngsTKgH2@>*W4p
+zx2?cA1d*bK;DlmyB~T`j(NZzJx;Ynk-nSBQA^QkJX{On+w(NRa_LI|WxjQdhq2l)9
+zK3PUWxH}hjL*axnG~#$DCf0P)13&3>n(eUvM}QI}MG<kJSx5K;f=)<3AdcBA$83t!
+zgiq=(o9vMk!9OX)-rAG&a#B9FziU_-!=59T4-31Ki+ny@)362+1kB$_`U&Smm!fVn
+zOI=_-+GCH<wiETtf$E@>&A%|LV`Bvv*4@3IxsZ#o@0X9NxtH<&=zx{^DYHtVXWV}P
+DtUhxF
+
+literal 0
+HcmV?d00001
+
+diff --git a/apps/web/public/icon-512.png b/apps/web/public/icon-512.png
+new file mode 100644
+index 0000000000000000000000000000000000000000..bf1e6e89728d6567b36f90420b04cfa0747712b3
+GIT binary patch
+literal 10612
+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
+U-_in7Q631}tsSi%SWqwgABZ3A<NyEw
+
+literal 0
+HcmV?d00001
+
+diff --git a/apps/web/public/icon-maskable-512.png b/apps/web/public/icon-maskable-512.png
+new file mode 100644
+index 0000000000000000000000000000000000000000..5651c8643880c1b6dfc6b2f1cd36aa63ac1fb2d1
+GIT binary patch
+literal 5732
+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
+ByKevh
+
+literal 0
+HcmV?d00001
+
+diff --git a/apps/web/public/manifest.webmanifest b/apps/web/public/manifest.webmanifest
+index 7214a5b..712ea00 100644
+--- a/apps/web/public/manifest.webmanifest
++++ b/apps/web/public/manifest.webmanifest
+@@ -5,5 +5,9 @@
+   "display": "standalone",
+   "background_color": "#f6f5f1",
+   "theme_color": "#0f6e4f",
+-  "icons": []
++  "icons": [
++    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
++    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
++    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
++  ]
+ }
+diff --git a/apps/web/src/app/[locale]/draws/[drawId]/page.tsx b/apps/web/src/app/[locale]/draws/[drawId]/page.tsx
+index edee7a9..ccd85be 100644
+--- a/apps/web/src/app/[locale]/draws/[drawId]/page.tsx
++++ b/apps/web/src/app/[locale]/draws/[drawId]/page.tsx
+@@ -51,7 +51,7 @@ export default async function DrawPage({
+         <Link href={`/games/${game.id}#draw`}>← {home.name}</Link>
+       </p>
+       <h1>
+-        🎲 {t("drawTitle")} <span className={`badge ${open ? "live" : "closed"}`}>{open ? t("drawStatusOpen") : t("drawStatusRevealed")}</span>
++        {t("drawTitle")} <span className={`badge ${open ? "live" : "closed"}`}>{open ? t("drawStatusOpen") : t("drawStatusRevealed")}</span>
+       </h1>
+       {game.status === "live" && <LiveRefresh gameId={game.id} />}
+       <ErrorNotice code={error} />
+diff --git a/apps/web/src/app/[locale]/error.tsx b/apps/web/src/app/[locale]/error.tsx
+new file mode 100644
+index 0000000..901e78a
+--- /dev/null
++++ b/apps/web/src/app/[locale]/error.tsx
+@@ -0,0 +1,28 @@
++"use client";
++
++import { useTranslations } from "next-intl";
++import { useEffect } from "react";
++import { Logo } from "@/components/Logo";
++import { Link } from "@/i18n/navigation";
++
++export default function ErrorPage({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
++  const t = useTranslations("states");
++  useEffect(() => {
++    console.error(error);
++  }, [error]);
++  return (
++    <div className="state-page" role="alert">
++      <Logo />
++      <h1>{t("errorTitle")}</h1>
++      <p>{t("errorBody")}</p>
++      <div className="row">
++        <button className="btn" type="button" onClick={reset}>
++          {t("retry")}
++        </button>
++        <Link className="btn secondary" href="/">
++          {t("backHome")}
++        </Link>
++      </div>
++    </div>
++  );
++}
+diff --git a/apps/web/src/app/[locale]/games/[gameId]/page.tsx b/apps/web/src/app/[locale]/games/[gameId]/page.tsx
+index a5d8209..802e50c 100644
+--- a/apps/web/src/app/[locale]/games/[gameId]/page.tsx
++++ b/apps/web/src/app/[locale]/games/[gameId]/page.tsx
+@@ -160,7 +160,7 @@ export default async function GamePage({
+             return (
+               <tr key={e.playerId} className={p?.userId === userId ? "me" : undefined}>
+                 <td>
+-                  <PlayerName name={name.get(e.playerId) ?? "?"} avatar={p?.avatar} /> {e.confirmedAt && <span className="badge" title={t("confirmed")}>✓</span>}
++                  <PlayerName name={name.get(e.playerId) ?? "?"} avatar={p?.avatar} /> {e.confirmedAt && <span className="badge">{t("confirmed")}</span>}
+                 </td>
+                 <td className="end num">{money(e.totalIn)}</td>
+                 <td className="end">
+@@ -179,8 +179,8 @@ export default async function GamePage({
+                       <form action={removeFromGameAction}>
+                         <input type="hidden" name="gameId" value={game.id} />
+                         <input type="hidden" name="playerId" value={e.playerId} />
+-                        <button className="linklike" type="submit" aria-label="remove">
+-                          ✕
++                        <button className="linklike" type="submit" aria-label={tp("remove")}>
++                          ×
+                         </button>
+                       </form>
+                     )}
+@@ -446,7 +446,7 @@ export default async function GamePage({
+                           <input type="hidden" name="homeId" value={home.id} />
+                           <input type="hidden" name="from" value="game" />
+                           <button className="linklike" type="submit" aria-label={tb("remove")}>
+-                            ✕
++                            ×
+                           </button>
+                         </form>
+                       </td>
+@@ -596,7 +596,7 @@ export default async function GamePage({
+ 
+       {story && (
+         <section className="card stack" id="story">
+-          <h2>📖 {ti("storyTitle")}</h2>
++          <h2>{ti("storyTitle")}</h2>
+           <p className="house-rules">{story.body}</p>
+           <p className="small muted">{ti("storyNote")}</p>
+         </section>
+diff --git a/apps/web/src/app/[locale]/homes/[homeId]/page.tsx b/apps/web/src/app/[locale]/homes/[homeId]/page.tsx
+index 335c93f..de07c6b 100644
+--- a/apps/web/src/app/[locale]/homes/[homeId]/page.tsx
++++ b/apps/web/src/app/[locale]/homes/[homeId]/page.tsx
+@@ -193,7 +193,7 @@ export default async function HomePage({
+           <ul className="plain player-list">
+             {active.map((p) => (
+               <li key={p.id}>
+-                <PlayerName name={p.displayName} avatar={p.avatar} /> {p.userId && <span className="badge">✓</span>}
++                <PlayerName name={p.displayName} avatar={p.avatar} /> {p.userId && <span className="badge">{t("member")}</span>}
+                 {canEdit(p) && playerEdit(p)}
+               </li>
+             ))}
+@@ -222,7 +222,7 @@ export default async function HomePage({
+             return (
+               <li key={p.id} className="row" style={{ justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+                 <span>
+-                  <PlayerName name={p.displayName} avatar={p.avatar} /> {p.userId && <span className="badge">✓</span>}
++                  <PlayerName name={p.displayName} avatar={p.avatar} /> {p.userId && <span className="badge">{t("member")}</span>}
+                 </span>
+                 <span className="row" style={{ flexWrap: "nowrap", alignItems: "center" }}>
+                   {info ? (
+@@ -367,7 +367,7 @@ export default async function HomePage({
+                             <input type="hidden" name="homeId" value={home.id} />
+                             <input type="hidden" name="from" value="home" />
+                             <button className="linklike" type="submit" aria-label={th("remove")}>
+-                              ✕
++                              ×
+                             </button>
+                           </form>
+                         </td>
+@@ -750,7 +750,7 @@ export default async function HomePage({
+               </label>
+               <label style={{ flex: "1 1 220px" }}>
+                 {tp("inviteEmailLabel")}
+-                <input name="email" type="email" maxLength={254} dir="ltr" placeholder="name@example.com" />
++                <input name="email" type="email" maxLength={254} dir="ltr" autoComplete="email" />
+               </label>
+               <button className="btn secondary" type="submit">
+                 {t("inviteCreate")}
+diff --git a/apps/web/src/app/[locale]/homes/[homeId]/stats/page.tsx b/apps/web/src/app/[locale]/homes/[homeId]/stats/page.tsx
+index 1ccd95f..7df952d 100644
+--- a/apps/web/src/app/[locale]/homes/[homeId]/stats/page.tsx
++++ b/apps/web/src/app/[locale]/homes/[homeId]/stats/page.tsx
+@@ -12,9 +12,7 @@ import { loadHomeResults, playerSlots } from "@/lib/home";
+ import { pdfEnabled } from "@/lib/pdf";
+ import { withUser } from "@/lib/session";
+ 
+-const MEDAL = { 1: "🥇", 2: "🥈", 3: "🥉" } as const;
+ const MAX_LINES = 8;
+-const BADGE_ICON = { streak: "🔥", bigWin: "💰", regular: "📅", comeback: "🔄" } as const;
+ 
+ export default async function StatsPage({
+   params,
+@@ -226,7 +224,6 @@ export default async function StatsPage({
+                   <tr key={p.playerId}>
+                     {/* The rank of every player (not just medals), like the Excel sheet's # column. */}
+                     <td className={`end num rank${p.medal ? ` medal-${p.medal}` : ""}`}>
+-                      {p.medal ? `${MEDAL[p.medal]} ` : ""}
+                       {num(i + 1)}
+                     </td>
+                     <td>
+@@ -255,9 +252,6 @@ export default async function StatsPage({
+               <div className="badges">
+                 {earned.map((b) => (
+                   <div className="badge-card" key={`${b.kind}-${b.playerId}`}>
+-                    <span className="icon" aria-hidden="true">
+-                      {BADGE_ICON[b.kind]}
+-                    </span>
+                     <strong>{tb(b.kind)}</strong>
+                     <span>
+                       <Link href={`/homes/${home.id}/players/${b.playerId}`}>{b.name}</Link>
+diff --git a/apps/web/src/app/[locale]/homes/page.tsx b/apps/web/src/app/[locale]/homes/page.tsx
+index 7f6af3a..79d6dbb 100644
+--- a/apps/web/src/app/[locale]/homes/page.tsx
++++ b/apps/web/src/app/[locale]/homes/page.tsx
+@@ -35,7 +35,7 @@ export default async function Homes({ searchParams }: { searchParams: Promise<{
+           {ts("verifyBanner")} <Link href="/settings">{ts("verifyBannerLink")}</Link>
+         </div>
+       )}
+-      {rows.length === 0 && <p className="muted">{t("empty")}</p>}
++      {rows.length === 0 && <p className="empty">{t("empty")}</p>}
+       <div className="grid">
+         {rows.map((h) => (
+           <Link key={h.id} href={`/homes/${h.id}`} className="card" style={{ color: "inherit" }}>
+diff --git a/apps/web/src/app/[locale]/layout.tsx b/apps/web/src/app/[locale]/layout.tsx
+index eae0922..115fcad 100644
+--- a/apps/web/src/app/[locale]/layout.tsx
++++ b/apps/web/src/app/[locale]/layout.tsx
+@@ -2,11 +2,13 @@ import "@fontsource-variable/inter";
+ import "@fontsource-variable/vazirmatn";
+ import "@fontsource-variable/noto-sans-arabic";
+ import "../globals.css";
+-import type { Metadata } from "next";
++import type { Metadata, Viewport } from "next";
+ import { NextIntlClientProvider, hasLocale } from "next-intl";
+ import { getTranslations, setRequestLocale } from "next-intl/server";
+ import { notFound } from "next/navigation";
+ import { Link } from "@/i18n/navigation";
++import { Logo } from "@/components/Logo";
++import { NavLink } from "@/components/NavLink";
+ import { dir, routing } from "@/i18n/routing";
+ import { currentUser } from "@/lib/auth";
+ import { signOutAction } from "../actions/auth";
+@@ -22,9 +24,26 @@ export function generateStaticParams() {
+ export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+   const { locale } = await params;
+   const t = await getTranslations({ locale, namespace: "meta" });
+-  return { title: t("title"), description: t("description"), manifest: "/manifest.webmanifest" };
++  return {
++    title: { default: t("title"), template: `%s · ${t("title")}` },
++    description: t("description"),
++    manifest: "/manifest.webmanifest",
++    applicationName: "Poker Home",
++    icons: { apple: "/apple-touch-icon.png" },
++    openGraph: { title: t("title"), description: t("description"), type: "website", siteName: "Poker Home" },
++  };
+ }
+ 
++export const viewport: Viewport = {
++  width: "device-width",
++  initialScale: 1,
++  colorScheme: "light dark",
++  themeColor: [
++    { media: "(prefers-color-scheme: light)", color: "#f6f5f1" },
++    { media: "(prefers-color-scheme: dark)", color: "#121311" },
++  ],
++};
++
+ export default async function LocaleLayout({
+   children,
+   params,
+@@ -36,6 +55,7 @@ export default async function LocaleLayout({
+   if (!hasLocale(routing.locales, locale)) notFound();
+   setRequestLocale(locale);
+   const t = await getTranslations("nav");
++  const ts = await getTranslations("states");
+   const user = await currentUser();
+   const theme = (await cookies()).get(THEME_COOKIE)?.value;
+ 
+@@ -43,22 +63,26 @@ export default async function LocaleLayout({
+     <html lang={locale} dir={dir(locale)} data-theme={isTheme(theme) && theme !== "system" ? theme : undefined}>
+       <body>
+         <NextIntlClientProvider>
++          <a className="skip-link" href="#main">
++            {ts("skipToContent")}
++          </a>
+           <header className="topbar">
+             <div className="shell">
+               <Link href={user ? "/homes" : "/"} className="brand">
+-                ♠ Poker Home
++                <Logo />
++                Poker Home
+               </Link>
+-              <nav className="nav">
+-                {user && !user.needsTwoFactor && <Link href="/homes">{t("homes")}</Link>}
+-                <Link href="/tools/sidepot">{t("sidepot")}</Link>
+-                <Link href="/tools/showdown">{t("showdown")}</Link>
+-                <Link href="/rules">{t("rules")}</Link>
+-                <Link href="/pricing">{t("pricing")}</Link>
++              <nav className="nav" aria-label="Poker Home">
++                {user && !user.needsTwoFactor && <NavLink href="/homes">{t("homes")}</NavLink>}
++                <NavLink href="/tools/sidepot">{t("sidepot")}</NavLink>
++                <NavLink href="/tools/showdown">{t("showdown")}</NavLink>
++                <NavLink href="/rules">{t("rules")}</NavLink>
++                <NavLink href="/pricing">{t("pricing")}</NavLink>
+                 {user ? (
+                   <>
+-                    {!user.needsTwoFactor && <Link href="/account/billing">{t("billing")}</Link>}
+-                    <Link href="/settings">{t("settings")}</Link>
+-                    {isAdmin(user) && <Link href="/admin">{t("admin")}</Link>}
++                    {!user.needsTwoFactor && <NavLink href="/account/billing">{t("billing")}</NavLink>}
++                    <NavLink href="/settings">{t("settings")}</NavLink>
++                    {isAdmin(user) && <NavLink href="/admin">{t("admin")}</NavLink>}
+                     <form action={signOutAction}>
+                       <button className="linklike" type="submit">
+                         {t("signOut")}
+@@ -66,13 +90,15 @@ export default async function LocaleLayout({
+                     </form>
+                   </>
+                 ) : (
+-                  <Link href="/signin">{t("signIn")}</Link>
++                  <NavLink href="/signin">{t("signIn")}</NavLink>
+                 )}
+                 <LocaleSwitcher label={t("language")} />
+               </nav>
+             </div>
+           </header>
+-          <main className="shell">{children}</main>
++          <main id="main" className="shell" tabIndex={-1}>
++            {children}
++          </main>
+           <footer className="shell footer small muted">
+             <Link href="/terms">{t("terms")}</Link> · <Link href="/privacy">{t("privacy")}</Link>
+           </footer>
+diff --git a/apps/web/src/app/[locale]/loading.tsx b/apps/web/src/app/[locale]/loading.tsx
+new file mode 100644
+index 0000000..32d904a
+--- /dev/null
++++ b/apps/web/src/app/[locale]/loading.tsx
+@@ -0,0 +1,13 @@
++import { getTranslations } from "next-intl/server";
++
++export default async function Loading() {
++  const t = await getTranslations("states");
++  return (
++    <div role="status" aria-busy="true" aria-live="polite">
++      <span className="sr-only">{t("loading")}</span>
++      <div className="skeleton" style={{ height: 36, width: "min(320px, 70%)", marginBlockEnd: 20 }} />
++      <div className="skeleton" style={{ height: 120, marginBlockEnd: 16 }} />
++      <div className="skeleton" style={{ height: 120 }} />
++    </div>
++  );
++}
+diff --git a/apps/web/src/app/[locale]/not-found.tsx b/apps/web/src/app/[locale]/not-found.tsx
+new file mode 100644
+index 0000000..ac6ef97
+--- /dev/null
++++ b/apps/web/src/app/[locale]/not-found.tsx
+@@ -0,0 +1,19 @@
++import { getTranslations } from "next-intl/server";
++import { Logo } from "@/components/Logo";
++import { Link } from "@/i18n/navigation";
++
++export default async function NotFound() {
++  const t = await getTranslations("states");
++  return (
++    <div className="state-page">
++      <Logo />
++      <h1>{t("notFoundTitle")}</h1>
++      <p>{t("notFoundBody")}</p>
++      <div className="row">
++        <Link className="btn" href="/">
++          {t("backHome")}
++        </Link>
++      </div>
++    </div>
++  );
++}
+diff --git a/apps/web/src/app/[locale]/page.tsx b/apps/web/src/app/[locale]/page.tsx
+index 077ba6a..ba1a5b1 100644
+--- a/apps/web/src/app/[locale]/page.tsx
++++ b/apps/web/src/app/[locale]/page.tsx
+@@ -1,4 +1,7 @@
+ import { getTranslations, setRequestLocale } from "next-intl/server";
++import { FrozenDemo } from "@/components/landing/FrozenDemo";
++import { LanguagesDemo } from "@/components/landing/LanguagesDemo";
++import { SettleDemo } from "@/components/landing/SettleDemo";
+ import { Link } from "@/i18n/navigation";
+ 
+ export default async function Landing({
+@@ -13,31 +16,60 @@ export default async function Landing({
+   setRequestLocale(locale);
+   const t = await getTranslations("landing");
+   return (
+-    <>
+-      {deleted && <div className="alert ok">{t("deleted")}</div>}
+-      <section className="hero">
+-        <h1>{t("title")}</h1>
+-        <p>{t("subtitle")}</p>
+-        <div className="row" style={{ marginBlockStart: 20 }}>
+-          <Link className="btn" href="/signup">
++    <div className="lp">
++      {deleted && (
++        <div className="lp-wrap">
++          <div className="alert ok" role="status">
++            {t("deleted")}
++          </div>
++        </div>
++      )}
++
++      <section className="lp-hero">
++        <div className="lp-copy">
++          <h1>{t("title")}</h1>
++          <p className="lead">{t("subtitle")}</p>
++        </div>
++        <div className="lp-actions">
++          <Link className="btn large" href="/signup">
+             {t("cta")}
+           </Link>
+-          <Link className="btn secondary" href="/tools/sidepot">
+-            {t("tryTool")}
+-          </Link>
++          <Link href="/tools/sidepot">{t("tryTool")}</Link>
++        </div>
++        <div className="lp-stage">
++          <div className="lp-shutter">
++            <SettleDemo />
++          </div>
+         </div>
+       </section>
+-      <section className="grid" style={{ marginBlockStart: 24 }}>
+-        {(["f1", "f2", "f3"] as const).map((f) => (
+-          <div className="card" key={f}>
+-            <h3>{t(`${f}Title`)}</h3>
+-            <p className="muted" style={{ margin: 0 }}>
+-              {t(`${f}Body`)}
+-            </p>
++
++      <section className="lp-wrap lp-rows">
++        <div className="lp-row">
++          <div className="lp-say">
++            <h2>{t("f1Title")}</h2>
++            <p>{t("f1Body")}</p>
+           </div>
+-        ))}
++          <div className="lp-frag">
++            <FrozenDemo />
++          </div>
++        </div>
++        <div className="lp-row">
++          <div className="lp-say">
++            <h2>{t("f3Title")}</h2>
++            <p>{t("f3Body")}</p>
++          </div>
++          <div className="lp-frag wide">
++            <LanguagesDemo />
++          </div>
++        </div>
++      </section>
++
++      <section className="lp-wrap lp-close">
++        <p className="lp-statement">{t("disclaimer")}</p>
++        <Link className="btn large" href="/signup">
++          {t("cta")}
++        </Link>
+       </section>
+-      <p className="muted small">{t("disclaimer")}</p>
+-    </>
++    </div>
+   );
+ }
+diff --git a/apps/web/src/app/api/homes/[homeId]/pdf/route.ts b/apps/web/src/app/api/homes/[homeId]/pdf/route.ts
+index 2bca7a6..e14c330 100644
+--- a/apps/web/src/app/api/homes/[homeId]/pdf/route.ts
++++ b/apps/web/src/app/api/homes/[homeId]/pdf/route.ts
+@@ -27,7 +27,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{
+ 
+   const locale = locales.find((l) => l === request.nextUrl.searchParams.get("locale")) ?? user.locale;
+   // Render from this server itself, never from a host named in the request.
+-  const origin = `http://127.0.0.1:${process.env.PORT ?? 3000}`;
++  const origin = `http://127.0.0.1:${process.env.PORT ?? 3100}`;
+   const token = request.cookies.get(SESSION_COOKIE)?.value ?? "";
+   let pdf: Buffer;
+   try {
+diff --git a/apps/web/src/app/globals.css b/apps/web/src/app/globals.css
+index e42bc2e..1dee025 100644
+--- a/apps/web/src/app/globals.css
++++ b/apps/web/src/app/globals.css
+@@ -1,94 +1,139 @@
+ /* Layout uses logical properties only (margin-inline, padding-block, inset-inline-start…)
+    so Persian and Arabic flip to right-to-left automatically. */
++/* Light and dark come from one set of light-dark() tokens; color-scheme picks the side
++   (system by default, or the theme cookie via data-theme). */
+ :root {
+-  --bg: #f6f5f1;
+-  --surface: #ffffff;
+-  --surface-2: #efede6;
+-  --text: #1c1b18;
+-  --muted: #6b675d;
+-  --border: #dedad0;
+-  --accent: #0f6e4f;
+-  --accent-text: #ffffff;
+-  --win: #0f7a3d;
+-  --loss: #b3261e;
+-  --warn-bg: #fff4d6;
+-  --warn-text: #6b4b00;
+-  --radius: 12px;
++  color-scheme: light dark;
++  /* Achromatic ledger (tasteskill app style): ink chrome on a sage ground from the felt, white
++     surfaces, one data hue (the brand green) and a near-black primary action. */
++  --bg: light-dark(#f2f5f2, #0a0a0a);
++  --surface: light-dark(#ffffff, #141414);
++  --surface-2: light-dark(#eaeeea, #1f1f1f);
++  --text: light-dark(#0a0a0a, #fafafa);
++  --muted: light-dark(#5b605c, #a3a3a3);
++  --border: light-dark(#dfe4df, #2e2e2e);
++  --border-strong: light-dark(#c3cac3, #444444);
++  --primary: light-dark(#141414, #fafafa);
++  --primary-text: light-dark(#ffffff, #0a0a0a);
++  --accent: light-dark(#0f6e4f, #3fbf8c);   /* the one data hue + the logo mark */
++  --accent-text: light-dark(#ffffff, #0b1a13);
++  --win: light-dark(#247b50, #3fc07a);
++  --loss: light-dark(#c4242a, #e5566f);
++  --warn-bg: light-dark(#fffbeb, #3a2f10);
++  --warn-text: light-dark(#92400e, #ffd97a);
++  --ok-bg: light-dark(#dcfae5, #172a1d);
++  --ok-text: light-dark(#04250e, #3fc07a);
++  --err-bg: light-dark(#ffedea, #2c1a20);
++  --err-text: light-dark(#831c1e, #ff9aae);
++  --felt: light-dark(#0c4a36, #0e2e23);
++  --felt-text: #e8f3ec;
++
++  --radius: 8px;
++  --radius-lg: 8px;
++  --radius-control: 6px;
++  --radius-chip: 4px;
++  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px; --space-6: 32px; --space-7: 48px;
++  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+   --font: "Inter Variable", system-ui, sans-serif;
+-  color-scheme: light;
+-}
+-@media (prefers-color-scheme: dark) {
+-  :root:not([data-theme="light"]) {
+-    --bg: #121311;
+-    --surface: #1b1c1a;
+-    --surface-2: #242522;
+-    --text: #ecebe6;
+-    --muted: #a19d92;
+-    --border: #34352f;
+-    --accent: #3fbf8c;
+-    --accent-text: #0b1a13;
+-    --win: #58d38a;
+-    --loss: #ff8a80;
+-    --warn-bg: #3a2f10;
+-    --warn-text: #ffd97a;
+-    color-scheme: dark;
+-  }
++
++  /* Chart palette: validated categorical order. */
++  --series-1: light-dark(#2a78d6, #3987e5); --series-2: light-dark(#eb6834, #d95926);
++  --series-3: light-dark(#1baf7a, #199e70); --series-4: light-dark(#eda100, #c98500);
++  --series-5: light-dark(#e87ba4, #d55181); --series-6: #008300;
++  --series-7: light-dark(#4a3aa7, #9085e9); --series-8: light-dark(#e34948, #e66767);
++  --pos: light-dark(#2a78d6, #3987e5); --neg: light-dark(#e34948, #e66767);
++  --grid: light-dark(#e1e6e1, #2b2b2b); --axis: light-dark(#8c928d, #6b6b6b);
+ }
+-:root[data-theme="dark"] {
+-    --bg: #121311;
+-    --surface: #1b1c1a;
+-    --surface-2: #242522;
+-    --text: #ecebe6;
+-    --muted: #a19d92;
+-    --border: #34352f;
+-    --accent: #3fbf8c;
+-    --accent-text: #0b1a13;
+-    --win: #58d38a;
+-    --loss: #ff8a80;
+-    --warn-bg: #3a2f10;
+-    --warn-text: #ffd97a;
+-    color-scheme: dark;
+-  }
++:root[data-theme="light"] { color-scheme: light; }
++:root[data-theme="dark"] { color-scheme: dark; }
+ 
++/* Persian and Arabic: taller line box, no tracking (it breaks joined letters). */
+ :lang(fa) { --font: "Vazirmatn Variable", "Inter Variable", system-ui, sans-serif; }
+ :lang(ar) { --font: "Noto Sans Arabic Variable", "Inter Variable", system-ui, sans-serif; }
++:lang(fa), :lang(ar) { --lh: 1.8; --track: 0; }
+ 
+ * { box-sizing: border-box; }
++html {
++  -webkit-text-size-adjust: 100%; text-size-adjust: 100%;
++  scroll-padding-block-start: 72px;
++  scrollbar-color: var(--border-strong) transparent;
++  accent-color: var(--accent);
++  -webkit-tap-highlight-color: transparent;
++}
++@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+ html, body { margin: 0; }
+ body {
++  font-size: 0.9375rem;
+   background: var(--bg);
+   color: var(--text);
+   font-family: var(--font);
+-  line-height: 1.55;
++  line-height: var(--lh, 1.55);
+   -webkit-font-smoothing: antialiased;
++  min-height: 100dvh;
++  display: flex; flex-direction: column;
++  caret-color: var(--accent);
++}
++::selection { background: color-mix(in srgb, var(--accent) 28%, transparent); color: inherit; }
++a { color: var(--text); text-decoration: underline; text-decoration-color: var(--border-strong); text-underline-offset: 0.2em; text-decoration-thickness: 1px; }
++a:hover { text-decoration-color: currentColor; }
++h1, h2, h3 { line-height: 1.25; margin-block: 0 0.6em; text-wrap: balance; letter-spacing: var(--track, -0.015em); }
++h1 { font-size: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem); font-weight: 600; }
++h2 { font-size: 1.0625rem; font-weight: 600; }
++h3 { font-size: 0.9375rem; font-weight: 600; }
++p { text-wrap: pretty; max-inline-size: 72ch; }
++.card p, td p, li p { max-inline-size: none; }
++:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; border-radius: var(--radius-chip); }
++
++main:focus { outline: none; }
++.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
++.skip-link {
++  position: absolute; inset-inline-start: 12px; inset-block-start: -64px; z-index: 100;
++  background: var(--primary); color: var(--primary-text); padding: 10px 16px; border-radius: var(--radius-control); font-weight: 600;
+ }
+-a { color: var(--accent); text-decoration: none; }
+-a:hover { text-decoration: underline; }
+-h1, h2, h3 { line-height: 1.25; margin-block: 0 0.6em; }
+-h1 { font-size: clamp(1.6rem, 4vw, 2.2rem); }
+-h2 { font-size: 1.25rem; }
+-h3 { font-size: 1.05rem; }
++.skip-link:focus { inset-block-start: 12px; text-decoration: none; }
+ 
+-.shell { max-width: 960px; margin-inline: auto; padding-inline: 16px; }
++.shell { width: 100%; max-width: 960px; margin-inline: auto; padding-inline: clamp(16px, 4vw, 28px); }
+ .topbar {
+   border-block-end: 1px solid var(--border);
+   background: var(--surface);
+   position: sticky; inset-block-start: 0; z-index: 10;
+ }
+-.topbar .shell { display: flex; align-items: center; gap: 16px; min-height: 56px; flex-wrap: wrap; }
+-.brand { font-weight: 700; color: var(--text); font-size: 1.05rem; }
++.topbar .shell { display: flex; align-items: center; gap: var(--space-4); min-height: 48px; flex-wrap: wrap; }
++.brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; color: var(--text); font-size: 1rem; text-decoration: none; }
+ .brand:hover { text-decoration: none; }
+-.nav { display: flex; gap: 14px; align-items: center; margin-inline-start: auto; flex-wrap: wrap; }
+-.nav a, .nav button { color: var(--muted); font-size: 0.95rem; }
+-main { padding-block: 28px 64px; }
++.logo { width: 28px; height: 28px; flex: none; }
++.logo rect { fill: var(--accent); }
++.logo path { fill: var(--accent-text); }
++.nav { display: flex; gap: 2px; align-items: center; margin-inline-start: auto; flex-wrap: wrap; }
++.nav a, .nav button {
++  color: var(--muted); font-size: 0.875rem; padding: 6px 10px; border-radius: var(--radius-control); min-height: 34px; text-decoration: none;
++  display: inline-flex; align-items: center; white-space: nowrap;
++  transition: color 0.15s, background-color 0.15s;
++}
++.nav a:hover, .nav button:hover { color: var(--text); background: var(--surface-2); text-decoration: none; }
++.nav a[aria-current="page"] { color: var(--text); background: var(--surface-2); }
++.nav select { margin-inline-start: var(--space-2); }
++/* Phones: the nav is its own scrollable row under the brand instead of wrapping into a pile. */
++@media (max-width: 720px) {
++  .topbar .shell { gap: 0; padding-block-start: 6px; }
++  .nav {
++    order: 3; flex-basis: 100%; margin-inline-start: 0; flex-wrap: nowrap; overflow-x: auto; padding-block-end: 6px;
++    scrollbar-width: none; margin-inline: calc(-1 * clamp(16px, 4vw, 28px)); padding-inline: clamp(12px, 3vw, 24px);
++  }
++  .nav::-webkit-scrollbar { display: none; }
++  .nav > * { flex: none; }
++}
++main { flex: 1; padding-block: 32px 72px; }
+ 
+ .card {
+   background: var(--surface);
+   border: 1px solid var(--border);
+-  border-radius: var(--radius);
+-  padding: 20px;
+-  margin-block-end: 16px;
++  border-radius: var(--radius-lg);
++  padding: clamp(16px, 2.4vw, 22px);
++  margin-block-end: var(--space-4);
+ }
++a.card { display: block; color: inherit; text-decoration: none; transition: border-color 0.15s; }
++a.card:hover { border-color: var(--text); }
+ .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+ .row { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; }
+ .stack > * + * { margin-block-start: 12px; }
+@@ -99,7 +144,8 @@ main { padding-block: 28px 64px; }
+ .n { direction: ltr; unicode-bidi: isolate; display: inline-block; font-variant-numeric: tabular-nums; white-space: nowrap; }
+ .win { color: var(--win); }
+ .loss { color: var(--loss); }
+-.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; overflow-wrap: anywhere; direction: ltr; unicode-bidi: isolate; }
++/* monospace is for IDs, hashes and keys only (app-screens §13) */
++.mono { /* taste-skill-ignore */ font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; overflow-wrap: anywhere; direction: ltr; unicode-bidi: isolate; }
+ 
+ label { display: block; font-size: 0.875rem; color: var(--muted); }
+ label > input, label > select, label > textarea { margin-block-start: 4px; }
+@@ -107,55 +153,85 @@ input, select, button, textarea { font: inherit; }
+ input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="date"],
+ input[type="datetime-local"], input:not([type]), select, textarea {
+   width: 100%;
+-  padding: 9px 11px;
+-  border: 1px solid var(--border);
+-  border-radius: 8px;
++  min-height: 40px;
++  padding: 8px 12px;
++  border: 1px solid var(--border-strong);
++  border-radius: var(--radius-control);
+   background: var(--surface);
+   color: var(--text);
+   min-width: 0;
++  transition: border-color 0.15s;
+ }
+-textarea:focus-visible, input:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible {
+-  outline: 2px solid var(--accent); outline-offset: 2px;
++input::placeholder, textarea::placeholder { color: var(--muted); opacity: 0.8; }
++input:hover:not(:disabled), select:hover:not(:disabled), textarea:hover:not(:disabled) { border-color: var(--muted); }
++input:focus-visible, select:focus-visible, textarea:focus-visible {
++  outline: 2px solid var(--text); outline-offset: 1px; border-color: var(--text);
+ }
++button:focus-visible, a:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
++input:user-invalid, textarea:user-invalid { border-color: var(--loss); }
++input:disabled, select:disabled, textarea:disabled { background: var(--surface-2); color: var(--muted); cursor: not-allowed; }
++input[type="checkbox"], input[type="radio"] { width: 1.1rem; height: 1.1rem; min-height: 0; margin: 0; flex: none; }
+ .checkbox { display: flex; gap: 8px; align-items: center; color: var(--text); }
+ 
+ .btn {
+   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+-  padding: 9px 16px; border-radius: 8px; border: 1px solid var(--accent);
+-  background: var(--accent); color: var(--accent-text); cursor: pointer; font-weight: 600;
+-  white-space: nowrap;
++  min-height: 40px; padding: 8px 18px; border-radius: var(--radius-control); border: 1px solid var(--primary);
++  background: var(--primary); color: var(--primary-text); cursor: pointer; font-weight: 600; font-size: 0.9375rem;
++  white-space: nowrap; touch-action: manipulation; text-decoration: none;
++  transition: background-color 0.15s, border-color 0.15s, transform 0.1s var(--ease-out);
+ }
+-.btn:hover { text-decoration: none; filter: brightness(1.05); }
+-.btn.secondary { background: transparent; color: var(--accent); }
+-.btn.danger { background: var(--loss); border-color: var(--loss); color: #fff; }
+-.btn.small { padding: 5px 10px; font-size: 0.85rem; }
++.btn:hover { background: color-mix(in srgb, var(--primary) 82%, var(--bg)); border-color: transparent; }
++.btn:active { transform: translateY(1px); }
++.btn.secondary { background: transparent; color: var(--text); border-color: var(--border-strong); }
++.btn.secondary:hover { background: var(--surface-2); border-color: var(--text); }
++.btn.danger { background: transparent; border-color: var(--loss); color: var(--loss); }
++.btn.danger:hover { background: var(--err-bg); }
++.btn.small { min-height: 32px; padding: 4px 12px; font-size: 0.8125rem; }
++.btn:disabled, .btn[aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; transform: none; }
++.btn[aria-busy="true"] { position: relative; color: transparent; pointer-events: none; }
++.btn[aria-busy="true"]::after {
++  content: ""; position: absolute; width: 1em; height: 1em; border-radius: 50%;
++  border: 2px solid var(--primary-text); border-inline-end-color: transparent; animation: spin 0.7s linear infinite;
++}
++.btn.secondary[aria-busy="true"]::after { border-color: var(--text); border-inline-end-color: transparent; }
++@keyframes spin { to { transform: rotate(360deg); } }
+ .linklike { background: none; border: 0; padding: 0; cursor: pointer; color: var(--muted); }
++.linklike:hover { color: var(--text); }
++@media (pointer: coarse) {
++  .btn, .btn.small { min-height: 44px; }
++  .nav a, .nav button { min-height: 44px; }
++}
+ 
+-.alert { padding: 12px 14px; border-radius: 8px; background: var(--warn-bg); color: var(--warn-text); margin-block-end: 12px; }
+-.badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 0.75rem; background: var(--surface-2); color: var(--muted); }
+-.badge.live { background: #d9f2e6; color: #0f5a3f; }
++.alert { padding: 12px 14px; border-radius: var(--radius); background: var(--warn-bg); color: var(--warn-text); margin-block-end: var(--space-3); }
++.alert.ok { background: var(--ok-bg); color: var(--ok-text); }
++.alert.error { background: var(--err-bg); color: var(--err-text); }
++.alert a { color: inherit; text-decoration: underline; font-weight: 600; }
++.badge { display: inline-block; padding: 2px 8px; border-radius: var(--radius-chip); font-size: 0.8125rem; font-weight: 500; background: var(--surface-2); color: var(--muted); }
++.badge.live { background: var(--ok-bg); color: var(--ok-text); }
+ .badge.closed { background: var(--surface-2); color: var(--muted); }
+ 
+-.table-wrap { overflow-x: auto; }
++.table-wrap { overflow-x: auto; scrollbar-width: thin; }
+ table { width: 100%; border-collapse: collapse; }
+ th, td { text-align: start; padding: 8px 6px; border-block-end: 1px solid var(--border); vertical-align: middle; }
+-th { font-size: 0.8rem; color: var(--muted); font-weight: 600; }
++th { font-size: 0.8125rem; color: var(--muted); font-weight: 500; }
+ td.end, th.end { text-align: end; }
+ /* Long words (names, card numbers) never widen a cell past the table. */
+ th, td { overflow-wrap: anywhere; }
+ 
+-.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
++.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px 0; }
+ /* A long amount (1,234,567,000) must stay INSIDE its box: the page steps the font down by the
+    number's length (see the stats page), and the box never grows past its grid cell. */
+-.stat { background: var(--surface-2); border-radius: 10px; padding: 12px; min-width: 0; }
+-.stat .label { font-size: 0.8rem; color: var(--muted); overflow-wrap: anywhere; }
+-.stat .value { font-size: 1.35rem; font-weight: 700; max-width: 100%; }
++.stat { padding-inline: 16px; border-inline-start: 1px solid var(--border); min-width: 0; }
++.stat:first-child { border-inline-start: 0; padding-inline-start: 0; }
++.stat .label { font-size: 0.8125rem; color: var(--muted); overflow-wrap: anywhere; }
++.stat .value { font-size: 1.5rem; font-weight: 500; max-width: 100%; font-variant-numeric: tabular-nums; }
+ .stat .value .n { max-width: 100%; }
+-.stat .unit { font-size: 0.75rem; color: var(--muted); margin-block-start: 2px; }
++.stat .unit { font-size: 0.8125rem; color: var(--muted); margin-block-start: 2px; }
+ .unit-note { margin-block: -4px 8px; }
+-table.data { font-size: 0.92rem; }
++table.data { font-size: 0.9375rem; }
+ table.data thead th { white-space: nowrap; position: sticky; inset-block-start: 0; background: var(--surface); }
+-table.data tbody tr:nth-child(even) { background: color-mix(in srgb, var(--surface-2) 55%, transparent); }
++table.data { font-variant-numeric: tabular-nums; }
++table.data tbody tr + tr td { border-block-start: 1px solid var(--border); }
+ table.data td.num, table.data td.end { white-space: nowrap; }
+ /* Numbers line up on their last digit, in both reading directions. */
+ table.data td.end, table.data th.end { text-align: right; }
+@@ -169,8 +245,107 @@ table.data td .win, table.data td .loss { font-weight: 600; }
+   .fold-sm { display: none; }
+ }
+ 
+-.hero { padding-block: 32px 16px; }
++.hero { padding-block: var(--space-5) var(--space-4); }
+ .hero p { font-size: 1.1rem; color: var(--muted); max-width: 40em; }
++.empty { padding: var(--space-5); border: 1px dashed var(--border-strong); border-radius: var(--radius); text-align: center; color: var(--muted); }
++
++/* ---- landing: "the product performs" ----
++   Idea: the settlement of a poker night (balances in, who pays whom out) is the page's picture,
++   and it works. Hero stage = the brand felt, flat, with one chamfered corner; fragments are
++   marked data-ui and keep the product's own 1px borders. */
++.lp { --m: clamp(16px, 4vw, 40px); --lp-max: 1280px; }
++main.shell:has(> .lp) { max-width: none; padding-inline: 0; }
++/* On the landing page the bar and footer share the page's own wider frame, so every left edge lines up. */
++body:has(.lp) :is(.topbar, .footer) .shell { max-width: 1280px; padding-inline: clamp(16px, 4vw, 40px); }
++.lp-wrap { max-width: var(--lp-max); margin-inline: auto; padding-inline: var(--m); }
++.lp h1, .lp h2 { letter-spacing: var(--track, -0.025em); }
++
++.lp-hero {
++  display: grid; gap: var(--space-5) var(--space-7); padding-block: clamp(24px, 6vw, 72px) 0;
++  padding-inline-start: max(var(--m), calc((100% - var(--lp-max)) / 2 + var(--m)));
++  padding-inline-end: 0;
++  grid-template-columns: minmax(0, 1fr);
++}
++.lp-copy { padding-inline-end: var(--m); }
++.lp-hero h1 { font-size: clamp(1.625rem, 1rem + 3.2vw, 3.5rem); font-weight: 600; line-height: 1.1; max-inline-size: 19em; margin-block-end: var(--space-4); }
++.lp-hero .lead { font-size: clamp(1rem, 0.95rem + 0.3vw, 1.125rem); color: var(--muted); max-inline-size: 40ch; margin: 0; }
++.lp-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4) var(--space-5); padding-inline-end: var(--m); }
++.btn.large { min-height: 48px; padding-inline: 24px; font-size: 1rem; }
++.lp-stage {
++  background: var(--felt); color: var(--felt-text);
++  padding-block: clamp(16px, 4vw, 48px); padding-inline: clamp(16px, 4vw, 56px) 0; margin-block-start: var(--space-4);
++  clip-path: polygon(56px 0, 100% 0, 100% 100%, 0 100%, 0 56px);
++}
++.lp-stage:dir(rtl) { clip-path: polygon(0 0, calc(100% - 56px) 0, 100% 56px, 100% 100%, 0 100%); }
++.lp-shutter { max-inline-size: 660px; padding-block-start: 24px; }
++@media (min-width: 960px) {
++  .lp-hero { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); align-items: start; }
++  .lp-copy { grid-column: 1 / -1; }
++  .lp-actions { grid-column: 1; grid-row: 2; align-self: start; flex-direction: column; align-items: flex-start; padding-block-start: var(--space-4); }
++  .lp-stage { grid-column: 2; grid-row: 2; margin-block-start: 0; }
++}
++
++/* the fragments: the product's own conventions inside (1px borders, 6-8px radii) */
++.ui { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.9375rem; overflow: hidden; }
++.ui-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: 14px 16px; border-block-end: 1px solid var(--border); }
++.ui-head h2, .ui-head h3 { margin: 0; font-size: 1rem; }
++.ui-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
++.ui-table th, .ui-table td { padding: 8px 16px; text-align: start; font-weight: 400; vertical-align: middle; }
++.ui-table thead th { color: var(--muted); font-size: 0.8125rem; font-weight: 500; }
++.ui-table tbody th { font-weight: 500; }
++.ui-table tbody tr + tr > * { border-block-start: 1px solid var(--border); }
++.ui-table .num { text-align: end; }
++.ui-table td.win { color: var(--win); }
++.ui-table td.loss { color: var(--loss); }
++.ui-table td.zero { color: var(--muted); }
++.ui-table input { width: 6.5em; min-height: 36px; padding: 4px 8px; text-align: end; font-variant-numeric: tabular-nums; }
++.ui-out { padding: 12px 16px 16px; border-block-start: 1px solid var(--border); background: var(--bg); }
++.ui-out h3 { font-size: 0.8125rem; font-weight: 500; color: var(--muted); margin-block-end: 8px; }
++.ui-out p { margin: 0; }
++.ui-out p.loss { color: var(--loss); }
++.pays { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
++.pays li { display: grid; grid-template-columns: minmax(3.5em, auto) 28px minmax(3.5em, 1fr) auto; align-items: center; gap: 10px; min-height: 32px; }
++.pays .num { font-weight: 600; font-variant-numeric: tabular-nums; }
++.pays .arrow { width: 28px; height: 10px; background: var(--text); -webkit-mask: var(--arrow) center / 100% 100% no-repeat; mask: var(--arrow) center / 100% 100% no-repeat; --arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 10'%3E%3Cpath d='M0 5h26M22 1l4 4-4 4' fill='none' stroke='%23000' stroke-width='1.25'/%3E%3C/svg%3E"); }
++.pays .arrow:dir(rtl) { transform: scaleX(-1); }
++.ui-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); padding: 12px 16px; border-block-start: 1px solid var(--border); }
++.ui-foot p { margin: 0; color: var(--muted); font-size: 0.8125rem; max-inline-size: 36ch; }
++.langs th, .langs td { white-space: nowrap; }
++@media (max-width: 520px) { .ui-table th, .ui-table td { padding-inline: 8px; } .ui-table input { width: 5em; } .ui-head, .ui-out, .ui-foot { padding-inline: 12px; } }
++.langs tr[dir="rtl"] th { text-align: start; }
++
++.lp-rows { padding-block: clamp(64px, 10vw, 160px) 0; display: grid; gap: clamp(64px, 9vw, 144px); }
++.lp-row { display: grid; gap: var(--space-5) var(--space-7); align-items: start; }
++@media (min-width: 880px) { .lp-row { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); } }
++.lp-say h2 { font-size: clamp(1.5rem, 1.1rem + 1.4vw, 2.25rem); font-weight: 600; line-height: 1.15; margin-block-end: var(--space-3); }
++.lp-say p { font-size: 1.0625rem; color: var(--muted); max-inline-size: 36ch; margin: 0; }
++.lp-frag { max-inline-size: 560px; }
++.lp-frag.wide { max-inline-size: 760px; overflow-x: auto; }
++
++.lp-close { padding-block: clamp(72px, 10vw, 160px) clamp(24px, 4vw, 48px); display: grid; gap: var(--space-5); justify-items: start; }
++.lp-statement { font-size: clamp(1.375rem, 1rem + 1.4vw, 2.25rem); line-height: 1.25; font-weight: 500; max-inline-size: 26em; margin: 0; letter-spacing: var(--track, -0.02em); text-wrap: balance; }
++
++/* Motion: entrance of the hero's parts, the stage opening like a shutter, scroll-in for the rows.
++   Everything is visible by default; reduced motion collapses every duration (see the end). */
++@media (prefers-reduced-motion: no-preference) {
++  .lp-copy h1 { animation: rise 0.7s var(--ease-out) both; }
++  .lp-copy .lead { animation: rise 0.7s var(--ease-out) 80ms both; }
++  .lp-actions { animation: rise 0.7s var(--ease-out) 160ms both; }
++  .lp-shutter { animation: shutter 1.1s var(--ease-out) 200ms both; }
++  @supports (animation-timeline: view()) {
++    .lp-say, .lp-frag, .lp-statement, .lp-close .btn { animation: rise linear both; animation-timeline: view(); animation-range: entry 0% entry 45%; }
++    .lp-frag { animation-range: entry 10% entry 55%; }
++  }
++}
++@keyframes rise { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
++@keyframes shutter { from { clip-path: inset(0 0 100% 0); transform: translateY(12px); } to { clip-path: inset(0 0 0 0); transform: none; } }
++
++/* ---- error / not-found / loading ---- */
++.state-page { max-width: 460px; margin-inline: auto; padding-block: var(--space-7); text-align: center; }
++.state-page .logo { width: 44px; height: 44px; margin-block-end: var(--space-4); }
++.state-page p { margin-inline: auto; color: var(--muted); }
++.state-page .row { justify-content: center; margin-block-start: var(--space-5); }
++.skeleton { background: var(--surface-2); border-radius: var(--radius-control); animation: pulse 1.4s ease-in-out infinite; }
+ 
+ .playing-card {
+   display: inline-flex; flex-direction: column; justify-content: space-between;
+@@ -181,25 +356,6 @@ table.data td .win, table.data td .loss { font-weight: 600; }
+ .playing-card.red { color: #c0182a; }
+ .playing-card .suit { align-self: flex-end; font-size: 1.1em; }
+ 
+-/* Chart palette: validated categorical order (see dataviz reference palette). */
+-:root {
+-  --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100;
+-  --series-5: #e87ba4; --series-6: #008300; --series-7: #4a3aa7; --series-8: #e34948;
+-  --pos: #2a78d6; --neg: #e34948; --grid: #e6e3da; --axis: #9a968b;
+-}
+-@media (prefers-color-scheme: dark) {
+-  :root:not([data-theme="light"]) {
+-    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500;
+-    --series-5: #d55181; --series-6: #008300; --series-7: #9085e9; --series-8: #e66767;
+-    --pos: #3987e5; --neg: #e66767; --grid: #2e2f2b; --axis: #6f6c63;
+-  }
+-}
+-:root[data-theme="dark"] {
+-    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500;
+-    --series-5: #d55181; --series-6: #008300; --series-7: #9085e9; --series-8: #e66767;
+-    --pos: #3987e5; --neg: #e66767; --grid: #2e2f2b; --axis: #6f6c63;
+-  }
+-
+ .chart { width: 100%; height: auto; display: block; direction: ltr; }
+ .chart text { fill: var(--muted); font-size: 11px; font-family: var(--font); }
+ .chart .gridline { stroke: var(--grid); stroke-width: 1; }
+@@ -216,8 +372,10 @@ table.data td .win, table.data td .loss { font-weight: 600; }
+   @page { size: A4 portrait; margin: 10mm; }
+   /* Always a light, compact sheet, whatever the screen theme is. */
+   :root:root:root {
++    color-scheme: light;
+     --bg: #fff; --surface: #fff; --surface-2: #f1efe9; --text: #111; --muted: #555; --border: #cfcbc0;
+     --accent: #0f6e4f; --win: #0b6b34; --loss: #b3261e;
++    --primary: #111; --primary-text: #fff; --border-strong: #bbb;
+   }
+   html { font-size: 11px; }
+   .topbar, .no-print, form, .nav { display: none !important; }
+@@ -225,11 +383,12 @@ table.data td .win, table.data td .loss { font-weight: 600; }
+   main { padding: 0; max-width: none; }
+   h1 { font-size: 1.5rem; margin-block: 0 8px; }
+   h2 { font-size: 1.05rem; margin-block: 0 6px; }
+-  .card { break-inside: auto; border-color: #ccc; box-shadow: none; padding: 10px 12px; margin-block-end: 10px; }
++  .card { break-inside: auto; border-color: #ccc; padding: 10px 12px; margin-block-end: 10px; }
+   .card.keep { break-inside: avoid; }
+   .card svg { max-width: 100%; height: auto; }
+   .stats { grid-template-columns: repeat(5, 1fr); gap: 6px; }
+   .stat { padding: 6px 8px; border: 1px solid #ddd; }
++  .stat:first-child { padding-inline-start: 8px; border-inline-start: 1px solid #ddd; }
+   .stat .value { font-size: 1rem; }
+   /* The PDF is the responsive one: a scroll box on screen would CUT the table off the
+      page, so let it flow and let the table itself shrink to the paper width. */
+@@ -257,15 +416,14 @@ ul.plain { list-style: none; padding: 0; margin: 0; }
+ tr.me td:first-child { font-weight: 600; }
+ .live-dot { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--muted); margin-block-end: 12px; }
+ .live-dot::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+-.live-dot.live::before { background: var(--win); box-shadow: 0 0 0 3px color-mix(in srgb, var(--win) 25%, transparent); }
++.live-dot.live::before { background: var(--win); }
++@media (prefers-reduced-motion: no-preference) { .live-dot.live::before { animation: pulse 2s ease-in-out infinite; } }
++@keyframes pulse { 50% { opacity: 0.35; } }
+ .live-dot.offline::before { background: var(--loss); }
+-details.card > summary { cursor: pointer; font-weight: 600; }
+-
+-/* Phase 4 rest: verification, rules, badges, result card */
+-.alert.ok { background: #d9f2e6; color: #0f5a3f; }
+-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .alert.ok { background: #13382a; color: #8fe3b8; } }
+-:root[data-theme="dark"] .alert.ok { background: #13382a; color: #8fe3b8; }
++details.card > summary { cursor: pointer; font-weight: 600; border-radius: 6px; }
++details.card > summary:hover { text-decoration: underline; }
+ 
++/* Verification, rules, badges, result card */
+ .break { overflow-wrap: anywhere; white-space: pre-wrap; }
+ pre.break { background: var(--surface-2); padding: 10px; border-radius: 8px; direction: ltr; text-align: left; }
+ dl.small dt { color: var(--muted); margin-block-start: 6px; }
+@@ -276,7 +434,7 @@ dl.small dd { margin-inline-start: 0; }
+ .rule-example .who.win strong { color: var(--win); }
+ .rules-toc { columns: 2 220px; }
+ .rules-toc li { break-inside: avoid; }
+-.house-rules { white-space: pre-wrap; border-inline-start: 4px solid var(--accent); padding-inline-start: 12px; }
++.house-rules { white-space: pre-wrap; background: var(--surface-2); border-radius: var(--radius); padding: var(--space-3) var(--space-4); }
+ .badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+ .badge-card { background: var(--surface-2); border-radius: 10px; padding: 10px 12px; display: grid; gap: 2px; }
+ .badge-card .icon { font-size: 1.4rem; line-height: 1; }
+@@ -286,7 +444,7 @@ dl.small dd { margin-inline-start: 0; }
+ 
+ /* Home members, invites and player profiles */
+ .player-name { display: inline-flex; align-items: center; gap: 6px; }
+-.rank-chip { font-size: 0.72rem; font-weight: 700; padding: 1px 7px; border-radius: 99px; background: var(--surface-2); color: var(--muted); white-space: nowrap; unicode-bidi: isolate; }
++.rank-chip { font-size: 0.8125rem; font-weight: 700; padding: 1px 7px; border-radius: var(--radius-chip); background: var(--surface-2); color: var(--muted); white-space: nowrap; unicode-bidi: isolate; }
+ .avatar { font-size: 1.15em; line-height: 1; margin-inline-end: 4px; }
+ .player-name .avatar { margin-inline-end: 0; }
+ .player-list > li { padding-block: 4px; }
+@@ -298,7 +456,7 @@ dl.small dd { margin-inline-start: 0; }
+ .avatar-picker input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+ .avatar-picker span { display: inline-flex; align-items: center; justify-content: center; min-width: 36px; height: 36px; padding-inline: 6px; border-radius: 8px; border: 1px solid var(--border); font-size: 1.2rem; }
+ .avatar-picker label:first-of-type span { font-size: 0.8rem; }
+-.avatar-picker input:checked + span { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
++.avatar-picker input:checked + span { border-color: var(--text); outline: 2px solid var(--text); outline-offset: -3px; }
+ .avatar-picker input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+ .pay-info { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+ .pay-info .mono { overflow-wrap: anywhere; }
+@@ -308,13 +466,21 @@ dl.small dd { margin-inline-start: 0; }
+ .invite-link .mono { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+ .invite-qr { display: block; margin-block-start: 8px; border-radius: 8px; background: #fff; }
+ /* Footer and legal pages */
+-.footer { padding-block: 24px 32px; text-align: center; }
++.footer { padding-block: var(--space-5) var(--space-6); text-align: center; border-block-start: 1px solid var(--border); }
+ .footer a { color: inherit; }
+ .legal h2 { font-size: 1.1rem; margin-block: 16px 4px; }
+ /* pricing and billing */
+ .pricing .price { font-size: 1.6rem; font-weight: 700; margin: 0; }
+ .pricing .price .small { font-weight: 400; }
+-.pricing .pro { border-color: var(--accent); }
++.pricing .pro { border-color: var(--text); }
+ .facts { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 0; }
+ .facts dt { color: var(--muted); }
+ .facts dd { margin-inline-start: 0; }
++
++@media (prefers-reduced-motion: reduce) {
++  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
++}
++@media (forced-colors: active) {
++  .btn, .card, input, select, textarea { border: 1px solid CanvasText; }
++  .nav a[aria-current="page"] { text-decoration: underline; }
++}
+diff --git a/apps/web/src/app/icon.svg b/apps/web/src/app/icon.svg
+new file mode 100644
+index 0000000..2ce33ad
+--- /dev/null
++++ b/apps/web/src/app/icon.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#0f6e4f"/><path fill="#fff" d="M16 6.5c-2.2 3-7.2 6.3-7.2 10.2 0 2.5 1.9 4.2 4.1 4.2 1.2 0 2.2-.5 2.9-1.4-.1 1.9-.8 3.5-2.1 4.7h4.6c-1.3-1.2-2-2.8-2.1-4.7.7.9 1.7 1.4 2.9 1.4 2.2 0 4.1-1.7 4.1-4.2C23.2 12.8 18.2 9.5 16 6.5z"/></svg>
+diff --git a/apps/web/src/components/Card.tsx b/apps/web/src/components/Card.tsx
+index d94d141..705627b 100644
+--- a/apps/web/src/components/Card.tsx
++++ b/apps/web/src/components/Card.tsx
+@@ -1,6 +1,7 @@
+ import { type Card, RANKS } from "@poker/domain";
+ 
+-const SUIT_SYMBOL = { s: "♠", h: "♥", d: "♦", c: "♣" } as const;
++// The four suit glyphs are the content of a playing card, not decoration.
++const SUIT_SYMBOL = { s: "♠", h: "♥", d: "♦", c: "♣" } as const; // taste-skill-ignore
+ 
+ /** A playing card drawn with markup (no images), readable in both themes. */
+ export function PlayingCard({ card }: { card: Card }) {
+diff --git a/apps/web/src/components/ErrorNotice.tsx b/apps/web/src/components/ErrorNotice.tsx
+index 986730c..5fa6602 100644
+--- a/apps/web/src/components/ErrorNotice.tsx
++++ b/apps/web/src/components/ErrorNotice.tsx
+@@ -8,7 +8,7 @@ export async function ErrorNotice({ code }: { code?: string }) {
+   // Any code with a translation in "errors" (they come from errorCode()); anything else is generic.
+   const key = /^[A-Z_]+$/.test(code) && t.has(code) ? code : "ERROR";
+   return (
+-    <div className="alert" role="alert">
++    <div className="alert error" role="alert">
+       {t(key)}
+       {(key === "LIMIT" || key === "READ_ONLY") && (
+         <>
+diff --git a/apps/web/src/components/ImportForm.tsx b/apps/web/src/components/ImportForm.tsx
+index e1de7fa..976a298 100644
+--- a/apps/web/src/components/ImportForm.tsx
++++ b/apps/web/src/components/ImportForm.tsx
+@@ -84,7 +84,7 @@ export function ImportForm({ homeId, divisor, suffix }: { homeId: string; diviso
+                           ? t("duplicate")
+                           : g.status === "duplicateInFile"
+                             ? t("inFile")
+-                            : "✕"}
++                            : "×"}
+                   </td>
+                 </tr>
+               ))}
+diff --git a/apps/web/src/components/Logo.tsx b/apps/web/src/components/Logo.tsx
+new file mode 100644
+index 0000000..3ec437a
+--- /dev/null
++++ b/apps/web/src/components/Logo.tsx
+@@ -0,0 +1,9 @@
++/** The spade mark: drawn once, coloured by the theme tokens (see .logo in globals.css). */
++export function Logo({ className = "logo" }: { className?: string }) {
++  return (
++    <svg className={className} viewBox="0 0 32 32" aria-hidden="true" focusable="false">
++      <rect width="32" height="32" rx="8" />
++      <path d="M16 6.5c-2.2 3-7.2 6.3-7.2 10.2 0 2.5 1.9 4.2 4.1 4.2 1.2 0 2.2-.5 2.9-1.4-.1 1.9-.8 3.5-2.1 4.7h4.6c-1.3-1.2-2-2.8-2.1-4.7.7.9 1.7 1.4 2.9 1.4 2.2 0 4.1-1.7 4.1-4.2C23.2 12.8 18.2 9.5 16 6.5z" />
++    </svg>
++  );
++}
+diff --git a/apps/web/src/components/NavLink.tsx b/apps/web/src/components/NavLink.tsx
+new file mode 100644
+index 0000000..ebd114b
+--- /dev/null
++++ b/apps/web/src/components/NavLink.tsx
+@@ -0,0 +1,11 @@
++"use client";
++
++import type { ComponentProps } from "react";
++import { Link, usePathname } from "@/i18n/navigation";
++
++/** A nav link that marks the page you are on (aria-current), for screen readers and the eye. */
++export function NavLink({ href, ...rest }: ComponentProps<typeof Link> & { href: string }) {
++  const pathname = usePathname();
++  const active = pathname === href || pathname.startsWith(`${href}/`);
++  return <Link href={href} aria-current={active ? "page" : undefined} {...rest} />;
++}
+diff --git a/apps/web/src/components/Ruling.tsx b/apps/web/src/components/Ruling.tsx
+index ab2824f..c14a290 100644
+--- a/apps/web/src/components/Ruling.tsx
++++ b/apps/web/src/components/Ruling.tsx
+@@ -23,7 +23,7 @@ export async function Ruling({ r }: { r: RulingRow }) {
+     <article className="rule-example">
+       <div className="row" style={{ justifyContent: "space-between", alignItems: "baseline" }}>
+         <strong className="win">
+-          ⚖️ {r.winners.length > 1 ? t("verdictSplit", { names: r.winners.join(" · ") }) : t("verdictWinner", { name: r.winners[0]! })}
++          {r.winners.length > 1 ? t("verdictSplit", { names: r.winners.join(" · ") }) : t("verdictWinner", { name: r.winners[0]! })}
+         </strong>
+         <span className="small muted">
+           {formatDate(r.createdAt, locale, true)} {r.via === "telegram" && `· ${t("viaTelegram")}`}
+diff --git a/apps/web/src/components/SidePotCalculator.tsx b/apps/web/src/components/SidePotCalculator.tsx
+index bff50a7..f462034 100644
+--- a/apps/web/src/components/SidePotCalculator.tsx
++++ b/apps/web/src/components/SidePotCalculator.tsx
+@@ -91,7 +91,7 @@ export function SidePotCalculator() {
+                 </td>
+                 <td>
+                   <button className="linklike" type="button" onClick={() => setRows((rs) => rs.filter((x) => x.key !== r.key))} aria-label={t("remove")}>
+-                    ✕
++                    ×
+                   </button>
+                 </td>
+               </tr>
+diff --git a/apps/web/src/components/landing/FrozenDemo.tsx b/apps/web/src/components/landing/FrozenDemo.tsx
+new file mode 100644
+index 0000000..c9bbc91
+--- /dev/null
++++ b/apps/web/src/components/landing/FrozenDemo.tsx
+@@ -0,0 +1,35 @@
++import { getTranslations } from "next-intl/server";
++import { SAMPLE_GAME } from "./sample";
++
++/** A closed game: the same night as the hero, now read-only. */
++export async function FrozenDemo() {
++  const t = await getTranslations("game");
++  return (
++    <div className="ui" data-ui>
++      <div className="ui-head">
++        <h3>{t("title", { number: SAMPLE_GAME.number })}</h3>
++        <span className="badge">{t("status_closed")}</span>
++      </div>
++      <table className="ui-table">
++        <tbody>
++          {SAMPLE_GAME.players.map((p) => {
++            const net = p.cashOut - p.buyIn;
++            return (
++              <tr key={p.id}>
++                <th scope="row">{p.name}</th>
++                <td className="num">{p.cashOut}</td>
++                <td className={`num ${net > 0 ? "win" : "loss"}`}>{net > 0 ? `+${net}` : `−${-net}`}</td>
++              </tr>
++            );
++          })}
++        </tbody>
++      </table>
++      <div className="ui-foot">
++        <p>{t("warning")}</p>
++        <button className="btn small" type="button" disabled>
++          {t("save")}
++        </button>
++      </div>
++    </div>
++  );
++}
+diff --git a/apps/web/src/components/landing/LanguagesDemo.tsx b/apps/web/src/components/landing/LanguagesDemo.tsx
+new file mode 100644
+index 0000000..3b85227
+--- /dev/null
++++ b/apps/web/src/components/landing/LanguagesDemo.tsx
+@@ -0,0 +1,31 @@
++import { getTranslations } from "next-intl/server";
++import { dir, localeNames, locales } from "@/i18n/routing";
++
++/** The same ledger header in every language the product ships, read from the real message files. */
++export async function LanguagesDemo() {
++  const rows = await Promise.all(
++    locales.map(async (l) => {
++      const t = await getTranslations({ locale: l, namespace: "game" });
++      return { l, name: localeNames[l], player: t("player"), cashOut: t("cashOut"), net: t("net"), closed: t("status_closed") };
++    }),
++  );
++  return (
++    <div className="ui" data-ui>
++      <table className="ui-table langs">
++        <tbody>
++          {rows.map((r) => (
++            <tr key={r.l} lang={r.l} dir={dir(r.l)}>
++              <th scope="row">{r.name}</th>
++              <td>{r.player}</td>
++              <td>{r.cashOut}</td>
++              <td>{r.net}</td>
++              <td>
++                <span className="badge">{r.closed}</span>
++              </td>
++            </tr>
++          ))}
++        </tbody>
++      </table>
++    </div>
++  );
++}
+diff --git a/apps/web/src/components/landing/SettleDemo.tsx b/apps/web/src/components/landing/SettleDemo.tsx
+new file mode 100644
+index 0000000..ac32cb7
+--- /dev/null
++++ b/apps/web/src/components/landing/SettleDemo.tsx
+@@ -0,0 +1,80 @@
++"use client";
++
++import { settle } from "@poker/domain";
++import { useLocale, useTranslations } from "next-intl";
++import { useMemo, useState } from "react";
++import { SAMPLE_GAME, nameOf } from "./sample";
++
++/** The product doing its job: change a cash-out and the real settle() prints who pays whom. */
++export function SettleDemo() {
++  const t = useTranslations("game");
++  const tl = useTranslations("landing");
++  const locale = useLocale();
++  const nf = useMemo(() => new Intl.NumberFormat(locale), [locale]);
++  const [outs, setOuts] = useState(SAMPLE_GAME.players.map((p) => String(p.cashOut)));
++
++  const cash = outs.map((v) => Math.max(0, Number.parseInt(v, 10) || 0));
++  const nets = SAMPLE_GAME.players.map((p, i) => cash[i]! - p.buyIn);
++  const difference = nets.reduce((a, b) => a + b, 0);
++  const balanced = difference === 0;
++  const transfers = balanced ? settle(SAMPLE_GAME.players.map((p, i) => ({ playerId: p.id, amount: nets[i]! }))) : [];
++  const signed = (n: number) => (n > 0 ? `+${nf.format(n)}` : n < 0 ? `−${nf.format(-n)}` : nf.format(0));
++
++  return (
++    <div className="ui" data-ui>
++      <div className="ui-head">
++        <h2>{t("title", { number: SAMPLE_GAME.number })}</h2>
++        <span className={`badge${balanced ? " live" : ""}`}>{balanced ? t("status_balanced") : t("status_live")}</span>
++      </div>
++      <div className="table-wrap">
++        <table className="ui-table">
++          <thead>
++            <tr>
++              <th scope="col">{t("player")}</th>
++              <th scope="col" className="num">{t("in")}</th>
++              <th scope="col" className="num">{t("cashOut")}</th>
++              <th scope="col" className="num">{t("net")}</th>
++            </tr>
++          </thead>
++          <tbody>
++            {SAMPLE_GAME.players.map((p, i) => (
++              <tr key={p.id}>
++                <th scope="row">{p.name}</th>
++                <td className="num">{nf.format(p.buyIn)}</td>
++                <td className="num">
++                  <input
++                    type="number"
++                    inputMode="numeric"
++                    min={0}
++                    step={1}
++                    value={outs[i]}
++                    aria-label={`${p.name}: ${t("cashOut")}`}
++                    onChange={(e) => setOuts((o) => o.map((v, j) => (j === i ? e.target.value : v)))}
++                  />
++                </td>
++                <td className={`num ${nets[i]! > 0 ? "win" : nets[i]! < 0 ? "loss" : "zero"}`}>{signed(nets[i]!)}</td>
++              </tr>
++            ))}
++          </tbody>
++        </table>
++      </div>
++      <div className="ui-out" aria-live="polite">
++        <h3>{tl("f2Title")}</h3>
++        {balanced ? (
++          <ul className="pays">
++            {transfers.map((x) => (
++              <li key={`${x.from}${x.to}`}>
++                <span>{nameOf(x.from)}</span>
++                <span className="arrow" aria-hidden="true" />
++                <span>{nameOf(x.to)}</span>
++                <span className="num">{nf.format(x.amount)}</span>
++              </li>
++            ))}
++          </ul>
++        ) : (
++          <p className="loss">{t("blocked_UNBALANCED", { difference: signed(difference) })}</p>
++        )}
++      </div>
++    </div>
++  );
++}
+diff --git a/apps/web/src/components/landing/sample.ts b/apps/web/src/components/landing/sample.ts
+new file mode 100644
+index 0000000..89cdd2d
+--- /dev/null
++++ b/apps/web/src/components/landing/sample.ts
+@@ -0,0 +1,19 @@
++/**
++ * One sample night, used by every fragment on the landing page so a fact shown twice is one
++ * variable. It is illustrative data, not a customer. Nets sum to zero (checked below).
++ */
++export const SAMPLE_GAME = {
++  number: 12,
++  players: [
++    { id: "a", name: "Ali", buyIn: 100, cashOut: 170 },
++    { id: "b", name: "Sara", buyIn: 100, cashOut: 45 },
++    { id: "c", name: "Max", buyIn: 100, cashOut: 70 },
++    { id: "d", name: "Nina", buyIn: 100, cashOut: 115 },
++  ],
++} as const;
++
++if (SAMPLE_GAME.players.reduce((n, p) => n + p.cashOut - p.buyIn, 0) !== 0) {
++  throw new Error("landing sample does not balance");
++}
++
++export const nameOf = (id: string) => SAMPLE_GAME.players.find((p) => p.id === id)?.name ?? id;
+diff --git a/apps/web/src/lib/live.ts b/apps/web/src/lib/live.ts
+index 3f669ec..bf92d18 100644
+--- a/apps/web/src/lib/live.ts
++++ b/apps/web/src/lib/live.ts
+@@ -25,7 +25,7 @@ export const inviteTokenHash = (inviteId: string) => sha256(inviteToken(inviteId
+ export async function appOrigin(): Promise<string> {
+   if (process.env.APP_URL) return process.env.APP_URL.replace(/\/$/, "");
+   const h = await headers();
+-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
++  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3100";
+   const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+   return `${proto}://${host}`;
+ }
+diff --git a/apps/web/src/lib/mail.ts b/apps/web/src/lib/mail.ts
+index 8000c00..09a7c14 100644
+--- a/apps/web/src/lib/mail.ts
++++ b/apps/web/src/lib/mail.ts
+@@ -2,7 +2,7 @@ import nodemailer, { type Transporter } from "nodemailer";
+ 
+ /**
+  * Outgoing email (verification, password reset, game-night reminders). SMTP_URL is any SMTP
+- * provider, e.g. smtps://user:pass@smtp.example.com:465. Without it, development prints the
++ * provider URL (smtps://user:pass@host:465). Without it, development prints the
+  * message to the server log and production sends nothing (the caller carries on).
+  */
+ export interface Mail {

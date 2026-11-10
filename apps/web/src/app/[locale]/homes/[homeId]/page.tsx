@@ -193,7 +193,7 @@ export default async function HomePage({
           <ul className="plain player-list">
             {active.map((p) => (
               <li key={p.id}>
-                <PlayerName name={p.displayName} avatar={p.avatar} /> {p.userId && <span className="badge">✓</span>}
+                <PlayerName name={p.displayName} avatar={p.avatar} /> {p.userId && <span className="badge">{t("member")}</span>}
                 {canEdit(p) && playerEdit(p)}
               </li>
             ))}
@@ -222,7 +222,7 @@ export default async function HomePage({
             return (
               <li key={p.id} className="row" style={{ justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
                 <span>
-                  <PlayerName name={p.displayName} avatar={p.avatar} /> {p.userId && <span className="badge">✓</span>}
+                  <PlayerName name={p.displayName} avatar={p.avatar} /> {p.userId && <span className="badge">{t("member")}</span>}
                 </span>
                 <span className="row" style={{ flexWrap: "nowrap", alignItems: "center" }}>
                   {info ? (
@@ -367,7 +367,7 @@ export default async function HomePage({
                             <input type="hidden" name="homeId" value={home.id} />
                             <input type="hidden" name="from" value="home" />
                             <button className="linklike" type="submit" aria-label={th("remove")}>
-                              ✕
+                              ×
                             </button>
                           </form>
                         </td>
@@ -750,7 +750,7 @@ export default async function HomePage({
               </label>
               <label style={{ flex: "1 1 220px" }}>
                 {tp("inviteEmailLabel")}
-                <input name="email" type="email" maxLength={254} dir="ltr" placeholder="name@example.com" />
+                <input name="email" type="email" maxLength={254} dir="ltr" autoComplete="email" />
               </label>
               <button className="btn secondary" type="submit">
                 {t("inviteCreate")}

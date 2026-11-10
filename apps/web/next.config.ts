@@ -15,7 +15,13 @@ const securityHeaders = [
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
 ];
 
+// Next 16 blocks dev resources (HMR, client chunks) for any host other than localhost, so a page
+// opened at http://127.0.0.1:3100 or a LAN address renders but never becomes interactive (side pot
+// calculator, language switcher...). Extra dev hosts can be added with DEV_ORIGINS=192.168.1.20,mypc.local
+const devOrigins = ["127.0.0.1", "[::1]", ...(process.env.DEV_ORIGINS ?? "").split(",").map((h) => h.trim()).filter(Boolean)];
+
 const nextConfig: NextConfig = {
+  allowedDevOrigins: devOrigins,
   poweredByHeader: false,
   experimental: { serverActions: { bodySizeLimit: "2mb" } },
   transpilePackages: ["@poker/domain", "@poker/db"],

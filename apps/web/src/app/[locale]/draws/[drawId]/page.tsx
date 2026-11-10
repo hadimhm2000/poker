@@ -51,7 +51,7 @@ export default async function DrawPage({
         <Link href={`/games/${game.id}#draw`}>← {home.name}</Link>
       </p>
       <h1>
-        🎲 {t("drawTitle")} <span className={`badge ${open ? "live" : "closed"}`}>{open ? t("drawStatusOpen") : t("drawStatusRevealed")}</span>
+        {t("drawTitle")} <span className={`badge ${open ? "live" : "closed"}`}>{open ? t("drawStatusOpen") : t("drawStatusRevealed")}</span>
       </h1>
       {game.status === "live" && <LiveRefresh gameId={game.id} />}
       <ErrorNotice code={error} />

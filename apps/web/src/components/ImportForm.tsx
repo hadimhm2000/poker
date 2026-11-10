@@ -84,7 +84,7 @@ export function ImportForm({ homeId, divisor, suffix }: { homeId: string; diviso
                           ? t("duplicate")
                           : g.status === "duplicateInFile"
                             ? t("inFile")
-                            : "✕"}
+                            : "×"}
                   </td>
                 </tr>
               ))}

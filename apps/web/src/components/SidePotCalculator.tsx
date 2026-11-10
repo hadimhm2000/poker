@@ -91,7 +91,7 @@ export function SidePotCalculator() {
                 </td>
                 <td>
                   <button className="linklike" type="button" onClick={() => setRows((rs) => rs.filter((x) => x.key !== r.key))} aria-label={t("remove")}>
-                    ✕
+                    ×
                   </button>
                 </td>
               </tr>

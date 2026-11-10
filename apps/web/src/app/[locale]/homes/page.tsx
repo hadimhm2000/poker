@@ -35,7 +35,7 @@ export default async function Homes({ searchParams }: { searchParams: Promise<{ 
           {ts("verifyBanner")} <Link href="/settings">{ts("verifyBannerLink")}</Link>
         </div>
       )}
-      {rows.length === 0 && <p className="muted">{t("empty")}</p>}
+      {rows.length === 0 && <p className="empty">{t("empty")}</p>}
       <div className="grid">
         {rows.map((h) => (
           <Link key={h.id} href={`/homes/${h.id}`} className="card" style={{ color: "inherit" }}>

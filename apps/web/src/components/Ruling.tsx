@@ -23,7 +23,7 @@ export async function Ruling({ r }: { r: RulingRow }) {
     <article className="rule-example">
       <div className="row" style={{ justifyContent: "space-between", alignItems: "baseline" }}>
         <strong className="win">
-          ⚖️ {r.winners.length > 1 ? t("verdictSplit", { names: r.winners.join(" · ") }) : t("verdictWinner", { name: r.winners[0]! })}
+          {r.winners.length > 1 ? t("verdictSplit", { names: r.winners.join(" · ") }) : t("verdictWinner", { name: r.winners[0]! })}
         </strong>
         <span className="small muted">
           {formatDate(r.createdAt, locale, true)} {r.via === "telegram" && `· ${t("viaTelegram")}`}

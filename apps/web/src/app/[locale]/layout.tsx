@@ -2,11 +2,13 @@ import "@fontsource-variable/inter";
 import "@fontsource-variable/vazirmatn";
 import "@fontsource-variable/noto-sans-arabic";
 import "../globals.css";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
+import { Logo } from "@/components/Logo";
+import { NavLink } from "@/components/NavLink";
 import { dir, routing } from "@/i18n/routing";
 import { currentUser } from "@/lib/auth";
 import { signOutAction } from "../actions/auth";
@@ -22,8 +24,25 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "meta" });
-  return { title: t("title"), description: t("description"), manifest: "/manifest.webmanifest" };
+  return {
+    title: { default: t("title"), template: `%s · ${t("title")}` },
+    description: t("description"),
+    manifest: "/manifest.webmanifest",
+    applicationName: "Poker Home",
+    icons: { apple: "/apple-touch-icon.png" },
+    openGraph: { title: t("title"), description: t("description"), type: "website", siteName: "Poker Home" },
+  };
 }
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  colorScheme: "light dark",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f6f5f1" },
+    { media: "(prefers-color-scheme: dark)", color: "#121311" },
+  ],
+};
 
 export default async function LocaleLayout({
   children,
@@ -36,6 +55,7 @@ export default async function LocaleLayout({
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
   const t = await getTranslations("nav");
+  const ts = await getTranslations("states");
   const user = await currentUser();
   const theme = (await cookies()).get(THEME_COOKIE)?.value;
 
@@ -43,22 +63,26 @@ export default async function LocaleLayout({
     <html lang={locale} dir={dir(locale)} data-theme={isTheme(theme) && theme !== "system" ? theme : undefined}>
       <body>
         <NextIntlClientProvider>
+          <a className="skip-link" href="#main">
+            {ts("skipToContent")}
+          </a>
           <header className="topbar">
             <div className="shell">
               <Link href={user ? "/homes" : "/"} className="brand">
-                ♠ Poker Home
+                <Logo />
+                Poker Home
               </Link>
-              <nav className="nav">
-                {user && !user.needsTwoFactor && <Link href="/homes">{t("homes")}</Link>}
-                <Link href="/tools/sidepot">{t("sidepot")}</Link>
-                <Link href="/tools/showdown">{t("showdown")}</Link>
-                <Link href="/rules">{t("rules")}</Link>
-                <Link href="/pricing">{t("pricing")}</Link>
+              <nav className="nav" aria-label="Poker Home">
+                {user && !user.needsTwoFactor && <NavLink href="/homes">{t("homes")}</NavLink>}
+                <NavLink href="/tools/sidepot">{t("sidepot")}</NavLink>
+                <NavLink href="/tools/showdown">{t("showdown")}</NavLink>
+                <NavLink href="/rules">{t("rules")}</NavLink>
+                <NavLink href="/pricing">{t("pricing")}</NavLink>
                 {user ? (
                   <>
-                    {!user.needsTwoFactor && <Link href="/account/billing">{t("billing")}</Link>}
-                    <Link href="/settings">{t("settings")}</Link>
-                    {isAdmin(user) && <Link href="/admin">{t("admin")}</Link>}
+                    {!user.needsTwoFactor && <NavLink href="/account/billing">{t("billing")}</NavLink>}
+                    <NavLink href="/settings">{t("settings")}</NavLink>
+                    {isAdmin(user) && <NavLink href="/admin">{t("admin")}</NavLink>}
                     <form action={signOutAction}>
                       <button className="linklike" type="submit">
                         {t("signOut")}
@@ -66,13 +90,15 @@ export default async function LocaleLayout({
                     </form>
                   </>
                 ) : (
-                  <Link href="/signin">{t("signIn")}</Link>
+                  <NavLink href="/signin">{t("signIn")}</NavLink>
                 )}
                 <LocaleSwitcher label={t("language")} />
               </nav>
             </div>
           </header>
-          <main className="shell">{children}</main>
+          <main id="main" className="shell" tabIndex={-1}>
+            {children}
+          </main>
           <footer className="shell footer small muted">
             <Link href="/terms">{t("terms")}</Link> · <Link href="/privacy">{t("privacy")}</Link>
           </footer>

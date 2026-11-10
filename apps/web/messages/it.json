@@ -1166,5 +1166,15 @@
     "totalRow": "Totale",
     "openGame": "Partita aperta",
     "hostHint": "Solo l'host può registrare o rimuovere, anche a partita chiusa."
+  },
+  "states": {
+    "notFoundTitle": "Pagina non trovata",
+    "notFoundBody": "Questa pagina non esiste o è stata spostata.",
+    "backHome": "Torna alla home",
+    "errorTitle": "Qualcosa è andato storto",
+    "errorBody": "Impossibile caricare questa pagina. Riprova tra un momento.",
+    "retry": "Riprova",
+    "loading": "Caricamento…",
+    "skipToContent": "Vai al contenuto"
   }
 }

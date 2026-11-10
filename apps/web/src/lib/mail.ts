@@ -2,7 +2,7 @@ import nodemailer, { type Transporter } from "nodemailer";
 
 /**
  * Outgoing email (verification, password reset, game-night reminders). SMTP_URL is any SMTP
- * provider, e.g. smtps://user:pass@smtp.example.com:465. Without it, development prints the
+ * provider URL (smtps://user:pass@host:465). Without it, development prints the
  * message to the server log and production sends nothing (the caller carries on).
  */
 export interface Mail {

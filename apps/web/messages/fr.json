@@ -1166,5 +1166,15 @@
     "totalRow": "Total",
     "openGame": "Partie ouverte",
     "hostHint": "Seul l'hôte peut enregistrer ou supprimer, même après la clôture de la partie."
+  },
+  "states": {
+    "notFoundTitle": "Page introuvable",
+    "notFoundBody": "Cette page n'existe pas ou a été déplacée.",
+    "backHome": "Retour à l'accueil",
+    "errorTitle": "Une erreur s'est produite",
+    "errorBody": "Impossible de charger cette page. Réessayez dans un instant.",
+    "retry": "Réessayer",
+    "loading": "Chargement…",
+    "skipToContent": "Aller au contenu"
   }
 }

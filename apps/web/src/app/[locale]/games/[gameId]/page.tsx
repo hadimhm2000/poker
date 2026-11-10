@@ -160,7 +160,7 @@ export default async function GamePage({
             return (
               <tr key={e.playerId} className={p?.userId === userId ? "me" : undefined}>
                 <td>
-                  <PlayerName name={name.get(e.playerId) ?? "?"} avatar={p?.avatar} /> {e.confirmedAt && <span className="badge" title={t("confirmed")}>✓</span>}
+                  <PlayerName name={name.get(e.playerId) ?? "?"} avatar={p?.avatar} /> {e.confirmedAt && <span className="badge">{t("confirmed")}</span>}
                 </td>
                 <td className="end num">{money(e.totalIn)}</td>
                 <td className="end">
@@ -179,8 +179,8 @@ export default async function GamePage({
                       <form action={removeFromGameAction}>
                         <input type="hidden" name="gameId" value={game.id} />
                         <input type="hidden" name="playerId" value={e.playerId} />
-                        <button className="linklike" type="submit" aria-label="remove">
-                          ✕
+                        <button className="linklike" type="submit" aria-label={tp("remove")}>
+                          ×
                         </button>
                       </form>
                     )}
@@ -446,7 +446,7 @@ export default async function GamePage({
                           <input type="hidden" name="homeId" value={home.id} />
                           <input type="hidden" name="from" value="game" />
                           <button className="linklike" type="submit" aria-label={tb("remove")}>
-                            ✕
+                            ×
                           </button>
                         </form>
                       </td>
@@ -596,7 +596,7 @@ export default async function GamePage({
 
       {story && (
         <section className="card stack" id="story">
-          <h2>📖 {ti("storyTitle")}</h2>
+          <h2>{ti("storyTitle")}</h2>
           <p className="house-rules">{story.body}</p>
           <p className="small muted">{ti("storyNote")}</p>
         </section>

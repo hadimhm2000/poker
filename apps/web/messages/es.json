@@ -1166,5 +1166,15 @@
     "totalRow": "Total",
     "openGame": "Partida abierta",
     "hostHint": "Solo el anfitrión puede registrar o quitar, incluso con la partida cerrada."
+  },
+  "states": {
+    "notFoundTitle": "Página no encontrada",
+    "notFoundBody": "Esta página no existe o se ha movido.",
+    "backHome": "Volver al inicio",
+    "errorTitle": "Algo salió mal",
+    "errorBody": "No pudimos cargar esta página. Inténtalo de nuevo en un momento.",
+    "retry": "Reintentar",
+    "loading": "Cargando…",
+    "skipToContent": "Ir al contenido"
   }
 }
